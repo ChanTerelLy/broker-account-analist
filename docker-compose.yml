@@ -1,29 +1,41 @@
-version: '3'
-
-volumes:
-  local_postgres_data: {}
-  local_postgres_data_backups: {}
+version: '3.7'
 
 services:
   django:
     build: ./baa_backend
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn baa.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - ./app/:/usr/src/app/
+      - ./baa_backend:/code
     ports:
       - 8000:8000
     env_file:
       - ./baa_backend/.env
-
-  postgres:
-    image: postgres:11
-    container_name: baa_postgres
-    volumes:
-      - local_postgres_data:/var/lib/postgresql/data
-      - local_postgres_data_backups:/backups
-    env_file:
-      - baa_backend/.env
+    container_name: baa_django
 
   redis:
-    image: redis:5
+    image: redis:latest
     container_name: baa_redis
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: postgres
+    ports:
+        - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    container_name: baa_postgres
+
+  vue:
+    build: ./baa_frontend
+    command: ["nginx", "-g", "daemon off;"]
+    volumes:
+      - ./baa_frontend:/usr/app/
+    ports:
+      - 80:80
+  container_name: baa_vue
+
+volumes:
+  postgres_data:

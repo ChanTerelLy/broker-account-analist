@@ -1,18 +1,17 @@
-# pull official base image
-FROM python:3.8.3-alpine
+# Pull base image
+FROM python:3.7
 
-# set work directory
-WORKDIR /usr/src/app
-
-# set environment variables
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# install dependencies
-RUN apk update && apk add gcc libc-dev make git libffi-dev openssl-dev python3-dev libxml2-dev libxslt-dev
-RUN pip install --upgrade pip
-COPY ./requirements.txt .
+# Set work directory
+WORKDIR /code
+
+# Install dependencies
+COPY requirements.txt .
+COPY .env .
 RUN pip install -r requirements.txt
 
-# copy project
-COPY .. .
+# Copy project
+COPY . /code/
