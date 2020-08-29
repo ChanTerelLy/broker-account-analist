@@ -10,7 +10,7 @@ WORKDIR /code
 
 # Install dependencies
 COPY requirements.txt .
-COPY .env .
+COPY baa/.env .
 RUN pip install -r requirements.txt
 
 # Copy project
