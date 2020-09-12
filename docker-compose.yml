@@ -2,14 +2,14 @@ version: '3.7'
 
 services:
   django:
-    build: ./baa_backend
+    build: .
     command: gunicorn baa.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - ./baa_backend:/code
+      - .:/code
     ports:
       - 8000:8000
     env_file:
-      - baa_backend/baa/.env
+      - .env
     container_name: baa_django
 
   redis:
@@ -27,15 +27,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     container_name: baa_postgres
-
-  vue:
-    build: ./baa_frontend
-    command: ["nginx", "-g", "daemon off;"]
-    volumes:
-      - ./baa_frontend:/usr/app/
-    ports:
-      - 80:80
-    container_name: baa_vue
 
 volumes:
   postgres_data:
