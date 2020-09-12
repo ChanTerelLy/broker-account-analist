@@ -3,10 +3,9 @@ import django_heroku
 from django.utils import timezone
 from dotenv import load_dotenv
 load_dotenv()
-import mimetypes
-mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+django_heroku.settings(locals())
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
