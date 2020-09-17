@@ -17,7 +17,7 @@ class Account(Modify):
     def __repr__(self):
         return f'{self.name} - {self.amount}'
 
-class Bound(Modify):
+class Asset(Modify):
     full_name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     isin = models.CharField(max_length=50)
@@ -31,7 +31,7 @@ class Bound(Modify):
         return f'{self.short_name} - {self.current_return}'
 
 class Deal(Modify):
-    bound_id = models.ForeignKey(to=Bound, on_delete=models.CASCADE)
+    bound_id = models.ForeignKey(to=Asset, on_delete=models.CASCADE)
     account_id = models.ForeignKey(to=Account, on_delete=models.CASCADE)
     price = models.FloatField()
     transaction_number = models.IntegerField()
@@ -46,3 +46,18 @@ class Deal(Modify):
 
     def __repr__(self):
         return f'{self.type} - {self.price}'
+
+class CorpBound(Modify):
+    name = models.CharField(max_length=255)
+    isin = models.CharField(max_length=50)
+    last_price = models.FloatField(null=True, blank=True)
+    assessed_return = models.FloatField(null=True, blank=True)
+    maturity_date = models.DateTimeField()
+    coupon_date_return = models.DateTimeField(null=True, blank=True)
+    coupon_price = models.FloatField(null=True, blank=True)
+    capitalization = models.IntegerField(null=True, blank=True)
+    coupon_duration = models.IntegerField(null=True, blank=True)
+    listing = models.IntegerField(choices=((1,1),(2,2),(3,3)))
+    demand_volume = models.IntegerField(null=True, blank=True)
+    duration = models.FloatField(null=True, blank=True)
+    tax_free = models.BooleanField()
