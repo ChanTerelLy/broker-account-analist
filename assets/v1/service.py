@@ -1,11 +1,13 @@
 import asyncio
 import csv
+import json
 
 import aiohttp
 import aiomoex
 from aiomoex.request_helpers import get_long_data
 import requests
 import pandas as pd
+from datetime import date, timedelta
 
 class Moex():
     def __init__(self):
@@ -15,8 +17,9 @@ class Moex():
                                       ' likeGecko) Chrome/70.0.3538.110 Safari/537.36',
                         'content-type': 'application/x-www-form-urlencoded', 'upgrade-insecure-requests': '1'}
 
-    def get_corp_bound_tax_free(self, date):
-        self.data = f'__EVENTTARGET=ctl00%24PageContent%24ctrlPrivilege%24DownCSV&__EVENTARGUMENT=&__VIEWSTATE=&__EVENTVALIDATION=%2FwEdABCvVXD1oYELeveMr0vHCmYPwaDSaUlVxBvR8swwp5V2bkCrzVsnCXEftxh8yu5XrI1wsOBwYZCjQDcRnEDHN%2FoVT8KU5%2Bz2UsdG3ULNV4%2BdsCzk2G%2BZ3EJfyjp1rhAoEp84DZs%2FwSUfyvtEF83piNDc%2B%2FPivpJxB7iJpU3%2B%2BtL1%2FoNvurASTA64JjG%2FUDcxYwsNirEaq0XvNcxGTLQrUOVNbQd6BXdjKzUgM6fhlk13Kighytrs7iWDvRido%2FVpD31dDWT41Pph6cnCUUhoab%2F9LSx3pPZlZJaAE2o5gPcXP0BWD1vP%2FwqkkPMp0nZeRXPqwbIccLdsbMTH014a4s0LoKLELXuIKxhOyEQBrhpqi1bfa%2F9dDsMxo9LUHBt8cL4%3D&ctl00%24PageContent%24ctrlPrivilege%24hidden_sort_column=&ctl00%24PageContent%24ctrlPrivilege%24hidden_current_page_index=0&ctl00%24PageContent%24ctrlPrivilege%24hidden_current_page_index_change=&ctl00%24PageContent%24ctrlPrivilege%24hidden_direction_desc=&ctl00%24PageContent%24ctrlPrivilege%24beginDate={date}&ctl00%24PageContent%24ctrlPrivilege%24txtSearch='
+    def get_corp_bound_tax_free(self):
+        begin_date=(date.today() - timedelta(days=1)).strftime('%d.%m.%Y')
+        self.data = f'__EVENTTARGET=ctl00%24PageContent%24ctrlPrivilege%24DownCSV&__EVENTARGUMENT=&__VIEWSTATE=&__EVENTVALIDATION=%2FwEdABCvVXD1oYELeveMr0vHCmYPwaDSaUlVxBvR8swwp5V2bkCrzVsnCXEftxh8yu5XrI1wsOBwYZCjQDcRnEDHN%2FoVT8KU5%2Bz2UsdG3ULNV4%2BdsCzk2G%2BZ3EJfyjp1rhAoEp84DZs%2FwSUfyvtEF83piNDc%2B%2FPivpJxB7iJpU3%2B%2BtL1%2FoNvurASTA64JjG%2FUDcxYwsNirEaq0XvNcxGTLQrUOVNbQd6BXdjKzUgM6fhlk13Kighytrs7iWDvRido%2FVpD31dDWT41Pph6cnCUUhoab%2F9LSx3pPZlZJaAE2o5gPcXP0BWD1vP%2FwqkkPMp0nZeRXPqwbIccLdsbMTH014a4s0LoKLELXuIKxhOyEQBrhpqi1bfa%2F9dDsMxo9LUHBt8cL4%3D&ctl00%24PageContent%24ctrlPrivilege%24hidden_sort_column=&ctl00%24PageContent%24ctrlPrivilege%24hidden_current_page_index=0&ctl00%24PageContent%24ctrlPrivilege%24hidden_current_page_index_change=&ctl00%24PageContent%24ctrlPrivilege%24hidden_direction_desc=&ctl00%24PageContent%24ctrlPrivilege%24beginDate={begin_date}&ctl00%24PageContent%24ctrlPrivilege%24txtSearch='
         self.request = self.session.post('https://www.moex.com/ru/markets/stock/privilegeindividuals.aspx',
                                          self.data, headers=self.headers)
         self.response = self.request.content
@@ -43,7 +46,22 @@ class Moex():
             df = pd.DataFrame(data)
         return df
 
+    def get_moex_columns_description(self):
+        self.request = self.session.get('https://iss.moex.com/iss/apps/infogrid/stock/columns.json?_'
+                                        '=1600420993828&lang=ru&iss.meta=off').json()
+        return self.request
+
+
+
+    def get_portfolio(self, data: list) -> list:
+        self.request = self.session.post('https://iss.moex.com/iss/apps/bondization/securities_portfolio.json?'
+                                         'iss.meta=off&iss.json=extended&lang=ru',
+                                         data, headers=self.headers)
+        content = self.request.content
+        self.response = json.loads(content)
+        return self.response
+
 
 if __name__ == '__main__':
-    data = Moex().get_corp_bound_tax_free('12.09.2020')
+    data = Moex().get_moex_columns_description()
     print(data)
