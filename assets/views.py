@@ -1,11 +1,15 @@
 import asyncio
+from datetime import datetime
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import CorpBound
+from .models import CorpBound, Portfolio
 from .v1.service import Moex
 import pandas as pd
+from .forms import DealsUploadForm
 # Create your views here.
+from .v1.utils import parse_file
+
 
 def update_bounds(requests):
     moex = Moex()
@@ -20,7 +24,7 @@ def update_bounds(requests):
             isin=row['ISIN_x'],
             last_price=row['PRICE_RUB'],
             assessed_return=row['YIELDATWAP'],
-            maturity_date=row['MATDATE'],
+            maturity_date=row['MATDATE'] or datetime.now(),
             coupon_date_return=row['MATDATE'],
             coupon_price=row['RTH1'],
             # capitalization=row[''],
@@ -28,15 +32,37 @@ def update_bounds(requests):
             listing=row['LISTLEVEL'],
             # demand_volume=row[''],
             # duration=row[''],
+            nkd=0,
             tax_free= tax_free,
         )
     return JsonResponse({'data': data.to_json()}, safe=False)
 
-def calculate_portfolio(request):
-    if request.method == "POST":
-        data = request.body
-        moex = Moex().get_portfolio(data)
-        return JsonResponse({'data' : moex[1]['portfolio']})
 
 def assets(request):
     return render(request, 'assets/assets.html')
+
+def upload_deals(request):
+    form = DealsUploadForm()
+    if request.method == 'POST':
+        form = DealsUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            data = parse_file(file)
+            request_payload = []
+            data = list([dict(zip(data[0], c)) for c in data[1:]])
+            for attr in data:
+                request_payload.append({
+                    "DIVIDENDS" : [],
+                    "FROM": attr['Дата покупки'],
+                    "SECID": attr['Код финансового инструмента'],
+                    "TILL": attr['Дата продажи'],
+                    "VOLUME": int(attr['Продано'])
+                })
+            #load data from moex
+            portfolio = Moex().get_portfolio(request_payload)
+            #write to database
+            Portfolio.save_portfolio(portfolio)
+            return JsonResponse(portfolio, safe=False)
+
+    return render(request, 'assets/upload_deals.html', {'form':form})
+
