@@ -4,11 +4,11 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import CorpBound, Portfolio
-from .v1.service import Moex
+from .helpers.service import Moex
 import pandas as pd
 from .forms import DealsUploadForm
 # Create your views here.
-from .v1.utils import parse_file
+from .helpers.utils import parse_file
 
 
 def update_bounds(requests):

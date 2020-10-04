@@ -1,6 +1,19 @@
-import graphene
+from graphene import ObjectType, Schema
 
-class Query(graphene.ObjectType):
-    hello = graphene.String(default_value="Hi!")
+from assets.graphql.schema import Query as InfoQuery
+from assets.graphql.schema import Mutation as InfoMutation
 
-schema = graphene.Schema(query=Query)
+
+class Query(InfoQuery, ObjectType):
+    # This class will inherit from multiple Queries
+    # as we begin to add more apps to our project
+    pass
+
+
+class Mutation(InfoMutation, ObjectType):
+    # This class will inherit from multiple Mutations
+    # as we begin to add more apps to our project
+    pass
+
+
+schema = Schema(query=Query, mutation=Mutation)

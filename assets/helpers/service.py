@@ -8,12 +8,8 @@ from aiomoex.request_helpers import get_long_data
 import requests
 import pandas as pd
 from datetime import date, timedelta
-from assets.models import *
 
-from django.db import transaction
-from django.utils.decorators import method_decorator
-
-from assets.v1.utils import chunks
+from assets.helpers.utils import chunks
 
 
 class Moex():
