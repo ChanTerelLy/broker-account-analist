@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+import time
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -19,6 +19,7 @@ def update_bounds(requests):
     CorpBound.objects.all().delete()
     for index, row in data.iterrows():
         tax_free = True if row['Эмитент'] else False
+        #TODO:find out field match
         CorpBound.objects.create(
             name=row['EMITENTNAME'],
             isin=row['ISIN_x'],

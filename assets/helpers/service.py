@@ -55,7 +55,7 @@ class Moex():
                                         '=1600420993828&lang=ru&iss.meta=off').json()
         return self.request
 
-    def get_portfolio(self, data: list) -> list:
+    async def get_portfolio(self, data: list) -> list:
         deals = []
         #moex total response
         yield_count = 0  #calculate avg position from chuncks
@@ -74,18 +74,19 @@ class Moex():
             'YIELD': 0
         }
         #calculate data in moex portfolio page
-        for chunk in chunks(data, 15):
-            self.headers['content-type'] = 'application/json;charset=UTF-8'
-            self.request = self.session.post('https://iss.moex.com/iss/apps/bondization/securities_portfolio.json?'
-                                             'iss.meta=off&iss.json=extended&lang=ru',
-                                             json=chunk, headers=self.headers)
-            content = self.request.content
-            portfolio = json.loads(content)[1]['portfolio']
-            deals_portfolio = portfolio[:-1]
-            total['EARNINGS'] += portfolio[-1]['EARNINGS']
-            total['YIELD'] += portfolio[-1]['YIELD']
-            deals += deals_portfolio
-            yield_count += 1
+        async with aiohttp.ClientSession() as session:
+            async for chunk in chunks(data, 15):
+                self.headers['content-type'] = 'application/json;charset=UTF-8'
+                response = await session.post('https://iss.moex.com/iss/apps/bondization/securities_portfolio.json?'
+                                                 'iss.meta=off&iss.json=extended&lang=ru',
+                                                 json=chunk, headers=self.headers)
+                response = await response.json()
+                portfolio = response[1]['portfolio']
+                deals_portfolio = portfolio[:-1]
+                total['EARNINGS'] += portfolio[-1]['EARNINGS']
+                total['YIELD'] += portfolio[-1]['YIELD']
+                deals += deals_portfolio
+                yield_count += 1
         total['YIELD'] = total['YIELD'] / yield_count if yield_count else 0
         deals.append(total)
         return deals

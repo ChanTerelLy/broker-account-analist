@@ -10,7 +10,7 @@ def parse_file(csv_upload):
         data.append(row)
     return data
 
-def chunks(lst, n):
+async def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]

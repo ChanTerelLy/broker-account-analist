@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Account, Asset, Deal
-from django.template.response import TemplateResponse
-from django.urls import path
+from .models import *
 
 admin.site.register(Account)
 admin.site.register(Asset)
 admin.site.register(Deal)
+admin.site.register(Portfolio)
+admin.site.register(Transfer)
