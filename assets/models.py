@@ -4,6 +4,8 @@ import uuid
 
 from django.utils.decorators import method_decorator
 
+from assets.helpers.utils import dmYHM_to_date
+
 
 class Modify(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -97,7 +99,7 @@ class Portfolio(Modify):
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
-    def save_portfolio(cls, deals):
+    def save_csv(cls, deals):
         for deal in deals:
             Portfolio.objects.create(
                 buycloseprice=deal['BUYCLOSEPRICE'],
@@ -119,18 +121,40 @@ class Portfolio(Modify):
         return super().dispatch(*args, **kwargs)
 
 class Transfer(Modify):
-    account_income = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_income')
-    account_charge = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_charge')
+    account_income = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_income', help_text='Зачисление на')
+    account_charge = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_charge',
+                                       help_text='Списание с', blank=True, null=True)
     date_of_application = models.DateTimeField(null=True, blank=True, help_text='Дата подачи поручения')
     execution_date = models.DateTimeField(null=True, blank=True, help_text='Дата исполнения поручения')
     type = models.CharField(max_length=50, choices=(('Ввод ДС', 'Ввод ДС'),("Вывод ДС", "Вывод ДС"),
                                      ('Списание комиссии', 'Списание комиссии'),('Зачисление купона','Зачисление купона'),
                                      ('Зачисление суммы от погашения ЦБ', 'Зачисление суммы от погашения ЦБ'),
                                      ('Списание налогов', 'Списание налогов'),
-                                     ('Зачисление дивидендов', 'Зачисление дивидендов')), help_text='Операция')
+                                     ('Зачисление дивидендов', 'Зачисление дивидендов'),
+                                     ('Перевод между счетами', 'Перевод между счетами')), help_text='Операция')
     sum = models.FloatField(help_text='Сумма')
     currency = models.CharField(max_length=5, help_text='Валюта')
-    charge_from = models.CharField(max_length=50, help_text='Списание с')
-    income_to = models.CharField(max_length=50, help_text='Зачисление на')
-    description = models.CharField(max_length=255, help_text='Содержание операции')
+    description = models.CharField(max_length=255, help_text='Содержание операции', blank=True, null=True)
     status = models.CharField(max_length=50, help_text='Статус')
+
+    @classmethod
+    @method_decorator(transaction.atomic, name='dispatch')
+    def save_csv(cls, transfers, form):
+        account_income_id = form['account_income'].value()[0]
+        account_charge_id = form['account_charge'].value()[0] if form['account_charge'].value() else None
+        for transfer in transfers:
+            Transfer.objects.create(
+                account_income=Account.objects.filter(id=account_income_id).first(),
+                account_charge=Account.objects.filter(id=account_charge_id).first(),
+                date_of_application=dmYHM_to_date(transfer['Дата подачи поручения']),
+                execution_date=dmYHM_to_date(transfer['Дата исполнения поручения']),
+                type=transfer['Операция'],
+                sum=transfer['Сумма'],
+                currency=transfer['Валюта операции'],
+                description=transfer['Содержание операции'],
+                status=transfer['Статус'],
+            )
+
+    @method_decorator(transaction.atomic)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)

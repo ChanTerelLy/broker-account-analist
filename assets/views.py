@@ -3,10 +3,10 @@ import time
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import CorpBound, Portfolio
+from .models import *
 from .helpers.service import Moex
 import pandas as pd
-from .forms import DealsUploadForm
+from .forms import UploadFile, UploadTransferFile
 # Create your views here.
 from .helpers.utils import parse_file
 
@@ -42,10 +42,10 @@ def update_bounds(requests):
 def assets(request):
     return render(request, 'assets/assets.html')
 
-def upload_deals(request):
-    form = DealsUploadForm()
+def upload_agr_deals(request):
+    form = UploadFile()
     if request.method == 'POST':
-        form = DealsUploadForm(request.POST, request.FILES)
+        form = UploadFile(request.POST, request.FILES)
         if form.is_valid():
             file = request.FILES['file']
             data = parse_file(file)
@@ -62,8 +62,18 @@ def upload_deals(request):
             #load data from moex
             portfolio = Moex().get_portfolio(request_payload)
             #write to database
-            Portfolio.save_portfolio(portfolio)
+            Portfolio.save_csv(portfolio)
             return JsonResponse(portfolio, safe=False)
 
     return render(request, 'assets/upload_deals.html', {'form':form})
 
+def upload_transers(requests):
+    form = UploadTransferFile(user=requests.user)
+    if requests.method == 'POST':
+        form = UploadTransferFile(requests.POST, requests.FILES)
+        if form.is_valid():
+            file = requests.FILES['file']
+            transfers = parse_file(file)
+            transfers = list([dict(zip(transfers[0], c)) for c in transfers[1:]])
+            Transfer.save_csv(transfers, form)
+    return render(requests, 'assets/upload_transfers.html', {'form' : form})
