@@ -11,11 +11,13 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = int(os.getenv('DEBUG'))
 
 ALLOWED_HOSTS = []
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_HOST_USER = os.getenv('SENDER_EMAIL')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', default='')
+EMAIL_PORT = os.getenv('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', default=True)
+DEFAULT_FROM_EMAIL = 'baa-system <noreply@baa-system.herokuapp.com>'
 ADMINS = [('Admin', os.getenv('ADMIN_EMAIL'))]
 
 
@@ -29,7 +31,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'assets',
-    'graphene_django'
+    'graphene_django',
+    'widget_tweaks',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -162,5 +166,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 GRAPHENE = {
     "SCHEMA": "baa.schema.schema"
 }
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'assets'
+LOGOUT_REDIRECT_URL = 'assets'
 
 django_heroku.settings(locals())
