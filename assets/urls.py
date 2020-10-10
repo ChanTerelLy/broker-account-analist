@@ -6,6 +6,7 @@ urlpatterns = [
     path('update_bounds/', login_required(update_bounds), name='update_bounds'),
     path('assets/', login_required(assets), name='assets'),
     path('', login_required(assets), name='home'), #TODO:change to normal redirect
-    path('upload_deals/', login_required(upload_agr_deals), name='upload_deals'),
-    path('upload_transers/', login_required(upload_transers), name='upload_transers'),
+    path('deals/', login_required(upload_agr_deals), name='portfolio'),
+    path('transfers/', login_required(upload_transers), name='transfers'),
+    path('corp-bounds/', login_required(update_bounds), name='corp-bounds'),
 ]

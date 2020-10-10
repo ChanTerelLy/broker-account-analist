@@ -44,6 +44,11 @@ def assets(request):
 
 def upload_agr_deals(request):
     form = UploadFile()
+    fields = Portfolio._meta._get_fields()
+    help_text = []
+    for field in fields:
+        help_text.append(field.help_text)
+    portfolio = Portfolio.objects.filter(account__user=request.user).all()
     if request.method == 'POST':
         form = UploadFile(request.POST, request.FILES)
         if form.is_valid():
@@ -65,7 +70,9 @@ def upload_agr_deals(request):
             Portfolio.save_csv(portfolio)
             return JsonResponse(portfolio, safe=False)
 
-    return render(request, 'assets/upload_deals.html', {'form':form})
+    return render(request, 'assets/upload_deals.html', {'form':form,
+                                                        'table_headers' : help_text,
+                                                        'portfolio' : portfolio})
 
 def upload_transers(requests):
     form = UploadTransferFile(user=requests.user)

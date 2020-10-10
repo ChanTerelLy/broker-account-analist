@@ -1,4 +1,39 @@
-<form method="post" enctype="multipart/form-data">
-    {{ form }}
-    <button type="submit">Submit</button>
-</form>
+{% extends '_base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--2-col graybox">
+            <form method="post" enctype="multipart/form-data">
+                {{ form|crispy }}
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+        <div class="mdl-cell mdl-cell--10-col graybox">
+            <table class="mdl-data-table mdl-js-data-table me ">
+                <thead>
+                <tr>
+                    {% for field in table_headers %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in portfolio %}
+                    <tr>
+                        <td>{{ row.buycloseprice }}</td>
+                        <td>{{ row.buysum }}</td>
+                        <td>{{ row.cashflow }}</td>
+                        <td>{{ row.earnings }}</td>
+                        <td>{{ row.from_date }}</td>
+                        <td>{{ row.secid }}</td>
+                        <td>{{ row.sellcloseprice }}</td>
+                        <td>{{ row.sellsum }}</td>
+                        <td>{{ row.till_date }}</td>
+                        <td>{{ row.volume }}</td>
+                        <td>{{ row.yield_percent }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+{% endblock content %}

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'widget_tweaks',
     'accounts',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -142,7 +143,7 @@ CACHES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -169,5 +170,6 @@ GRAPHENE = {
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'assets'
 LOGOUT_REDIRECT_URL = 'assets'
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 django_heroku.settings(locals())
