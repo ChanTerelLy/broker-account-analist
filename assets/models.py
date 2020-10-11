@@ -2,6 +2,9 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 import uuid
 
+from graphene.utils.str_converters import to_camel_case
+from toolz import curry
+
 from django.utils.decorators import method_decorator
 
 from assets.helpers.utils import dmYHM_to_date
@@ -85,17 +88,42 @@ class Portfolio(Modify):
     cashflow = models.FloatField(help_text='Купоны/ дивиденды', null=True, blank=True)
     earnings = models.FloatField(help_text='Доход', null=True, blank=True)
     error = models.TextField(null=True, blank=True)
-    from_date = models.DateField('Дата покупки', null=True, blank=True)
+    from_date = models.DateField(help_text='Дата покупки', null=True, blank=True)
     secid = models.CharField(help_text="Инструмент", max_length=255)
     sellcloseprice = models.FloatField(help_text='Цена закрытия в дату продажи, в рублях', null=True, blank=True)
     sellsum = models.FloatField(help_text='Сумма продажи', null=True, blank=True)
-    till_date = models.DateField('Дата продажи', null=True, blank=True)
+    till_date = models.DateField(help_text='Дата продажи', null=True, blank=True)
     volume = models.IntegerField(help_text='Количество бумаг', null=True, blank=True)
     yield_percent = models.FloatField(help_text='Внутр. ставка доходности', null=True, blank=True)
-    account = models.ForeignKey(Account, related_name='account', on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name='account', on_delete=models.CASCADE, help_text='Аккаунт')
 
     def __str__(self):
         return f'{self.secid} - {self.earnings}'
+
+    @property
+    def help_text_map(self):
+        return list([{to_camel_case(field.name) : field.help_text} for field in self._meta.fields])
+
+    def _get_help_text(self, field_name):
+        """Given a field name, return it's help text."""
+        for field in self._meta.fields:
+            if field.name == field_name:
+                return field.help_text
+
+    def __init__(self, *args, **kwargs):
+        # Call the superclass first; it'll create all of the field objects.
+        super(Portfolio, self).__init__(*args, **kwargs)
+
+        # Again, iterate over all of our field objects.
+        for field in self._meta.fields:
+            # Create a string, get_FIELDNAME_help text
+            method_name = "get_{0}_help_text".format(field.name)
+
+            # We can use curry to create the method with a pre-defined argument
+            curried_method = curry(self._get_help_text, field_name=field.name)
+
+            # And we add this method to the instance of the class.
+            setattr(self, method_name, curried_method)
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')

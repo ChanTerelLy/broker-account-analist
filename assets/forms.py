@@ -5,8 +5,8 @@ class UploadFile(forms.Form):
 
 class UploadTransferFile(forms.Form):
     file = forms.FileField(label='Загрузите файл')
-    account_income = forms.ModelMultipleChoiceField(queryset=Account.objects)
-    account_charge = forms.ModelMultipleChoiceField(queryset=Account.objects, required=False)
+    account_income = forms.ModelMultipleChoiceField(queryset=Account.objects.none())
+    account_charge = forms.ModelMultipleChoiceField(queryset=Account.objects.none(), required=False)
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)

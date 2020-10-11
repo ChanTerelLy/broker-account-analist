@@ -1,0 +1,151 @@
+{"slice": {
+        "rows": [
+            {
+                "uniqueName": "Дата продажи.Month"
+            },
+            {
+                "uniqueName": "Аккаунт"
+            },
+            {
+                "uniqueName": "Инструмент"
+            }
+        ],
+        "columns": [
+            {
+                "uniqueName": "Measures"
+            }
+        ],
+        "measures": [
+            {
+                "uniqueName": "Цена закрытия в дату покупки, в рублях",
+                "aggregation": "sum",
+                "format": "47kdsyoo"
+            },
+            {
+                "uniqueName": "Доход",
+                "aggregation": "sum",
+                "format": "47kdtbsh"
+            },
+            {
+                "uniqueName": "Количество бумаг",
+                "aggregation": "sum",
+                "format": "47kdthat"
+            },
+            {
+                "uniqueName": "Купоны/ дивиденды",
+                "aggregation": "sum",
+                "format": "47kdv4x0"
+            },
+            {
+                "uniqueName": "Сумма покупки",
+                "aggregation": "sum",
+                "format": "47kdvbjh"
+            },
+            {
+                "uniqueName": "Сумма продажи",
+                "aggregation": "sum",
+                "format": "47kdvh8q"
+            },
+            {
+                "uniqueName": "Цена закрытия в дату продажи, в рублях",
+                "aggregation": "average",
+                "format": "47kdvrg0"
+            },
+            {
+                "uniqueName": "Внутр. ставка доходности",
+                "aggregation": "average",
+                "format": "47kdw2yc"
+            }
+        ]
+    },
+"formats": [
+        {
+            "name": "47kdsyoo",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdtbsh",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdthat",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdv4x0",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdvbjh",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdvh8q",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdvrg0",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        },
+        {
+            "name": "47kdw2yc",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 1,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        }
+    ]
+}

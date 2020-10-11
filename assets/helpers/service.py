@@ -59,20 +59,6 @@ class Moex():
         deals = []
         #moex total response
         yield_count = 0  #calculate avg position from chuncks
-        total = {
-            'BUYCLOSEPRICE': None,
-            'BUYSUM': None,
-            'CASHFLOW': None,
-            'EARNINGS': 0,
-            'ERROR': None,
-            'FROM': None,
-            'SECID': "_TOTAL_",
-            'SELLCLOSEPRICE': None,
-            'SELLSUM': None,
-            'TILL': None,
-            'VOLUME': None,
-            'YIELD': 0
-        }
         #calculate data in moex portfolio page
         async with aiohttp.ClientSession() as session:
             async for chunk in chunks(data, 15):
@@ -83,12 +69,8 @@ class Moex():
                 response = await response.json()
                 portfolio = response[1]['portfolio']
                 deals_portfolio = portfolio[:-1]
-                total['EARNINGS'] += portfolio[-1]['EARNINGS']
-                total['YIELD'] += portfolio[-1]['YIELD']
                 deals += deals_portfolio
                 yield_count += 1
-        total['YIELD'] = total['YIELD'] / yield_count if yield_count else 0
-        deals.append(total)
         return deals
 
 
