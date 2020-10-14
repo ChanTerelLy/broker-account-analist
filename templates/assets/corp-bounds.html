@@ -1,0 +1,40 @@
+{% extends '_base.html' %}
+{% load bootstrap_pagination %}
+{% load static %}
+{% block title %}Корпоративные облигации{% endblock %}
+{% block content %}
+    <div class="table-responsive-md table-bordered">
+        <table class="table">
+            <thead>
+            <tr>
+                {% for text in help_text %}
+                    <th>{{ text }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for bound in corp_bounds %}
+                <tr>
+                    <td>{{ bound.name }}</td>
+                    <td>{{ bound.short_name }}</td>
+                    <td>{{ bound.isin }}</td>
+                    <td>{{ bound.last_price }}</td>
+                    <td>{{ bound.assessed_return }}</td>
+                    <td>{{ bound.maturity_date }}</td>
+                    <td>{{ bound.coupon_date_return }}</td>
+                    <td>{{ bound.coupon_price }}</td>
+                    <td>{{ bound.capitalization }}</td>
+                    <td>{{ bound.coupon_duration }}</td>
+                    <td>{{ bound.listing }}</td>
+                    <td>{{ bound.demand_volume }}</td>
+                    <td>{{ bound.duration }}</td>
+                    <td>{{ bound.nkd }}</td>
+                    <td>{{ bound.tax_free }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% bootstrap_paginate page_obj %}
+{% endblock content %}

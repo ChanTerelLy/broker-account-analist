@@ -93,11 +93,6 @@ $.ajax({
         ],
         "measures": [
             {
-                "uniqueName": "Цена закрытия в дату покупки, в рублях",
-                "aggregation": "sum",
-                "format": "47kdsyoo"
-            },
-            {
                 "uniqueName": "Доход",
                 "aggregation": "sum",
                 "format": "47kdtbsh"
@@ -108,9 +103,24 @@ $.ajax({
                 "format": "47kdthat"
             },
             {
+                "uniqueName": "Внутр. ставка доходности",
+                "aggregation": "average",
+                "format": "47kdw2yc"
+            },
+            {
                 "uniqueName": "Купоны/ дивиденды",
                 "aggregation": "sum",
                 "format": "47kdv4x0"
+            },
+            {
+                "uniqueName": "Цена закрытия в дату покупки, в рублях",
+                "aggregation": "avg",
+                "format": "47kdsyoo"
+            },
+            {
+                "uniqueName": "Цена закрытия в дату продажи, в рублях",
+                "aggregation": "average",
+                "format": "47kdvrg0"
             },
             {
                 "uniqueName": "Сумма покупки",
@@ -122,16 +132,6 @@ $.ajax({
                 "aggregation": "sum",
                 "format": "47kdvh8q"
             },
-            {
-                "uniqueName": "Цена закрытия в дату продажи, в рублях",
-                "aggregation": "average",
-                "format": "47kdvrg0"
-            },
-            {
-                "uniqueName": "Внутр. ставка доходности",
-                "aggregation": "average",
-                "format": "47kdw2yc"
-            }
         ]
     },
     "formats": [

@@ -3,6 +3,8 @@ import time
 
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.generic import TemplateView, ListView
+
 from .models import *
 from .helpers.service import Moex
 import pandas as pd
@@ -42,7 +44,7 @@ def update_bounds(requests):
 def assets(request):
     return render(request, 'assets/assets.html')
 
-def upload_agr_deals(request):
+def upload_portfolio(request):
     form = UploadFile()
     fields = Portfolio._meta._get_fields()
     help_text = []
@@ -70,9 +72,24 @@ def upload_agr_deals(request):
             Portfolio.save_csv(portfolio)
             return JsonResponse(portfolio, safe=False)
 
-    return render(request, 'assets/upload_deals.html', {'form':form,
-                                                        'table_headers' : help_text,
-                                                        'portfolio' : portfolio})
+    return render(request, 'assets/upload_porfolio.html', {'form':form})
+
+class PortfolioView(TemplateView):
+    template_name = 'assets/portfolio.html'
+
+class CorpBounView(ListView):
+    template_name = 'assets/corp-bounds.html'
+    model = CorpBound
+    context_object_name = 'corp_bounds'
+    paginate_by = 100
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        # Add in the publisher
+        context['help_text'] = CorpBound.objects.first().help_text_map
+        return context
+
 
 def upload_transers(requests):
     form = UploadTransferFile(user=requests.user)

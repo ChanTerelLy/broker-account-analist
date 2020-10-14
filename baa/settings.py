@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'accounts',
     'crispy_forms',
+    'bootstrap_pagination',
 ]
 
 MIDDLEWARE = [

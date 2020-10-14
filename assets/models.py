@@ -64,7 +64,7 @@ class Deal(Modify):
 class CorpBound(Modify):
     name = models.CharField(max_length=255, help_text='Полное наименование')
     short_name = models.CharField(max_length=255, help_text='Сокращенное наименование')
-    isin = models.CharField(max_length=50)
+    isin = models.CharField(max_length=50, help_text='ISIN')
     last_price = models.FloatField(null=True, blank=True, help_text='Цена последней сделки')
     assessed_return = models.FloatField(null=True, blank=True, help_text='Доход оценочный в %')
     maturity_date = models.DateTimeField(help_text='Дата погашения')
@@ -75,8 +75,12 @@ class CorpBound(Modify):
     listing = models.IntegerField(choices=((1, 1), (2, 2), (3, 3)), help_text='Листинг')
     demand_volume = models.IntegerField(null=True, blank=True, help_text='Общий спрос')
     duration = models.FloatField(null=True, blank=True, help_text='Дюрация')
-    nkd = models.FloatField()
+    nkd = models.FloatField(help_text='НКД')
     tax_free = models.BooleanField(help_text='Свободна от уплаты налогов')
+
+    @property
+    def help_text_map(self):
+        return list([field.help_text for field in self._meta.fields if field.help_text])
 
     def __str__(self):
         return f'{self.short_name} - {self.assessed_return}'
