@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.models import User
 from django.db import models, transaction
 import uuid
@@ -17,6 +19,16 @@ class Modify(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def help_text_map(self):
+        l = list([{to_camel_case(field.name) : field.help_text} for field in self._meta.fields])
+        l.append({'typeSum' : 'Сумма с вычетами'})
+        return json.dumps(l)
+
+    @property
+    def help_text_map_table(self):
+        return list([field.help_text for field in self._meta.fields if field.help_text])
 
 
 class Account(Modify):
@@ -78,10 +90,6 @@ class CorpBound(Modify):
     nkd = models.FloatField(help_text='НКД')
     tax_free = models.BooleanField(help_text='Свободна от уплаты налогов')
 
-    @property
-    def help_text_map(self):
-        return list([field.help_text for field in self._meta.fields if field.help_text])
-
     def __str__(self):
         return f'{self.short_name} - {self.assessed_return}'
 
@@ -103,31 +111,6 @@ class Portfolio(Modify):
 
     def __str__(self):
         return f'{self.secid} - {self.earnings}'
-
-    @property
-    def help_text_map(self):
-        return list([{to_camel_case(field.name) : field.help_text} for field in self._meta.fields])
-
-    def _get_help_text(self, field_name):
-        """Given a field name, return it's help text."""
-        for field in self._meta.fields:
-            if field.name == field_name:
-                return field.help_text
-
-    def __init__(self, *args, **kwargs):
-        # Call the superclass first; it'll create all of the field objects.
-        super(Portfolio, self).__init__(*args, **kwargs)
-
-        # Again, iterate over all of our field objects.
-        for field in self._meta.fields:
-            # Create a string, get_FIELDNAME_help text
-            method_name = "get_{0}_help_text".format(field.name)
-
-            # We can use curry to create the method with a pre-defined argument
-            curried_method = curry(self._get_help_text, field_name=field.name)
-
-            # And we add this method to the instance of the class.
-            setattr(self, method_name, curried_method)
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
@@ -153,21 +136,36 @@ class Portfolio(Modify):
         return super().dispatch(*args, **kwargs)
 
 class Transfer(Modify):
+    TYPE_CHOICES = (('Ввод ДС', 'Ввод ДС'), ("Вывод ДС", "Вывод ДС"),
+                    ('Списание комиссии', 'Списание комиссии'), ('Зачисление купона', 'Зачисление купона'),
+                    ('Зачисление суммы от погашения ЦБ', 'Зачисление суммы от погашения ЦБ'),
+                    ('Списание налогов', 'Списание налогов'),
+                    ('Зачисление дивидендов', 'Зачисление дивидендов'),
+                    ('Перевод между счетами', 'Перевод между счетами'))
     account_income = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_income', help_text='Зачисление на')
     account_charge = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_charge',
                                        help_text='Списание с', blank=True, null=True)
     date_of_application = models.DateTimeField(null=True, blank=True, help_text='Дата подачи поручения')
     execution_date = models.DateTimeField(null=True, blank=True, help_text='Дата исполнения поручения')
-    type = models.CharField(max_length=50, choices=(('Ввод ДС', 'Ввод ДС'),("Вывод ДС", "Вывод ДС"),
-                                     ('Списание комиссии', 'Списание комиссии'),('Зачисление купона','Зачисление купона'),
-                                     ('Зачисление суммы от погашения ЦБ', 'Зачисление суммы от погашения ЦБ'),
-                                     ('Списание налогов', 'Списание налогов'),
-                                     ('Зачисление дивидендов', 'Зачисление дивидендов'),
-                                     ('Перевод между счетами', 'Перевод между счетами')), help_text='Операция')
-    sum = models.FloatField(help_text='Сумма')
+    type = models.CharField(max_length=50,
+                            # choices=TYPE_CHOICES, TODO:automatic transliterate russian value
+                            help_text='Операция')
+    sum = models.FloatField(help_text='Сумма', )
     currency = models.CharField(max_length=5, help_text='Валюта')
     description = models.CharField(max_length=255, help_text='Содержание операции', blank=True, null=True)
     status = models.CharField(max_length=50, help_text='Статус')
+
+    @property
+    def type_sum(self):
+        if self.type == self.TYPE_CHOICES[2][0]:
+            return self.sum * -1
+        elif self.type == self.TYPE_CHOICES[5][0]:
+            return self.sum * -1
+        elif self.type == self.TYPE_CHOICES[1][0]:
+            return self.sum * -1
+        else:
+            return self.sum
+
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')

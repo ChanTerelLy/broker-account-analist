@@ -77,6 +77,9 @@ def upload_portfolio(request):
 class PortfolioView(TemplateView):
     template_name = 'assets/portfolio.html'
 
+class TransfersView(TemplateView):
+    template_name = 'assets/transfers.html'
+
 class CorpBounView(ListView):
     template_name = 'assets/corp-bounds.html'
     model = CorpBound
@@ -84,10 +87,8 @@ class CorpBounView(ListView):
     paginate_by = 100
 
     def get_context_data(self, **kwargs):
-        # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
-        # Add in the publisher
-        context['help_text'] = CorpBound.objects.first().help_text_map
+        context['help_text'] = CorpBound.objects.first().help_text_map_table
         return context
 
 

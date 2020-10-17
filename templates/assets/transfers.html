@@ -1,6 +1,6 @@
 {% extends 'assets/_webdatarocket-table.html' %}
 {% load static %}
-{% block title %}Портфель{% endblock %}
+{% block title %}Трансферы{% endblock %}
 {% block content %}
     <body>
     <div id="pivot-table-container"></div>
@@ -10,7 +10,7 @@
 {% block extra_scripts %}
     <script>
     let ru_localization = "{% static 'js/webdatarocks/localization/ru.json' %}";
-    let portfolio_json_path = "{% static 'js/webdatarocks/portfolio/portfolio.json' %}";
+    let transfers_json_path = "{% static 'js/webdatarocks/transfers/transfers.json' %}";
     </script>
-    <script src="{% static 'js/webdatarocks/portfolio/portfolio.js' %}"></script>
+    <script src="{% static 'js/webdatarocks/transfers/transfers.js' %}"></script>
 {% endblock extra_scripts %}

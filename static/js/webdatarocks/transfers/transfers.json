@@ -1,0 +1,71 @@
+{
+  "slice": {
+    "rows": [
+      {
+        "uniqueName": "Зачисление на"
+      },
+      {
+        "uniqueName": "Операция"
+      },
+      {
+        "uniqueName": "Дата подачи поручения.Year"
+      },
+      {
+        "uniqueName": "Дата подачи поручения.Month"
+      },
+      {
+        "uniqueName": "Содержание операции"
+      }
+    ],
+    "columns": [
+      {
+        "uniqueName": "Measures"
+      }
+    ],
+    "measures": [
+      {
+        "uniqueName": "Сумма с вычетами",
+        "aggregation": "sum",
+        "format": "47tr87rj"
+      }
+    ],
+    "expands": {
+      "rows": [
+        {
+          "tuple": [
+            "Зачисление на.4NDKP"
+          ]
+        },
+        {
+          "tuple": [
+            "Зачисление на.4NDKP",
+            "Операция.ZACHISLENIE_DIVIDENDOV",
+            "Дата подачи поручения.Year.2019",
+            "Дата подачи поручения.Month.Май"
+          ]
+        },
+        {
+          "tuple": [
+            "Зачисление на.4NDKP",
+            "Операция.ZACHISLENIE_DIVIDENDOV",
+            "Дата подачи поручения.Year.2019",
+            "Дата подачи поручения.Month.Июнь"
+          ]
+        }
+      ]
+    }
+  },
+  "formats": [
+    {
+      "name": "47tr87rj",
+      "thousandsSeparator": " ",
+      "decimalSeparator": ".",
+      "decimalPlaces": 0,
+      "currencySymbol": "",
+      "currencySymbolAlign": "left",
+      "nullValue": "",
+      "textAlign": "right",
+      "isPercent": false
+    }
+  ]
+}

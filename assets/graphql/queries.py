@@ -12,20 +12,30 @@ class AccountNode(DjangoObjectType):
         filter_fields = ['id', ]
         interfaces = (relay.Node, )
 
-class PortfolioNode(DjangoObjectType):
-    help_text_map = graphene.JSONString()
+class PortfolioType(DjangoObjectType):
+    help_text_map = graphene.String()
 
     class Meta:
         model = Portfolio
         fields = ('__all__')
-        filter_fields = ['id', ]
         interfaces = (relay.Node,)
+
+class TransferType(DjangoObjectType):
+    help_text_map = graphene.String()
+    type_sum = graphene.Float()
+
+    class Meta:
+        model = Transfer
+        fields = ('__all__')
+        interfaces = (relay.Node,)
+
 
 
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
     my_accounts = DjangoFilterConnectionField(AccountNode)
-    my_portfolio = DjangoFilterConnectionField(PortfolioNode)
+    my_portfolio = graphene.List(PortfolioType)
+    my_transfers = graphene.List(TransferType)
 
     def resolve_my_accounts(self, info):
         # context will reference to the Django request
@@ -40,3 +50,10 @@ class Query(ObjectType):
             return Portfolio.objects.none()
         else:
             return Portfolio.objects.filter(account__user=info.context.user)
+
+    def resolve_my_transfers(self, info):
+        # context will reference to the Django request
+        if not info.context.user.is_authenticated:
+            return Transfer.objects.none()
+        else:
+            return Transfer.objects.filter(account_income__user=info.context.user).all()

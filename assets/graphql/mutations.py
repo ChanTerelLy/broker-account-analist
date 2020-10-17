@@ -1,6 +1,6 @@
 import graphene
 
-from .queries import PortfolioNode
+from .queries import PortfolioType
 from ..models import Portfolio
 
 
@@ -13,7 +13,7 @@ class CreatePortfolio(graphene.Mutation):
     class Arguments:
         input = PortfolioInput(required=True)
 
-    portfolio = graphene.Field(PortfolioNode)
+    portfolio = graphene.Field(PortfolioType)
 
     @staticmethod
     def mutate(root, info, input=None):
