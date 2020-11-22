@@ -4,7 +4,7 @@ from datetime import datetime as dt
 
 
 def parse_file(csv_upload):
-    file = csv_upload.read().decode('utf-8')
+    file = csv_upload.read().decode('utf-8-sig')
     csv_data = csv.reader(StringIO(file), delimiter=';')
     data = []
     for row in csv_data:

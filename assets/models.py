@@ -56,14 +56,39 @@ class Asset(Modify):
 
 
 class Deal(Modify):
-    bound_id = models.ForeignKey(to=Asset, on_delete=models.CASCADE, null=True, blank=True)
     account_id = models.ForeignKey(to=Account, on_delete=models.CASCADE)
-    price = models.FloatField()
-    transaction_number = models.IntegerField()
-    service_fee = models.FloatField()
-    currency = models.CharField(max_length=10)
-    date = models.DateTimeField(auto_now_add=True)
+    number = models.IntegerField(help_text='Номер сделки')
+    conclusion_date = models.DateTimeField(help_text='Дата заключения')
+    settlement_date = models.DateTimeField(help_text='Дата расчётов')
+    isin = models.CharField(max_length=50, help_text='')
     type = models.CharField(max_length=50, choices=[('Покупка', 'Покупка'), ('Продажа', 'Продажа')])
+    amount = models.IntegerField(help_text='Количество')
+    price = models.FloatField(help_text='Цена')
+    nkd = models.FloatField(help_text='НКД')
+    volume = models.FloatField(help_text='Объем сделки')
+    currency = models.CharField(max_length=10, help_text='Валюта')
+    service_fee = models.FloatField(help_text='Комиссия')
+
+    @classmethod
+    @method_decorator(transaction.atomic, name='dispatch')
+    def save_csv(cls, transfers):
+        for transfer in transfers:
+            account_charge = Account.objects.filter(id=transfer['Cписание с']).first() if transfer['Cписание с'] else Account.objects.none();
+            Transfer.objects.create(
+                account_income=Account.objects.filter(name=transfer['Номер договора']).first(),
+                account_charge=account_charge,
+                date_of_application=dmYHM_to_date(transfer['Дата подачи поручения']),
+                execution_date=dmYHM_to_date(transfer['Дата исполнения поручения']),
+                type=transfer['Операция'],
+                sum=transfer['Сумма'],
+                currency=transfer['Валюта операции'],
+                description=transfer['Содержание операции'],
+                status=transfer['Статус'],
+            )
+
+    @method_decorator(transaction.atomic)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
     @property
     def transaction_volume(self):
@@ -169,20 +194,19 @@ class Transfer(Modify):
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
-    def save_csv(cls, transfers, form):
-        account_income_id = form['account_income'].value()[0]
-        account_charge_id = form['account_charge'].value()[0] if form['account_charge'].value() else None
+    def save_csv(cls, transfers):
         for transfer in transfers:
+            account_charge = Account.objects.none() #TODO:add account instance
             Transfer.objects.create(
-                account_income=Account.objects.filter(id=account_income_id).first(),
-                account_charge=Account.objects.filter(id=account_charge_id).first(),
-                date_of_application=dmYHM_to_date(transfer['Дата подачи поручения']),
-                execution_date=dmYHM_to_date(transfer['Дата исполнения поручения']),
-                type=transfer['Операция'],
-                sum=transfer['Сумма'],
-                currency=transfer['Валюта операции'],
-                description=transfer['Содержание операции'],
-                status=transfer['Статус'],
+                account_income=Account.objects.filter(name=transfer['Номер договора']).first(),
+                # account_charge=account_charge,
+                date_of_application=dmYHM_to_date(transfer.get('Дата подачи поручения')),
+                execution_date=dmYHM_to_date(transfer.get('Дата исполнения поручения')),
+                type=transfer.get('Операция'),
+                sum=transfer.get('Сумма'),
+                currency=transfer.get('Валюта операции'),
+                description=transfer.get('Содержание операции'),
+                status=transfer.get('Статус'),
             )
 
     @method_decorator(transaction.atomic)

@@ -5,6 +5,7 @@
     <body>
     <div id="pivot-table-container"></div>
     <div id="pivot-chart-container"></div>
+    <input id='input-upload-button' type="file" hidden>
     </body>
 {% endblock content %}
 {% block extra_scripts %}
@@ -12,5 +13,9 @@
     let ru_localization = "{% static 'js/webdatarocks/localization/ru.json' %}";
     let transfers_json_path = "{% static 'js/webdatarocks/transfers/transfers.json' %}";
     </script>
+    <script src="{% static 'js/webdatarocks/helper.js' %}"></script>
     <script src="{% static 'js/webdatarocks/transfers/transfers.js' %}"></script>
+    <script>
+        generatePivotTable();
+    </script>
 {% endblock extra_scripts %}

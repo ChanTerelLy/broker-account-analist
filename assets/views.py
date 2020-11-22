@@ -44,6 +44,23 @@ def update_bounds(requests):
 def assets(request):
     return render(request, 'assets/assets.html')
 
+class PortfolioView(TemplateView):
+    template_name = 'assets/portfolio.html'
+
+class TransfersView(TemplateView):
+    template_name = 'assets/transfers.html'
+
+class CorpBounView(ListView):
+    template_name = 'assets/corp-bounds.html'
+    model = CorpBound
+    context_object_name = 'corp_bounds'
+    paginate_by = 100
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['help_text'] = CorpBound.objects.first().help_text_map_table
+        return context
+
 def upload_portfolio(request):
     form = UploadFile()
     fields = Portfolio._meta._get_fields()
@@ -73,32 +90,3 @@ def upload_portfolio(request):
             return JsonResponse(portfolio, safe=False)
 
     return render(request, 'assets/upload_porfolio.html', {'form':form})
-
-class PortfolioView(TemplateView):
-    template_name = 'assets/portfolio.html'
-
-class TransfersView(TemplateView):
-    template_name = 'assets/transfers.html'
-
-class CorpBounView(ListView):
-    template_name = 'assets/corp-bounds.html'
-    model = CorpBound
-    context_object_name = 'corp_bounds'
-    paginate_by = 100
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['help_text'] = CorpBound.objects.first().help_text_map_table
-        return context
-
-
-def upload_transers(requests):
-    form = UploadTransferFile(user=requests.user)
-    if requests.method == 'POST':
-        form = UploadTransferFile(requests.POST, requests.FILES)
-        if form.is_valid():
-            file = requests.FILES['file']
-            transfers = parse_file(file)
-            transfers = list([dict(zip(transfers[0], c)) for c in transfers[1:]])
-            Transfer.save_csv(transfers, form)
-    return render(requests, 'assets/upload_transfers.html', {'form' : form})

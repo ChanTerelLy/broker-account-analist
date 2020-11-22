@@ -4,12 +4,6 @@ function processData(dataset) {
     return result;
 }
 
-function camelize(str) {
-  return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
-    return index === 0 ? word.toLowerCase() : word.toUpperCase();
-  }).replace(/\s+/g, '');
-}
-
 function returnAccountName(node){
     let map = JSON.parse(node.helpTextMap)
     let newMap = {};
@@ -33,12 +27,13 @@ function returnAccountName(node){
     return newNode
 }
 
-$.ajax({
-    method: "POST",
-    url: '/graphql',
-    contentType: "application/json",
-    data: JSON.stringify({
-    query: `
+function generatePivotTable() {
+    $.ajax({
+        method: "POST",
+        url: '/graphql',
+        contentType: "application/json",
+        data: JSON.stringify({
+            query: `
     query {
      myTransfers {
             accountIncome {
@@ -59,27 +54,88 @@ $.ajax({
       }
     }
     `,
-    }),
-    success: function (data) {
-        data = data.data.myTransfers
-        $.getJSON(transfers_json_path, function (parametrs) {
-            new WebDataRocks({
-                container: "#pivot-table-container",
-                width: "100%",
-                height: 700,
-                toolbar: true,
-                report: {
-                    dataSource: {
-                        type: "json",
-                        data: processData(data),
+        }),
+        success: function (data) {
+            data = data.data.myTransfers
+            $.getJSON(transfers_json_path, function (parametrs) {
+                new WebDataRocks({
+                    container: "#pivot-table-container",
+                    beforetoolbarcreated: customizeToolbar,
+                    width: "100%",
+                    height: 700,
+                    report: {
+                        dataSource: {
+                            type: "json",
+                            data: processData(data),
+                        },
+                        slice: parametrs.slice,
+                        formats: parametrs.formats
                     },
-                    slice: parametrs.slice,
-                    formats: parametrs.formats
-                },
-                global: {
-                    localization: ru_localization
-                }
-            });
-        })
+                    toolbar: true,
+                    global: {
+                        localization: ru_localization
+                    }
+                });
+            })
+        }
+    })
+}
+
+function customizeToolbar(toolbar) {
+    var tabs = toolbar.getTabs();
+    $.each([0,1,2], function (index, value) {
+        delete tabs[value];
+        return tabs;
+    })
+    toolbar.getTabs = function() {
+        // There will be two new tabs at the beginning of the Toolbar
+        tabs.unshift({
+            id: "wdr-tab-upload",
+            title: "Загрузить данные",
+            handler: uploadData,
+            icon: this.icons.connect
+        });
+        return tabs;
     }
-})
+}
+
+function uploadData() {
+    $('#input-upload-button').click()
+}
+
+$('#input-upload-button').on('change', function () {
+
+    const uploadQuery = {
+        'query' : "mutation($file: Upload!) {\n  \tuploadTransfers(file: $file)  {\n  \t\tsuccess\n  \t}\n\t}",
+        "variables":{"file":null},
+        "operationName":null
+    }
+
+    var fd = new FormData();
+    var files = $('#input-upload-button')[0].files;
+    // Check file selected or not
+    if (files.length > 0) {
+        fd.append('0', files[0]);
+        fd.append('map', JSON.stringify({"0":["variables.file"]}));
+        fd.append('operations', JSON.stringify(uploadQuery));
+
+        $.ajax({
+            url: '/graphql',
+            type: 'post',
+            data: fd,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                if (response?.data?.uploadTransfers?.success) {
+                    alert('Данные загружены успешно')
+                } else {
+                    alert('Что то пошло не так')
+                }
+            },
+            onerror: function () {
+                alert('Что то пошло не так')
+            }
+        });
+        $('#input-upload-button').val('');
+    }
+});

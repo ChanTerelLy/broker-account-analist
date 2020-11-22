@@ -4,12 +4,6 @@ function processData(dataset) {
     return result;
 }
 
-function camelize(str) {
-  return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
-    return index === 0 ? word.toLowerCase() : word.toUpperCase();
-  }).replace(/\s+/g, '');
-}
-
 function returnAccountName(node){
     let map = JSON.parse(node.helpTextMap)
     let newMap = {};
@@ -30,12 +24,13 @@ function returnAccountName(node){
     return newNode
 }
 
-$.ajax({
-    method: "POST",
-    url: '/graphql',
-    contentType: "application/json",
-    data: JSON.stringify({
-    query: `
+function generatePivotTable() {
+    $.ajax({
+        method: "POST",
+        url: '/graphql',
+        contentType: "application/json",
+        data: JSON.stringify({
+            query: `
     query {
         myPortfolio{
                 buycloseprice,
@@ -56,27 +51,28 @@ $.ajax({
               }
         }
     `,
-    }),
-    success: function (data) {
-        data = data.data.myPortfolio
-        $.getJSON(portfolio_json_path, function (parametrs) {
-                    new WebDataRocks({
-            container: "#pivot-table-container",
-            width: "100%",
-            height: 700,
-            toolbar: true,
-            report: {
-                dataSource: {
-                    type: "json",
-                    data: processData(data),
-                },
-                slice : parametrs.slice,
-                formats: parametrs.formats
-            },
-            global: {
-                localization: ru_localization
-            }
-        });
-        })
-    }
-})
+        }),
+        success: function (data) {
+            data = data.data.myPortfolio
+            $.getJSON(portfolio_json_path, function (parametrs) {
+                new WebDataRocks({
+                    container: "#pivot-table-container",
+                    width: "100%",
+                    height: 700,
+                    toolbar: true,
+                    report: {
+                        dataSource: {
+                            type: "json",
+                            data: processData(data),
+                        },
+                        slice: parametrs.slice,
+                        formats: parametrs.formats
+                    },
+                    global: {
+                        localization: ru_localization
+                    }
+                });
+            })
+        }
+    })
+}

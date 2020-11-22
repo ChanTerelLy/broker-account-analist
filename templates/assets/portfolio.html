@@ -12,5 +12,7 @@
     let ru_localization = "{% static 'js/webdatarocks/localization/ru.json' %}";
     let portfolio_json_path = "{% static 'js/webdatarocks/portfolio/portfolio.json' %}";
     </script>
-    <script src="{% static 'js/webdatarocks/portfolio/portfolio.js' %}"></script>
+    <script>
+        generatePivotTable();
+    </script>
 {% endblock extra_scripts %}
