@@ -197,8 +197,11 @@ class Transfer(Modify):
     def save_csv(cls, transfers):
         for transfer in transfers:
             account_charge = Account.objects.none() #TODO:add account instance
+            account_income = Account.objects.filter(name=transfer['Номер договора']).first()
+            if not account_income:
+                account_income = Account.objects.create(name=transfer['Номер договора'])
             Transfer.objects.create(
-                account_income=Account.objects.filter(name=transfer['Номер договора']).first(),
+                account_income=account_income,
                 # account_charge=account_charge,
                 date_of_application=dmYHM_to_date(transfer.get('Дата подачи поручения')),
                 execution_date=dmYHM_to_date(transfer.get('Дата исполнения поручения')),

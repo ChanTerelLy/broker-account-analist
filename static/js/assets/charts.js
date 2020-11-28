@@ -18,7 +18,7 @@ async function accountsChart() {
             labels: labels,
             datasets: [
                 {
-                    label: "Суммы по аккаунтам",
+                    label: "Итог",
                     backgroundColor: colors,
                     data: data
                 }
@@ -29,6 +29,15 @@ async function accountsChart() {
             title: {
                 display: true,
                 text: 'Итоговые значения аккаунтов'
+            },
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        min: 0,
+                        stepSize: 5000
+                    },
+                    display: false
+                }]
             },
         }
     });

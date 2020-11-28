@@ -1,6 +1,7 @@
 function processData(dataset) {
     var result = [];
     dataset.forEach(item => result.push(returnAccountName(item)));
+    $('.loader').hide();
     return result;
 }
 
@@ -118,6 +119,7 @@ $('#input-upload-button').on('change', function () {
         fd.append('0', files[0]);
         fd.append('map', JSON.stringify({"0":["variables.file"]}));
         fd.append('operations', JSON.stringify(uploadQuery));
+        $('.loader').show();
 
         $.ajax({
             url: '/graphql',
@@ -128,12 +130,16 @@ $('#input-upload-button').on('change', function () {
             success: function (response) {
                 if (response?.data?.uploadTransfers?.success) {
                     alert('Данные загружены успешно')
+                    $('.loader').hide();
+                    location.reload();
                 } else {
                     alert('Что то пошло не так')
+                    $('.loader').hide();
                 }
             },
             onerror: function () {
                 alert('Что то пошло не так')
+                $('.loader').hide();
             }
         });
         $('#input-upload-button').val('');
