@@ -74,6 +74,9 @@ function generatePivotTable() {
                     toolbar: true,
                     global: {
                         localization: ru_localization
+                    },
+                    dataloaded: function () {
+                        $('.loader').hide();
                     }
                 });
             })

@@ -60,33 +60,3 @@ class CorpBounView(ListView):
         context = super().get_context_data(**kwargs)
         context['help_text'] = CorpBound.objects.first().help_text_map_table
         return context
-
-def upload_portfolio(request):
-    form = UploadFile()
-    fields = Portfolio._meta._get_fields()
-    help_text = []
-    for field in fields:
-        help_text.append(field.help_text)
-    portfolio = Portfolio.objects.filter(account__user=request.user).all()
-    if request.method == 'POST':
-        form = UploadFile(request.POST, request.FILES)
-        if form.is_valid():
-            file = request.FILES['file']
-            data = parse_file(file)
-            request_payload = []
-            data = list([dict(zip(data[0], c)) for c in data[1:]])
-            for attr in data:
-                request_payload.append({
-                    "DIVIDENDS" : [],
-                    "FROM": attr['Дата покупки'],
-                    "SECID": attr['Код финансового инструмента'],
-                    "TILL": attr['Дата продажи'],
-                    "VOLUME": int(attr['Продано'])
-                })
-            #load data from moex
-            portfolio = Moex().get_portfolio(request_payload)
-            #write to database
-            Portfolio.save_csv(portfolio)
-            return JsonResponse(portfolio, safe=False)
-
-    return render(request, 'assets/upload_porfolio.html', {'form':form})

@@ -5,6 +5,8 @@
     <body>
     <div id="pivot-table-container"></div>
     <div id="pivot-chart-container"></div>
+    <input id='input-upload-button' type="file" accept=".csv" hidden>
+    <div class="loader"></div>
     </body>
 {% endblock content %}
 {% block extra_scripts %}
@@ -12,6 +14,8 @@
     let ru_localization = "{% static 'js/webdatarocks/localization/ru.json' %}";
     let portfolio_json_path = "{% static 'js/webdatarocks/portfolio/portfolio.json' %}";
     </script>
+    <script src="{% static 'js/webdatarocks/helper.js' %}"></script>
+    <script src="{% static 'js/webdatarocks/portfolio/portfolio.js' %}"></script>
     <script>
         generatePivotTable();
     </script>

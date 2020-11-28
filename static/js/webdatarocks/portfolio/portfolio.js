@@ -60,6 +60,7 @@ function generatePivotTable() {
                     width: "100%",
                     height: 700,
                     toolbar: true,
+                    beforetoolbarcreated: customizeToolbar,
                     report: {
                         dataSource: {
                             type: "json",
@@ -70,9 +71,71 @@ function generatePivotTable() {
                     },
                     global: {
                         localization: ru_localization
+                    },
+                    dataloaded: function () {
+                        $('.loader').hide();
                     }
                 });
             })
         }
     })
 }
+
+function customizeToolbar(toolbar) {
+    var tabs = toolbar.getTabs();
+    $.each([0,1,2], function (index, value) {
+        delete tabs[value];
+        return tabs;
+    })
+    toolbar.getTabs = function() {
+        // There will be two new tabs at the beginning of the Toolbar
+        tabs.unshift({
+            id: "wdr-tab-upload",
+            title: "Загрузить данные",
+            handler: uploadData,
+            icon: this.icons.connect
+        });
+        return tabs;
+    }
+}
+
+function uploadData() {
+    $('#input-upload-button').click()
+}
+
+$('#input-upload-button').on('change', function () {
+
+    const uploadQuery = {
+        'query' : "mutation($file: Upload!) {\n  \tuploadPortfolio(file: $file)  {\n  \t\tsuccess\n  \t}\n\t}",
+        "variables":{"file":null},
+        "operationName":null
+    }
+
+    var fd = new FormData();
+    var files = $('#input-upload-button')[0].files;
+    // Check file selected or not
+    if (files.length > 0) {
+        fd.append('0', files[0]);
+        fd.append('map', JSON.stringify({"0":["variables.file"]}));
+        fd.append('operations', JSON.stringify(uploadQuery));
+
+        $.ajax({
+            url: '/graphql',
+            type: 'post',
+            data: fd,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                if (response?.data?.uploadTransfers?.success) {
+                    alert('Данные загружены успешно')
+                } else {
+                    alert('Что то пошло не так')
+                }
+            },
+            onerror: function () {
+                alert('Что то пошло не так')
+            }
+        });
+        $('#input-upload-button').val('');
+    }
+});
