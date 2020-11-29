@@ -53,8 +53,7 @@ class UploadDeals(graphene.Mutation):
     def mutate(self, info, file, **kwargs):
         files = info.context.FILES
         deals = parse_file(files['0'])
-        deals = list([dict(zip(deals[0], c)) for c in deals[1:]])
-        Deal.save_csv(deals)
+        Deal.save_from_list(deals)
         return UploadTransfers(success=True)
 
 
@@ -74,3 +73,5 @@ class CreatePortfolio(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()
     upload_transfers = UploadTransfers.Field()
+    upload_deals = UploadDeals.Field()
+    upload_portfolio = UploadPortfolio.Field()

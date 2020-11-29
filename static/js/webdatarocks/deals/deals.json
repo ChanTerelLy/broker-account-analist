@@ -1,0 +1,48 @@
+{
+    "slice": {
+        "reportFilters": [
+            {
+                "uniqueName": "Валюта"
+            }
+        ],
+        "rows": [
+            {
+                "uniqueName": "account"
+            },
+            {
+                "uniqueName": "Код финансового инструмента"
+            },
+            {
+                "uniqueName": "Операция"
+            },
+            {
+                "uniqueName": "Номер сделки"
+            }
+        ],
+        "columns": [
+            {
+                "uniqueName": "Measures"
+            }
+        ],
+        "measures": [
+            {
+                "uniqueName": "Объём сделки",
+                "aggregation": "sum",
+                "format": "49uokoi4"
+            }
+        ]
+    },
+    "formats": [
+        {
+            "name": "49uokoi4",
+            "thousandsSeparator": " ",
+            "decimalSeparator": ".",
+            "decimalPlaces": 0,
+            "currencySymbol": "",
+            "currencySymbolAlign": "left",
+            "nullValue": "",
+            "textAlign": "right",
+            "isPercent": false
+        }
+    ]
+}

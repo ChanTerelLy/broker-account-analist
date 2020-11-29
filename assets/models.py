@@ -56,34 +56,39 @@ class Asset(Modify):
 
 
 class Deal(Modify):
-    account_id = models.ForeignKey(to=Account, on_delete=models.CASCADE)
-    number = models.IntegerField(help_text='Номер сделки')
+    account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
+    number = models.CharField(max_length=50, help_text='Номер сделки')
     conclusion_date = models.DateTimeField(help_text='Дата заключения')
     settlement_date = models.DateTimeField(help_text='Дата расчётов')
-    isin = models.CharField(max_length=50, help_text='')
-    type = models.CharField(max_length=50, choices=[('Покупка', 'Покупка'), ('Продажа', 'Продажа')])
+    isin = models.CharField(max_length=50, help_text='Код финансового инструмента')
+    type = models.CharField(max_length=50, help_text='Операция', choices=[('Покупка', 'Покупка'), ('Продажа', 'Продажа')])
     amount = models.IntegerField(help_text='Количество')
     price = models.FloatField(help_text='Цена')
     nkd = models.FloatField(help_text='НКД')
-    volume = models.FloatField(help_text='Объем сделки')
+    volume = models.FloatField(help_text='Объём сделки')
     currency = models.CharField(max_length=10, help_text='Валюта')
     service_fee = models.FloatField(help_text='Комиссия')
 
     @classmethod
-    @method_decorator(transaction.atomic, name='dispatch')
-    def save_csv(cls, transfers):
-        for transfer in transfers:
-            account_charge = Account.objects.filter(id=transfer['Cписание с']).first() if transfer['Cписание с'] else Account.objects.none();
-            Transfer.objects.create(
-                account_income=Account.objects.filter(name=transfer['Номер договора']).first(),
-                account_charge=account_charge,
-                date_of_application=dmYHM_to_date(transfer['Дата подачи поручения']),
-                execution_date=dmYHM_to_date(transfer['Дата исполнения поручения']),
-                type=transfer['Операция'],
-                sum=transfer['Сумма'],
-                currency=transfer['Валюта операции'],
-                description=transfer['Содержание операции'],
-                status=transfer['Статус'],
+    # @method_decorator(transaction.atomic, name='dispatch')
+    def save_from_list(cls, deals):
+        for deal in deals:
+            account_income = Account.objects.filter(name=deal['Номер договора']).first()
+            if not account_income:
+                account_income = Account.objects.create(name=deal['Номер договора'])
+            Deal.objects.create(
+                account=account_income,
+                number=deal.get('Номер сделки'),
+                conclusion_date=dmYHM_to_date(deal.get('Дата заключения')),
+                settlement_date=dmYHM_to_date(deal.get('Дата расчётов')),
+                isin=deal.get('Код финансового инструмента'),
+                type=deal.get('Операция'),
+                amount=deal.get('Количество'),
+                price=deal.get('Цена'),
+                nkd=deal.get('НКД'),
+                volume=deal.get('Объём сделки'),
+                currency=deal.get('Валюта'),
+                service_fee=(deal.get('Комиссия') if deal.get('Комиссия') else 0),
             )
 
     @method_decorator(transaction.atomic)

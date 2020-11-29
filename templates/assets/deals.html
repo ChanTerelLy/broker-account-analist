@@ -1,0 +1,22 @@
+{% extends 'assets/_webdatarocket-table.html' %}
+{% load static %}
+{% block title %}Сделки{% endblock %}
+{% block content %}
+    <body>
+    <div id="pivot-table-container"></div>
+    <div id="pivot-chart-container"></div>
+    <input id='input-upload-button' type="file" accept=".csv, .xlsx" hidden>
+    <div class="loader"></div>
+    </body>
+{% endblock content %}
+{% block extra_scripts %}
+    <script>
+    let ru_localization = "{% static 'js/webdatarocks/localization/ru.json' %}";
+    let deals_json_path = "{% static 'js/webdatarocks/deals/deals.json' %}";
+    </script>
+    <script src="{% static 'js/webdatarocks/helper.js' %}"></script>
+    <script src="{% static 'js/webdatarocks/deals/deals.js' %}"></script>
+    <script>
+        generatePivotTable();
+    </script>
+{% endblock extra_scripts %}

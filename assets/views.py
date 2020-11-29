@@ -50,6 +50,9 @@ class PortfolioView(TemplateView):
 class TransfersView(TemplateView):
     template_name = 'assets/transfers.html'
 
+class DealsView(TemplateView):
+    template_name = 'assets/deals.html'
+
 class CorpBounView(ListView):
     template_name = 'assets/corp-bounds.html'
     model = CorpBound

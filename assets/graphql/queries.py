@@ -1,5 +1,4 @@
 import graphene
-from django.db.models import Sum
 from graphene import relay
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType, ObjectType
@@ -34,11 +33,22 @@ class TransferType(DjangoObjectType):
         interfaces = (relay.Node,)
 
 
+class DealsType(DjangoObjectType):
+    help_text_map = graphene.String()
+    transaction_volume = graphene.Int()
+
+    class Meta:
+        model = Deal
+        fields = ('__all__')
+        interfaces = (relay.Node,)
+
+
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
     my_accounts = DjangoFilterConnectionField(AccountNode)
     my_portfolio = graphene.List(PortfolioType)
     my_transfers = graphene.List(TransferType)
+    my_deals = graphene.List(DealsType)
     account_chart = graphene.JSONString()
 
     def resolve_my_accounts(self, info):
@@ -62,8 +72,15 @@ class Query(ObjectType):
         else:
             return Transfer.objects.filter(account_income__user=info.context.user).all()
 
+    def resolve_my_deals(self, info) -> Transfer:
+        # context will reference to the Django request
+        if not info.context.user.is_authenticated:
+            return Deal.objects.none()
+        else:
+            return Deal.objects.filter(account__user=info.context.user).all()
+
     def resolve_account_chart(self, info) -> dict:
-        data = {'data' : []}
+        data = {'data': []}
         if not info.context.user.is_authenticated:
             pass
         else:
