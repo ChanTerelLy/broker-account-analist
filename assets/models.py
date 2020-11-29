@@ -139,7 +139,7 @@ class Portfolio(Modify):
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
-    def save_csv(cls, deals):
+    def save_from_list(cls, deals):
         for deal in deals:
             Portfolio.objects.create(
                 buycloseprice=deal['BUYCLOSEPRICE'],
@@ -194,7 +194,7 @@ class Transfer(Modify):
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
-    def save_csv(cls, transfers):
+    def save_from_list(cls, transfers):
         for transfer in transfers:
             account_charge = Account.objects.none() #TODO:add account instance
             account_income = Account.objects.filter(name=transfer['Номер договора']).first()

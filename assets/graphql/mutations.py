@@ -19,8 +19,7 @@ class UploadTransfers(graphene.Mutation):
     def mutate(self, info, file, **kwargs):
         files = info.context.FILES
         transfers = parse_file(files['0'])
-        transfers = list([dict(zip(transfers[0], c)) for c in transfers[1:]])
-        Transfer.save_csv(transfers)
+        Transfer.save_from_list(transfers)
         return UploadTransfers(success=True)
 
 class UploadPortfolio(graphene.Mutation):
@@ -31,8 +30,7 @@ class UploadPortfolio(graphene.Mutation):
 
     def mutate(self, info, file, **kwargs):
         files = info.context.FILES
-        portfolio = parse_file(files['0'])
-        data = list([dict(zip(portfolio[0], c)) for c in portfolio[1:]])
+        data = parse_file(files['0'])
         request_payload = []
         for attr in data:
             request_payload.append({
@@ -43,7 +41,7 @@ class UploadPortfolio(graphene.Mutation):
                 "VOLUME": int(attr['Продано'])
             })
         portfolio = Moex().get_portfolio(request_payload)
-        Portfolio.save_csv(portfolio)
+        Portfolio.save_from_list(portfolio)
         return UploadTransfers(success=True)
 
 class UploadDeals(graphene.Mutation):
