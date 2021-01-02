@@ -2,8 +2,9 @@ import graphene
 from graphene import relay
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType, ObjectType
-
+import pandas as pd
 from ..models import *
+from assets.helpers.utils import dmYHM_to_date, xirr
 
 
 class AccountNode(DjangoObjectType):
@@ -50,6 +51,7 @@ class Query(ObjectType):
     my_transfers = graphene.List(TransferType)
     my_deals = graphene.List(DealsType)
     account_chart = graphene.JSONString()
+    my_transfer_xirr = graphene.Float()
 
     def resolve_my_accounts(self, info):
         # context will reference to the Django request
@@ -59,14 +61,12 @@ class Query(ObjectType):
             return Account.objects.filter(user=info.context.user)
 
     def resolve_my_portfolio(self, info):
-        # context will reference to the Django request
         if not info.context.user.is_authenticated:
             return Portfolio.objects.none()
         else:
             return Portfolio.objects.filter(account__user=info.context.user)
 
     def resolve_my_transfers(self, info) -> Transfer:
-        # context will reference to the Django request
         if not info.context.user.is_authenticated:
             return Transfer.objects.none()
         else:
@@ -93,3 +93,18 @@ class Query(ObjectType):
                     }
                 )
         return data
+
+
+    def resolve_my_transfer_xirr(self, info) -> float:
+        if not info.context.user.is_authenticated:
+            return 0
+        else:
+            transfers = Transfer.objects.filter(account_income__user=info.context.user, type__in=['Вывод ДС', 'Вывод ДС']).order_by('execution_date').all()
+            dates = list([t.execution_date for t in transfers])
+            sum = list([t.xirr_sum for t in transfers])
+            df = pd.DataFrame({
+                'sum': sum,
+                'execution_date': dates
+            })
+            x = xirr(df)
+            return x

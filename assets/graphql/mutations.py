@@ -23,6 +23,7 @@ class UploadTransfers(graphene.Mutation):
         return UploadTransfers(success=True)
 
 class UploadPortfolio(graphene.Mutation):
+    """NOT working because of AsyncioExecutor is not return right thread, wait update from graphene"""
     class Arguments:
         file = Upload(required=True)
 

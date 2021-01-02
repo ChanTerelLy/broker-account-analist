@@ -1,15 +1,13 @@
 import json
-
+from datetime import datetime
+import pytz
+from pandas import Timestamp
 from django.contrib.auth.models import User
 from django.db import models, transaction
 import uuid
-
 from graphene.utils.str_converters import to_camel_case
-from toolz import curry
-
 from django.utils.decorators import method_decorator
-
-from assets.helpers.utils import dmYHM_to_date
+from assets.helpers.utils import dmYHM_to_date, xirr
 
 
 class Modify(models.Model):
@@ -22,8 +20,8 @@ class Modify(models.Model):
 
     @property
     def help_text_map(self):
-        l = list([{to_camel_case(field.name) : field.help_text} for field in self._meta.fields])
-        l.append({'typeSum' : 'Сумма с вычетами'})
+        l = list([{to_camel_case(field.name): field.help_text} for field in self._meta.fields])
+        l.append({'typeSum': 'Сумма с вычетами'})
         return json.dumps(l)
 
     @property
@@ -61,7 +59,8 @@ class Deal(Modify):
     conclusion_date = models.DateTimeField(help_text='Дата заключения')
     settlement_date = models.DateTimeField(help_text='Дата расчётов')
     isin = models.CharField(max_length=50, help_text='Код финансового инструмента')
-    type = models.CharField(max_length=50, help_text='Операция', choices=[('Покупка', 'Покупка'), ('Продажа', 'Продажа')])
+    type = models.CharField(max_length=50, help_text='Операция',
+                            choices=[('Покупка', 'Покупка'), ('Продажа', 'Продажа')])
     amount = models.IntegerField(help_text='Количество')
     price = models.FloatField(help_text='Цена')
     nkd = models.FloatField(help_text='НКД')
@@ -165,6 +164,7 @@ class Portfolio(Modify):
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
+
 class Transfer(Modify):
     TYPE_CHOICES = (('Ввод ДС', 'Ввод ДС'), ("Вывод ДС", "Вывод ДС"),
                     ('Списание комиссии', 'Списание комиссии'), ('Зачисление купона', 'Зачисление купона'),
@@ -172,7 +172,8 @@ class Transfer(Modify):
                     ('Списание налогов', 'Списание налогов'),
                     ('Зачисление дивидендов', 'Зачисление дивидендов'),
                     ('Перевод между счетами', 'Перевод между счетами'))
-    account_income = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_income', help_text='Зачисление на')
+    account_income = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_income',
+                                       help_text='Зачисление на')
     account_charge = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='account_charge',
                                        help_text='Списание с', blank=True, null=True)
     date_of_application = models.DateTimeField(null=True, blank=True, help_text='Дата подачи поручения')
@@ -196,22 +197,32 @@ class Transfer(Modify):
         else:
             return self.sum
 
-
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
     def save_from_list(cls, transfers):
         for transfer in transfers:
-            account_charge = Account.objects.none() #TODO:add account instance
+            account_charge = Account.objects.none()  # TODO:add account instance
             account_income = Account.objects.filter(name=transfer['Номер договора']).first()
+            execution_date = dmYHM_to_date(transfer.get('Дата исполнения поручения'))
+            sum = transfer.get('Сумма')
+            type = transfer.get('Операция')
+            transfer_exist = Transfer.objects.filter(
+                account_income=account_income,
+                execution_date=execution_date,
+                type=type,
+                sum=sum
+            ).count()
+            if transfer_exist:
+                continue
             if not account_income:
                 account_income = Account.objects.create(name=transfer['Номер договора'])
             Transfer.objects.create(
                 account_income=account_income,
                 # account_charge=account_charge,
                 date_of_application=dmYHM_to_date(transfer.get('Дата подачи поручения')),
-                execution_date=dmYHM_to_date(transfer.get('Дата исполнения поручения')),
-                type=transfer.get('Операция'),
-                sum=transfer.get('Сумма'),
+                execution_date=execution_date,
+                type=type,
+                sum=sum,
                 currency=transfer.get('Валюта операции'),
                 description=transfer.get('Содержание операции'),
                 status=transfer.get('Статус'),
