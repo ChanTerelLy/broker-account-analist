@@ -4,7 +4,8 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType, ObjectType
 import pandas as pd
 from ..models import *
-from assets.helpers.utils import dmYHM_to_date, xirr
+from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent
+from django.db.models import Sum
 
 
 class AccountNode(DjangoObjectType):
@@ -43,6 +44,10 @@ class DealsType(DjangoObjectType):
         fields = ('__all__')
         interfaces = (relay.Node,)
 
+class XirrType(ObjectType):
+    avg_percent = graphene.Float()
+    total_percent = graphene.Float()
+
 
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
@@ -51,7 +56,7 @@ class Query(ObjectType):
     my_transfers = graphene.List(TransferType)
     my_deals = graphene.List(DealsType)
     account_chart = graphene.JSONString()
-    my_transfer_xirr = graphene.Float()
+    my_transfer_xirr = graphene.Field(XirrType)
 
     def resolve_my_accounts(self, info):
         # context will reference to the Django request
@@ -94,17 +99,25 @@ class Query(ObjectType):
                 )
         return data
 
-
-    def resolve_my_transfer_xirr(self, info) -> float:
+    def resolve_my_transfer_xirr(self, info) -> dict:
         if not info.context.user.is_authenticated:
             return 0
         else:
-            transfers = Transfer.objects.filter(account_income__user=info.context.user, type__in=['Вывод ДС', 'Вывод ДС']).order_by('execution_date').all()
+            transfers = Transfer.objects.filter(account_income__user=info.context.user,
+                                                type__in=['Вывод ДС', 'Ввод ДС']).order_by('execution_date').all()
             dates = list([t.execution_date for t in transfers])
             sum = list([t.xirr_sum for t in transfers])
+            dates.append(datetime.now(tz=pytz.UTC))  # get current date
+            sum.append(Account.objects.filter(user=info.context.user).aggregate(Sum('amount'))['amount__sum'])  # get
+            # sum of all account from person
             df = pd.DataFrame({
                 'sum': sum,
                 'execution_date': dates
             })
             x = xirr(df)
-            return x
+            days = (transfers.reverse()[0].execution_date - transfers[0].execution_date).days
+            y = get_total_xirr_percent(x, days)
+            return {
+                'avg_percent': round(x, 3),
+                'total_percent': round(y, 3),
+            }

@@ -76,3 +76,6 @@ def xirr(df, guess=0.05, date_column='execution_date', amount_column='sum'):
         else:
             return guess
     return 0
+
+def get_total_xirr_percent(percent: float, days: int) -> float:
+    return (days * percent)/365

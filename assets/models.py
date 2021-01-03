@@ -228,6 +228,13 @@ class Transfer(Modify):
                 status=transfer.get('Статус'),
             )
 
+    @property
+    def xirr_sum(self):
+        if self.type == self.TYPE_CHOICES[0][0]:
+            return self.sum * -1
+        else:
+            return self.sum
+
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)

@@ -2,20 +2,48 @@
 {% load static %}
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-<div class="chart-container" style="position: relative; height:50%; width:50%">
-    <canvas id="accounts"></canvas>
-</div>
-<div class="chart-container" style="position: relative; height:50%; width:50%">
-    <canvas id="transfers"></canvas>
-</div>
+    <div class="row">
+        <div class="col-md">
+            <canvas id="accounts"></canvas>
+        </div>
+        <div class="card-deck">
+            <div class="card">
+                <div class="card-header">
+                    <h4>AVG доходность за год</h4>
+                </div>
+                  <div class="card-body">
+                      <h1 class="text-center" id="avg-xirr"></h1>
+                  </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h4>Доход за все время</h4>
+                </div>
+                  <div class="card-body">
+                      <h1 class="text-center" id="total-xirr"></h1>
+                  </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
 {% block extra_scripts %}
 <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
 <script src="{% static 'js/assets/charts.js' %}"></script>
+<script src="{% static 'js/assets/main.js' %}"></script>
 <script>
-$( document ).ready(function() {
-    accountsChart();
-    {#transterChart();#}
+$( document ).ready(async function() {
+    let query = `
+    query {
+        myTransferXirr{
+            avgPercent,
+            totalPercent
+        },
+        accountChart
+    }
+    `
+    let data = await graphqlQuery(query)
+    accountsChart(data);
+    showXirrValue(data);
 })
 </script>
 {% endblock extra_scripts %}

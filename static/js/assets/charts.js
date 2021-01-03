@@ -1,6 +1,6 @@
 const COLORS = ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"];
-async function accountsChart() {
-    let accountData = await getAccountData();
+function accountsChart(value) {
+    let accountData = value;
     accountData = JSON.parse(accountData.data.accountChart);
     let colors = [];
     var labels = accountData.data.map(function (e) {
@@ -61,22 +61,4 @@ function transterChart() {
       }
     }
 });
-}
-
-function getAccountData() {
-    return $.ajax({
-        method: "POST",
-        url: '/graphql',
-        contentType: "application/json",
-        data: JSON.stringify({
-            query: `
-    query {
-     accountChart
-    }
-    `,
-        }),
-        success: function (data) {
-            return data
-        }
-    })
 }
