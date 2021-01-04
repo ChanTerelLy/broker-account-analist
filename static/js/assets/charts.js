@@ -40,7 +40,8 @@ function accountsChart(value) {
             legend: {display: false},
             title: {
                 display: true,
-                text: 'Итоговые значения аккаунтов'
+                text: 'Итоговые значения аккаунтов: ' + numberWithCommas(data.reduce((a, b) => a + b, 0)),
+                fontSize: 16
             },
             scales: {
                 xAxes: [{

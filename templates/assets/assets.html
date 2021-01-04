@@ -13,7 +13,7 @@
                     <h4>AVG доходность за год</h4>
                 </div>
                   <div class="card-body">
-                      <h1 class="text-center" id="avg-xirr"></h1>
+                      <h3 class="text-center" id="avg-xirr"></h3>
                   </div>
             </div>
             <div class="card">
@@ -21,7 +21,7 @@
                     <h4>Доход за все время</h4>
                 </div>
                   <div class="card-body">
-                      <h1 class="text-center" id="total-xirr"></h1>
+                      <h3 class="text-center" id="total-xirr"></h3>
                   </div>
             </div>
         </div>
@@ -35,6 +35,7 @@ $( document ).ready(async function() {
     let query = `
     query {
         myTransferXirr{
+            accountName,
             avgPercent,
             totalPercent
         },

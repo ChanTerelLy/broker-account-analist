@@ -17,12 +17,14 @@ async function graphqlQuery(query) {
 }
 
 function showXirrValue(data) {
-    let value = data;
-    if(value){
-        let avg_xirr = value.data.myTransferXirr.avgPercent
-        let total_xirr = value.data.myTransferXirr.totalPercent
-        $('#avg-xirr').text((avg_xirr * 100).toFixed(1) + '%')
-        $('#total-xirr').text((total_xirr * 100).toFixed(1) + '%')
+    if(data){
+        $.each(data.data.myTransferXirr, function (index, value){
+            let avg_xirr = value.avgPercent
+            let total_xirr = value.totalPercent
+            let account_name = value.accountName
+            $('#avg-xirr').after(`<p>${account_name} - ${(avg_xirr * 100).toFixed(1)}%</p>`)
+            $('#total-xirr').after(`<p>${account_name} - ${(total_xirr * 100).toFixed(1)}%</p>`)
+        })
     }
 
 }

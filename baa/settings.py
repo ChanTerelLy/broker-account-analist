@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'accounts',
     'crispy_forms',
     'bootstrap_pagination',
+    'guardian',
 ]
 
 MIDDLEWARE = [
@@ -137,6 +138,11 @@ CACHES = {
         }
     }
 }
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend', # default
+    'guardian.backends.ObjectPermissionBackend',
+)
 
 
 # Internationalization
