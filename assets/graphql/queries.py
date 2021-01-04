@@ -90,11 +90,11 @@ class Query(ObjectType):
             pass
         else:
             for account in Account.objects.filter(user=info.context.user).all():
-                type_sum = [transfer.type_sum for transfer in Transfer.objects.filter(account_income=account)]
+                type_sum = account.amount
                 data['data'].append(
                     {
                         'name': account.name,
-                        'total': int(sum(type_sum))
+                        'total': int(type_sum)
                     }
                 )
         return data

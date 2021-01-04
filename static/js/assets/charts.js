@@ -13,6 +13,7 @@ function accountsChart(value) {
         colors.push(COLORS[index])
     })
     new Chart(document.getElementById("accounts"), {
+        plugins: [ChartDataLabels],
         type: 'horizontalBar',
         data: {
             labels: labels,
@@ -25,6 +26,17 @@ function accountsChart(value) {
             ]
         },
         options: {
+            plugins: {
+                datalabels: {
+                    font: {
+                        size: 20,
+                        weight: 600
+                    },
+                    formatter: function (value) {
+                        return numberWithCommas(value)
+                    }
+                }
+            },
             legend: {display: false},
             title: {
                 display: true,
@@ -34,7 +46,8 @@ function accountsChart(value) {
                 xAxes: [{
                     ticks: {
                         min: 0,
-                        stepSize: 5000
+                        stepSize: 5000,
+                        mirror: true
                     },
                     display: false
                 }]
