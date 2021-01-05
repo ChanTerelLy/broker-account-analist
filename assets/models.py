@@ -238,3 +238,10 @@ class Transfer(Modify):
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
+
+
+class Template(models.Model):
+    name = models.CharField(max_length=250)
+    description = models.TextField()
+    url = models.URLField()
+    key = models.CharField(max_length=25)

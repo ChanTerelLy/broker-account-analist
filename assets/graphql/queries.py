@@ -44,6 +44,14 @@ class DealsType(DjangoObjectType):
         fields = ('__all__')
         interfaces = (relay.Node,)
 
+
+class TemplateType(DjangoObjectType):
+    class Meta:
+        model = Template
+        fields = ('__all__')
+        interfaces = (relay.Node, )
+
+
 class XirrType(ObjectType):
     account_name = graphene.String()
     avg_percent = graphene.Float()
@@ -58,6 +66,7 @@ class Query(ObjectType):
     my_deals = graphene.List(DealsType)
     account_chart = graphene.JSONString()
     my_transfer_xirr = graphene.List(XirrType)
+    get_template_by_key = graphene.List(TemplateType, key=graphene.String())
 
     def resolve_my_accounts(self, info):
         # context will reference to the Django request
@@ -127,3 +136,6 @@ class Query(ObjectType):
                     'total_percent': round(y, 3),
                 })
             return result
+
+    def resolve_get_template_by_key(self, info, key):
+        return Template.objects.filter(key=key)

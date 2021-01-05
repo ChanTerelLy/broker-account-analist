@@ -1,3 +1,5 @@
+let graphqlData = [];
+
 function processData(dataset) {
     var result = [];
     dataset.forEach(item => result.push(returnAccountName(item)));
@@ -52,11 +54,16 @@ function generatePivotTable() {
             status
             typeSum
             helpTextMap
+      },
+      getTemplateByKey(key:"transfer"){
+            name,
+            url
       }
     }
     `,
         }),
         success: function (data) {
+            graphqlData = data.data
             data = data.data.myTransfers
             $.getJSON(transfers_json_path, function (parametrs) {
                 new WebDataRocks({
@@ -92,12 +99,19 @@ function customizeToolbar(toolbar) {
         return tabs;
     })
     toolbar.getTabs = function() {
-        // There will be two new tabs at the beginning of the Toolbar
         tabs.unshift({
             id: "wdr-tab-upload",
             title: "Загрузить данные",
             handler: uploadData,
             icon: this.icons.connect
+        });
+        tabs.unshift({
+            id: "wdr-tab-template",
+            title: "Шаблон",
+            handler: function (){
+                location.href = graphqlData.getTemplateByKey[0].url
+            },
+            icon: this.icons.connect_json
         });
         return tabs;
     }
