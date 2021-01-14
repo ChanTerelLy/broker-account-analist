@@ -1,3 +1,4 @@
+import codecs
 import csv
 import os
 from io import StringIO
@@ -17,6 +18,8 @@ def parse_file(uploaded_file):
         data = list([dict(zip(data[0], c)) for c in data[1:]])
     elif uploaded_file.name.endswith('.xlsx'):
         data = pd.read_excel(uploaded_file).to_dict(orient='records')
+    elif uploaded_file.name.endswith('.html'):
+        data = uploaded_file.read()
     return data
 
 
@@ -29,6 +32,14 @@ async def chunks(lst, n):
 def dmYHM_to_date(date):
     if isinstance(date, str):
         return dt.strptime(date, "%d.%m.%Y %H:%M").replace(tzinfo=pytz.UTC) if date else None
+    elif isinstance(date, Timestamp):
+        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
+    else:
+        return None
+
+def dmY_to_date(date):
+    if isinstance(date, str):
+        return dt.strptime(date, "%d.%m.%Y").replace(tzinfo=pytz.UTC) if date else None
     elif isinstance(date, Timestamp):
         return date.to_pydatetime().replace(tzinfo=pytz.UTC)
     else:
@@ -57,7 +68,7 @@ def xirr(df, guess=0.05, date_column='execution_date', amount_column='sum'):
 
     step = 0.05
     epsilon = 0.0001
-    limit = 1000
+    limit = 100
     residual = 1
 
     #Test for direction of cashflows
@@ -79,3 +90,45 @@ def xirr(df, guess=0.05, date_column='execution_date', amount_column='sum'):
 
 def get_total_xirr_percent(percent: float, days: int) -> float:
     return (days * percent)/365
+
+def full_strip(text: str)-> str:
+    text = ' '.join(text.split()).strip()
+    return text
+
+
+import re
+MATCH_ALL = r'.*'
+
+
+def like(string):
+    """
+    Return a compiled regular expression that matches the given
+    string with any prefix and postfix, e.g. if string = "hello",
+    the returned regex matches r".*hello.*"
+    """
+    string_ = string
+    if not isinstance(string_, str):
+        string_ = str(string_)
+    regex = MATCH_ALL + re.escape(string_) + MATCH_ALL
+    return re.compile(regex, flags=re.DOTALL)
+
+
+def find_by_text(soup, text, tag, **kwargs):
+    """
+    Find the tag in soup that matches all provided kwargs, and contains the
+    text.
+
+    If no match is found, return None.
+    If more than one match is found, raise ValueError.
+    """
+    elements = soup.find_all(tag, **kwargs)
+    matches = []
+    for element in elements:
+        if element.find(text=like(text)):
+            matches.append(element)
+    if len(matches) > 1:
+        raise ValueError("Too many matches:\n" + "\n".join(matches))
+    elif len(matches) == 0:
+        return None
+    else:
+        return matches[0]

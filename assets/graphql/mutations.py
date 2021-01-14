@@ -1,9 +1,9 @@
 import graphene
 
 from .queries import PortfolioType
-from ..helpers.service import Moex
+from ..helpers.service import Moex, SberbankReport
 from ..helpers.utils import parse_file
-from ..models import Portfolio, Transfer, Deal
+from ..models import Portfolio, Transfer, Deal, AccountReport
 from graphene_file_upload.scalars import Upload
 
 class PortfolioInput(graphene.InputObjectType):
@@ -70,9 +70,22 @@ class CreatePortfolio(graphene.Mutation):
         portfolio_instance.save()
         return CreatePortfolio(name=portfolio_instance)
 
+class UploadSberbankReport(graphene.Mutation):
+    class Arguments:
+        file = Upload(required=True)
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, file, **kwargs):
+        files = info.context.FILES
+        html = parse_file(files['0'])
+        data = SberbankReport().parse_html(html)
+        AccountReport.save_from_dict(data)
+        return UploadSberbankReport(success=True)
 
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()
     upload_transfers = UploadTransfers.Field()
     upload_deals = UploadDeals.Field()
     upload_portfolio = UploadPortfolio.Field()
+    upload_sberbank_report = UploadSberbankReport.Field()

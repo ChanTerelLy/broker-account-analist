@@ -245,3 +245,23 @@ class Template(models.Model):
     description = models.TextField()
     url = models.URLField()
     key = models.CharField(max_length=25)
+
+
+class AccountReport(models.Model):
+    account = models.ForeignKey(Account, models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    asset_estimate = models.JSONField()
+    iis_income = models.JSONField()
+    portfolio = models.JSONField()
+    money_flow = models.JSONField()
+    tax = models.JSONField()
+    handbook = models.JSONField()
+
+    @classmethod
+    def save_from_dict(cls, data):
+        data['account'] = Account.objects.filter(name=data['account']).first()
+        data['asset_estimate'] = json.dumps(data['asset_estimate'])
+        data['portfolio'] = json.dumps(data['portfolio'])
+        data['handbook'] = json.dumps(data['handbook'])
+        cls.objects.create(**data)
