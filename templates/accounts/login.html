@@ -13,6 +13,7 @@
             <input type="hidden" name="next" value="{{ next }}">
             {% include 'includes/form.html' %}
             <button type="submit" class="btn btn-primary btn-block">Log in</button>
+            <a type="button" href="{% url 'social:begin' 'google-oauth2' %}?next={% url 'assets' %}" class="btn btn-danger btn-block">Google</a>
           </form>
         </div>
         <div class="card-footer text-muted text-center">

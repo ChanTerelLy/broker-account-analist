@@ -81,15 +81,15 @@ def provides_credentials(func, *args, **kwargs):
         # If OAuth redirect response, get credentials
         if not request:
             request = args[0].context
-        flow = InstalledAppFlow.from_client_secrets_file(
-            'credentials/credentials.json', SCOPES,
+        flow = InstalledAppFlow.from_client_config(
+            json.loads(settings.GOOGLE_CONFIG), SCOPES,
             redirect_uri=settings.GOOGLE_SERVICE_REDIRECT_URI)
 
         existing_state = request.GET.get('state', None)
         current_path = request.path
         if existing_state:
             secure_uri = request.build_absolute_uri(
-                ).replace('http', 'https')
+                )
             location_path = urllib.parse.urlparse(existing_state).path
             flow.fetch_token(
                 authorization_response=secure_uri,
