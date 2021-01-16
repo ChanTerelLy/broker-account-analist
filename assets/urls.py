@@ -11,4 +11,5 @@ urlpatterns = [
     path('deals/', login_required(DealsView.as_view()), name='deals'),
     path('corp-bounds/', login_required(CorpBounView.as_view()), name='corp-bounds'),
     path('update-bounds/', login_required(update_bounds), name='update-bounds'),
+    path('update-report-gmail/', update_report_gmail, name='update-report-gmail'),
 ]

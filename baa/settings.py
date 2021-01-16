@@ -9,6 +9,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = int(os.getenv('DEBUG'))
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 ALLOWED_HOSTS = []
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
     'accounts',
     'crispy_forms',
     'bootstrap_pagination',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -47,6 +49,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '252695860163-52v97mk9896no1d2bpl5t3frhl6slisu.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'TJAInshh1zqBUjNOXwF1A1II'
 
 ROOT_URLCONF = 'baa.urls'
 

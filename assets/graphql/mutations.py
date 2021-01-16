@@ -1,6 +1,7 @@
 import graphene
 
 from .queries import PortfolioType
+from ..helpers.gmail_parser import get_gmail_reports
 from ..helpers.service import Moex, SberbankReport
 from ..helpers.utils import parse_file
 from ..models import Portfolio, Transfer, Deal, AccountReport
@@ -83,9 +84,24 @@ class UploadSberbankReport(graphene.Mutation):
         AccountReport.save_from_dict(data)
         return UploadSberbankReport(success=True)
 
+class ParseReportsFromGmail(graphene.Mutation):
+    class Arguments:
+        account_name = graphene.String()
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, account_name, **kwargs):
+        htmls = get_gmail_reports(account_name)
+        for html in htmls:
+            data = SberbankReport().parse_html(html)
+            AccountReport.save_from_dict(data)
+        return ParseReportsFromGmail(success=True)
+
+
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()
     upload_transfers = UploadTransfers.Field()
     upload_deals = UploadDeals.Field()
     upload_portfolio = UploadPortfolio.Field()
     upload_sberbank_report = UploadSberbankReport.Field()
+    parse_reports_from_gmail = ParseReportsFromGmail.Field()

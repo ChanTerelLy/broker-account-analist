@@ -111,6 +111,9 @@ class SberbankReport(Report):
         handbook_table = find_by_text(soup, 'Справочник Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in handbook_table.find_all('tr')]
         json_handbook = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
+        money_flow_table = find_by_text(soup, 'Денежные средства', 'p').find_next_sibling('table')
+        table_data = [self._cell_generator(row) for row in money_flow_table.find_all('tr')]
+        json_money_flow = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
         return {
             'account': account,
             'start_date': start_date,
@@ -120,7 +123,7 @@ class SberbankReport(Report):
             'portfolio': json_portfolio,
             'tax': '',
             'handbook': json_handbook,
-            'money_flow': ''
+            'money_flow': json_money_flow
         }
 
 
@@ -133,9 +136,7 @@ class SberbankReport(Report):
             return None, None
 
 
-# if __name__ == '__main__':
-#     # data = Moex().get_moex_columns_description()
-#     # print(data)
-#     with codecs.open("4NDKP.html", "r", "utf-8") as html:
-#         data = SberbankReport().parse_html(html)
-#         print(data)
+if __name__ == '__main__':
+    with codecs.open("../../data/examples/4NDKP.html", "r", "utf-8") as html:
+        data = SberbankReport().parse_html(html)
+        print(data)

@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 import pytz
+from django.db.models import UniqueConstraint
 from pandas import Timestamp
 from django.contrib.auth.models import User
 from django.db import models, transaction
@@ -258,10 +259,19 @@ class AccountReport(models.Model):
     tax = models.JSONField()
     handbook = models.JSONField()
 
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['start_date', 'end_date', 'account_id'], name='unique_report')
+        ]
+
     @classmethod
     def save_from_dict(cls, data):
         data['account'] = Account.objects.filter(name=data['account']).first()
         data['asset_estimate'] = json.dumps(data['asset_estimate'])
         data['portfolio'] = json.dumps(data['portfolio'])
         data['handbook'] = json.dumps(data['handbook'])
-        cls.objects.create(**data)
+        data['money_flow'] = json.dumps(data['money_flow'])
+        try:
+            cls.objects.create(**data)
+        except Exception as e:
+            print(e)

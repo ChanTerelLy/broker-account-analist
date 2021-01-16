@@ -60,3 +60,4 @@ whitenoise==5.2.0
 xlrd==1.2.0
 yarl==1.5.1
 beautifulsoup4==4.9.3
+social-auth-app-django==4.0.0
