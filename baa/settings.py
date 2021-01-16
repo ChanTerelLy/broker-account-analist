@@ -20,6 +20,7 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', default=True)
 DEFAULT_FROM_EMAIL = 'baa-system <noreply@baa-system.herokuapp.com>'
 ADMINS = [('Admin', os.getenv('ADMIN_EMAIL'))]
+GOOGLE_SERVICE_REDIRECT_URI = os.getenv('GOOGLE_SERVICE_REDIRECT_URI')
 
 
 # Application definition

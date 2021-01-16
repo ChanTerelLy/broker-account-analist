@@ -1,11 +1,15 @@
+import json
+
 import graphene
 
 from .queries import PortfolioType
-from ..helpers.gmail_parser import get_gmail_reports
+from ..helpers.google_services import get_gmail_reports, provides_credentials
 from ..helpers.service import Moex, SberbankReport
 from ..helpers.utils import parse_file
 from ..models import Portfolio, Transfer, Deal, AccountReport
 from graphene_file_upload.scalars import Upload
+
+from google.oauth2.credentials import Credentials
 
 class PortfolioInput(graphene.InputObjectType):
     id = graphene.ID()
@@ -89,9 +93,12 @@ class ParseReportsFromGmail(graphene.Mutation):
         account_name = graphene.String()
 
     success = graphene.Boolean()
+    redirect_uri = graphene.String()
 
-    def mutate(self, info, account_name, **kwargs):
-        htmls = get_gmail_reports(account_name)
+    @provides_credentials
+    def mutate(self, info, **kwargs):
+        cred = Credentials(**json.loads(info['credentials']))
+        htmls = get_gmail_reports(info['account_name'], cred)
         for html in htmls:
             data = SberbankReport().parse_html(html)
             AccountReport.save_from_dict(data)
