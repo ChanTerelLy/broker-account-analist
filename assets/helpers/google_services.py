@@ -2,9 +2,8 @@ from __future__ import print_function
 import pickle
 import os.path
 import base64
-
 from django.conf import settings
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build, Resource
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -13,24 +12,24 @@ import functools
 import urllib
 import json
 
-# If modifying these scopes, delete the file credentials/token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-def get_gmail_reports(account_name, credentials, max_page=10, limit=2000):
-    # creds = generate_google_cred()
 
+def get_gmail_reports(account_name: str, credentials: Credentials, max_page=10, limit=2000) -> list:
+    """Return list of string what contain html pages with sberbank reports"""
     service = build('gmail', 'v1', credentials=credentials)
     # Call the Gmail API
     q = f'subject: {account_name}'
     results = service.users().messages().list(userId='me', q=q).execute()
     messages = results.get('messages', [])
     next_page = results.get('nextPageToken')
-    if next_page and max_page > 1:
+    if next_page and max_page > 1:  # get messages for other pages
         messages.extend(get_all_messages(service, next_page, q=q, limit=limit))
 
     htmls = []
 
     for message in messages[:limit]:
+        #  Fetch attachments, try to find .html and decode from base64 to string
         message_body = service.users().messages().get(userId='me', id=message['id']).execute()
         attachments = message_body.get('payload', {}).get('parts', [])
         attach_id = None
@@ -39,11 +38,12 @@ def get_gmail_reports(account_name, credentials, max_page=10, limit=2000):
                 attach_id = attach['body']['attachmentId']
                 break
         if attach_id:
-            data = service.users().messages().attachments().get(userId='me', messageId=message['id'], id=attach_id).execute()
+            data = service.users().messages().attachments().get(userId='me', messageId=message['id'],
+                                                                id=attach_id).execute()
             data = data.get('data', None)
             if data:
                 try:
-                    html = base64.urlsafe_b64decode(data).decode(encoding='UTF-8',errors='ignore')
+                    html = base64.urlsafe_b64decode(data).decode(encoding='UTF-8', errors='ignore')
                     htmls.append(html)
                 except Exception as e:
                     print(e)
@@ -51,19 +51,19 @@ def get_gmail_reports(account_name, credentials, max_page=10, limit=2000):
 
     return htmls
 
-def get_all_messages(service, next_page, q, limit):
+
+def get_all_messages(service: Resource, next_page: str, q: str, limit: int) -> list:
+    """Looping through messages and nextPageToken until end of limit or batch of message is over"""
     messages = []
-    while(next_page and len(messages) < limit):
+    while (next_page and len(messages) < limit):
         results = service.users().messages().list(userId='me', q=q, pageToken=next_page).execute()
         messages.extend(results.get('messages', []))
         next_page = results.get('nextPageToken')
     return messages
 
 
-def generate_google_cred_local():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
+def generate_google_cred_local() -> Credentials:
+    """Return google Credentials (token.pickle), only for local or development usage"""
     creds = None
     # The file credentials/token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -84,7 +84,9 @@ def generate_google_cred_local():
             pickle.dump(creds, token)
     return creds
 
+
 def provides_credentials(func, *args, **kwargs):
+    """Wrap function return oath link for grant permission or get data from session if user already granted permissions"""
     @functools.wraps(func)
     def wraps(request, *args, **kwargs):
         # If OAuth redirect response, get credentials
@@ -98,7 +100,7 @@ def provides_credentials(func, *args, **kwargs):
         current_path = request.path
         if existing_state:
             secure_uri = request.build_absolute_uri(
-                )
+            )
             location_path = urllib.parse.urlparse(existing_state).path
             flow.fetch_token(
                 authorization_response=secure_uri,
@@ -110,7 +112,6 @@ def provides_credentials(func, *args, **kwargs):
             # Head back to location stored in state when
             # it is different from the configured redirect uri
             return redirect(existing_state)
-
 
         # Otherwise, retrieve credential from request session.
         stored_credentials = request.session.get('credentials', None)
@@ -143,4 +144,5 @@ def provides_credentials(func, *args, **kwargs):
         kwargs['credentials'] = credentials.to_json()
 
         return func(args, kwargs)
+
     return wraps
