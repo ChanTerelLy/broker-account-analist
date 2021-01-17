@@ -35,14 +35,24 @@ class TransferType(DjangoObjectType):
         interfaces = (relay.Node,)
 
 
+class ChoicesPropertyEnum(graphene.Enum):
+    BUY = "Покупка"
+    SELL = "Продажа"
+
+
 class DealsType(DjangoObjectType):
     help_text_map = graphene.String()
     transaction_volume = graphene.Int()
+    type = ChoicesPropertyEnum()
 
     class Meta:
         model = Deal
         fields = ('__all__')
         interfaces = (relay.Node,)
+        exclude_fields = ['type']
+
+    def resolve_type(self, info, **kwargs):
+        return self.type
 
 
 class TemplateType(DjangoObjectType):
@@ -71,7 +81,6 @@ class ReportType(ObjectType):
 
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
-    my_accounts = DjangoFilterConnectionField(AccountNode)
     my_portfolio = graphene.List(PortfolioType)
     my_transfers = graphene.List(TransferType)
     my_deals = graphene.List(DealsType)
@@ -82,14 +91,7 @@ class Query(ObjectType):
     income_transfers_sum = graphene.List(ReportType, account_name=graphene.String())
     user_accounts = graphene.List(AccountNode)
 
-    def resolve_my_accounts(self, info):
-        # context will reference to the Django request
-        if not info.context.user.is_authenticated:
-            return Account.objects.none()
-        else:
-            return Account.objects.filter(user=info.context.user)
-
-    def resolve_my_portfolio(self, info):
+    def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
             return Portfolio.objects.none()
         else:
@@ -102,13 +104,13 @@ class Query(ObjectType):
             return Transfer.objects.filter(account_income__user=info.context.user).all()
 
     def resolve_my_deals(self, info) -> Transfer:
-        # context will reference to the Django request
         if not info.context.user.is_authenticated:
             return Deal.objects.none()
         else:
             return Deal.objects.filter(account__user=info.context.user).all()
 
     def resolve_account_chart(self, info) -> dict:
+        """Return data from bar chart on dashboard"""
         data = {'data': []}
         if not info.context.user.is_authenticated:
             pass
@@ -124,6 +126,7 @@ class Query(ObjectType):
         return data
 
     def resolve_my_transfer_xirr(self, info) -> list:
+        """Return avg xirr(the same as xirr in excel), and total xirr for transfer income, charge values"""
         if not info.context.user.is_authenticated:
             return 0
         else:
@@ -152,9 +155,15 @@ class Query(ObjectType):
             return result
 
     def resolve_get_template_by_key(self, info, key):
+        """Return filtered templates"""
         return Template.objects.filter(key=key)
 
     def resolve_report_asset_estimate_dataset(self, info, **kwargs) -> list:
+        """Calculate value from AccountReport:
+        date - get date from start_date or Transfer execution date
+        sum - return total price estimate from report
+        income_sum - calculate sum previous by date range amount of money
+        """
         if not info.context.user.is_authenticated:
             return []
         else:
@@ -190,6 +199,7 @@ class Query(ObjectType):
             return result
 
     def resolve_user_accounts(self, info):
+        """Return accounts owned by active user"""
         if not info.context.user.is_authenticated:
             return []
         else:

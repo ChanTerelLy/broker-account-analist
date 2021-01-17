@@ -180,6 +180,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 GRAPHENE = {
     "SCHEMA": "baa.schema.schema"
 }
+DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
+
+
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'assets'
 LOGOUT_REDIRECT_URL = 'assets'

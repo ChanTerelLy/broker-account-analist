@@ -16,6 +16,7 @@ class PortfolioInput(graphene.InputObjectType):
     name = graphene.String()
 
 class UploadTransfers(graphene.Mutation):
+    """Get income file from client and save values to Transfer table"""
     class Arguments:
         file = Upload(required=True)
 
@@ -51,6 +52,7 @@ class UploadPortfolio(graphene.Mutation):
         return UploadTransfers(success=True)
 
 class UploadDeals(graphene.Mutation):
+    """Get income file from client and save values to Deals table"""
     class Arguments:
         file = Upload(required=True)
 
@@ -64,6 +66,7 @@ class UploadDeals(graphene.Mutation):
 
 
 class CreatePortfolio(graphene.Mutation):
+    """Get income file from client and save values to Portfolio (MOEX) table"""
     class Arguments:
         input = PortfolioInput(required=True)
 
@@ -76,6 +79,7 @@ class CreatePortfolio(graphene.Mutation):
         return CreatePortfolio(name=portfolio_instance)
 
 class UploadSberbankReport(graphene.Mutation):
+    """Get income file from client and save values to Report table"""
     class Arguments:
         file = Upload(required=True)
 
@@ -89,6 +93,9 @@ class UploadSberbankReport(graphene.Mutation):
         return UploadSberbankReport(success=True)
 
 class ParseReportsFromGmail(graphene.Mutation):
+    """IF user already grant permissions, start uploading report from gmail
+    If user is not authorized on oauth2, return redirect_uri for gmail grant auth.
+    """
     class Arguments:
         account_name = graphene.String()
         limit = graphene.Int()
