@@ -16,22 +16,21 @@ import json
 # If modifying these scopes, delete the file credentials/token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-def get_gmail_reports(account_name, creds):
+def get_gmail_reports(account_name, credentials, max_page=10, limit=2000):
     # creds = generate_google_cred()
 
-    service = build('gmail', 'v1', credentials=creds)
-
+    service = build('gmail', 'v1', credentials=credentials)
     # Call the Gmail API
     q = f'subject: {account_name}'
     results = service.users().messages().list(userId='me', q=q).execute()
     messages = results.get('messages', [])
     next_page = results.get('nextPageToken')
-    if next_page:
-        messages.extend(get_all_messages(service, next_page, q=q))
+    if next_page and max_page > 1:
+        messages.extend(get_all_messages(service, next_page, q=q, limit=limit))
 
     htmls = []
 
-    for message in messages:
+    for message in messages[:limit]:
         message_body = service.users().messages().get(userId='me', id=message['id']).execute()
         attachments = message_body.get('payload', {}).get('parts', [])
         attach_id = None
@@ -52,9 +51,9 @@ def get_gmail_reports(account_name, creds):
 
     return htmls
 
-def get_all_messages(service, next_page, q):
+def get_all_messages(service, next_page, q, limit):
     messages = []
-    while(next_page):
+    while(next_page and len(messages) < limit):
         results = service.users().messages().list(userId='me', q=q, pageToken=next_page).execute()
         messages.extend(results.get('messages', []))
         next_page = results.get('nextPageToken')

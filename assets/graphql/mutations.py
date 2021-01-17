@@ -91,14 +91,16 @@ class UploadSberbankReport(graphene.Mutation):
 class ParseReportsFromGmail(graphene.Mutation):
     class Arguments:
         account_name = graphene.String()
+        limit = graphene.Int()
+        max_page = graphene.Int()
 
     success = graphene.Boolean()
     redirect_uri = graphene.String()
 
     @provides_credentials
     def mutate(self, info, **kwargs):
-        cred = Credentials(**json.loads(info['credentials']))
-        htmls = get_gmail_reports(info['account_name'], cred)
+        info['credentials'] = Credentials(**json.loads(info['credentials']))
+        htmls = get_gmail_reports(**info)
         for html in htmls:
             try:
                 data = SberbankReport().parse_html(html)

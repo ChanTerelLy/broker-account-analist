@@ -81,6 +81,7 @@ class Moex:
 
 class Report:
     def _cell_generator(self, row):
+        """Replace calspans by empty values in row"""
         cells = []
         for cell in row("td"):
             cells.append(cell.text.strip())
@@ -102,15 +103,19 @@ class SberbankReport(Report):
             match = re.search(r'Торговый код:(.*)', account)
             if match:
                 account = full_strip(match.group(1))
+        #asset estimate table
         asset_estimate_table = find_by_text(soup, 'Оценка активов', 'p').find_next_sibling('table')
         table_data = [[cell.text.strip() for cell in row("td")] for row in asset_estimate_table.find_all('tr')]
         json_asset_estimate = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
+        #portfolio table
         portfolio_table = find_by_text(soup, 'Портфель Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in portfolio_table.find_all('tr')]
-        json_portfolio = pd.DataFrame(table_data[2:], columns=table_data[1]).to_dict(orient='records')
+        json_portfolio = pd.DataFrame(table_data[2:], columns=self._generate_header_for_portfel(table_data[1])).to_dict(orient='records')
+        #hand book table
         handbook_table = find_by_text(soup, 'Справочник Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in handbook_table.find_all('tr')]
         json_handbook = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
+        # money flow table
         money_flow_table = find_by_text(soup, 'Денежные средства', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in money_flow_table.find_all('tr')]
         json_money_flow = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
@@ -135,6 +140,17 @@ class SberbankReport(Report):
         else:
             return None, None
 
+    def _generate_header_for_portfel(self, row: list) -> list:
+        for index, attr in enumerate(row[3:8]):
+            row[row.index(attr)] = self._clear_asterics(attr) + ' (Начало Периода)'
+        for index, attr in enumerate(row[8:13]):
+            row[row.index(attr)] = self._clear_asterics(attr) + ' (Конец Периода)'
+        for index, attr in enumerate(row[13:15]):
+            row[row.index(attr)] = self._clear_asterics(attr) + ' (Изменение за период)'
+        return row
+
+    def _clear_asterics(self, string: str):
+        return string.replace('*','')
 
 if __name__ == '__main__':
     with codecs.open("../../data/examples/4NDKP.html", "r", "utf-8") as html:
