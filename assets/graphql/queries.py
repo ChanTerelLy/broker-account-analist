@@ -4,8 +4,8 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType, ObjectType
 import pandas as pd
 from ..models import *
-from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent
-from django.db.models import Sum
+from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get
+from django.db.models import Sum, Window, F
 
 
 class AccountNode(DjangoObjectType):
@@ -49,13 +49,24 @@ class TemplateType(DjangoObjectType):
     class Meta:
         model = Template
         fields = ('__all__')
-        interfaces = (relay.Node, )
+        interfaces = (relay.Node,)
 
 
 class XirrType(ObjectType):
     account_name = graphene.String()
     avg_percent = graphene.Float()
     total_percent = graphene.Float()
+
+
+class ReportData(ObjectType):
+    date = graphene.Date()
+    sum = graphene.Float()
+    income_sum = graphene.Float()
+
+
+class ReportType(ObjectType):
+    account_name = graphene.String()
+    data = graphene.List(ReportData)
 
 
 class Query(ObjectType):
@@ -67,6 +78,9 @@ class Query(ObjectType):
     account_chart = graphene.JSONString()
     my_transfer_xirr = graphene.List(XirrType)
     get_template_by_key = graphene.List(TemplateType, key=graphene.String())
+    report_asset_estimate_dataset = graphene.List(ReportType, account_name=graphene.String())
+    income_transfers_sum = graphene.List(ReportType, account_name=graphene.String())
+    user_accounts = graphene.List(AccountNode)
 
     def resolve_my_accounts(self, info):
         # context will reference to the Django request
@@ -139,3 +153,44 @@ class Query(ObjectType):
 
     def resolve_get_template_by_key(self, info, key):
         return Template.objects.filter(key=key)
+
+    def resolve_report_asset_estimate_dataset(self, info, **kwargs) -> list:
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            result = []
+            if kwargs.get('account_name'):
+                accounts = Account.objects.filter(user=info.context.user, name=kwargs.get('account_name'))
+            else:
+                accounts = Account.objects.filter(user=info.context.user)
+            for account in accounts:
+                reports = AccountReport.objects.filter(account=account).order_by('start_date')
+                ac_dic = {'account_name': account.name, 'data': []}
+                for report in reports:
+                    data = json.loads(report.asset_estimate)
+                    sum = data[-1]['Оценка, руб.']
+                    ac_dic['data'].append(
+                        ReportData(date=report.start_date, sum=convert_devided_number(sum), income_sum=None)
+                    )
+                result.append(ac_dic)
+                real_income = Transfer.get_previous_sum_for_days(user=info.context.user, account_name=account.name)
+                for income in real_income[0]['data']:
+                    elem = [i for i in ac_dic['data'] if income['date'] == i.date]
+                    index = None
+                    if elem:
+                        index = ac_dic['data'].index(elem)
+                    if index:
+                        ac_dic['data'][index].income_sum = income['sum']
+                    else:
+                        ac_dic['data'].append(
+                            ReportData(date=income['date'], sum=None, income_sum=income['sum'])
+                        )
+                if real_income[0]['data']:
+                    ac_dic['data'].append(ReportData(date=datetime.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
+            return result
+
+    def resolve_user_accounts(self, info):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            return Account.objects.filter(user=info.context.user)

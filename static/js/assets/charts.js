@@ -1,4 +1,5 @@
-const COLORS = ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"];
+const COLORS = ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850"];
+
 function accountsChart(value) {
     let accountData = value;
     accountData = JSON.parse(accountData.data.accountChart);
@@ -59,20 +60,65 @@ function accountsChart(value) {
 
 function transterChart() {
     new Chart(document.getElementById("transfers"), {
-    type: 'pie',
-    data: {
-      labels: ["Africa", "Asia", "Europe", "Latin America", "North America"],
-      datasets: [{
-        label: "Population (millions)",
-        backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
-        data: [2478,5267,734,784,433]
-      }]
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Predicted world population (millions) in 2050'
-      }
+        type: 'pie',
+        data: {
+            labels: ["Africa", "Asia", "Europe", "Latin America", "North America"],
+            datasets: [{
+                label: "Population (millions)",
+                backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850"],
+                data: [2478, 5267, 734, 784, 433]
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'Predicted world population (millions) in 2050'
+            }
+        }
+    });
+}
+
+function getReportDataByIndex(index=0){
+    return queryData.data.reportAssetEstimateDataset[index].data
+}
+
+
+function showReportChart(index=0) {
+    google.charts.load('current', {'packages': ['corechart']});
+    var reportInstanceData = getReportDataByIndex(index)
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+        let darrays = [];
+        $.each(reportInstanceData, function (index, value) {
+            darrays.push([new Date(value.date), value.sum, value.incomeSum])
+        })
+        var data = google.visualization.arrayToDataTable(
+            [
+                ['Дата', 'Ликвидационная сумма', 'Входящий поток'],
+                ...darrays
+            ]
+        );
+        var options = {
+            curveType: 'function',
+            legend: {position: 'bottom'}
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        chart.draw(data, options);
     }
-});
+}
+
+function updateChart() {
+    showReportChart($("#report-menu option:selected").val())
+}
+
+function setReportSelectors() {
+    if(queryData.data.userAccounts){
+        $("#report-menu").attr({'visibility': 'visible'})
+    }
+    $.each(queryData.data.userAccounts, function(index, value){
+        $("#report-menu").append(new Option(value.name, index));
+    })
 }

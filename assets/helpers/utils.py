@@ -37,6 +37,7 @@ def dmYHM_to_date(date):
     else:
         return None
 
+
 def dmY_to_date(date):
     if isinstance(date, str):
         return dt.strptime(date, "%d.%m.%Y").replace(tzinfo=pytz.UTC) if date else None
@@ -64,22 +65,22 @@ def xirr(df, guess=0.05, date_column='execution_date', amount_column='sum'):
     amounts = df[amount_column].values
     dates = df[date_column].values
 
-    years = np.array(dates-dates[0], dtype='timedelta64[D]').astype(int)/365
+    years = np.array(dates - dates[0], dtype='timedelta64[D]').astype(int) / 365
 
     step = 0.05
     epsilon = 0.0001
     limit = 100
     residual = 1
 
-    #Test for direction of cashflows
-    disc_val_1 = np.sum(amounts/((1+guess)**years))
-    disc_val_2 = np.sum(amounts/((1.05+guess)**years))
+    # Test for direction of cashflows
+    disc_val_1 = np.sum(amounts / ((1 + guess) ** years))
+    disc_val_2 = np.sum(amounts / ((1.05 + guess) ** years))
     mul = 1 if disc_val_2 < disc_val_1 else -1
 
-    #Calculate XIRR
+    # Calculate XIRR
     for i in range(limit):
         prev_residual = residual
-        residual = np.sum(amounts/((1+guess)**years))
+        residual = np.sum(amounts / ((1 + guess) ** years))
         if abs(residual) > epsilon:
             if np.sign(residual) != np.sign(prev_residual):
                 step /= 2
@@ -88,15 +89,18 @@ def xirr(df, guess=0.05, date_column='execution_date', amount_column='sum'):
             return guess
     return 0
 
-def get_total_xirr_percent(percent: float, days: int) -> float:
-    return (days * percent)/365
 
-def full_strip(text: str)-> str:
+def get_total_xirr_percent(percent: float, days: int) -> float:
+    return (days * percent) / 365
+
+
+def full_strip(text: str) -> str:
     text = ' '.join(text.split()).strip()
     return text
 
 
 import re
+
 MATCH_ALL = r'.*'
 
 
@@ -132,3 +136,15 @@ def find_by_text(soup, text, tag, **kwargs):
         return None
     else:
         return matches[0]
+
+
+def convert_devided_number(value):
+    value = ''.join(value.split())
+    return float(value)
+
+
+def safe_list_get(l, idx, default):
+    try:
+        return l[idx]
+    except IndexError:
+        return default

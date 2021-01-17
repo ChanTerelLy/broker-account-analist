@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 import pytz
-from django.db.models import UniqueConstraint
+from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
 from pandas import Timestamp
 from django.contrib.auth.models import User
 from django.db import models, transaction
@@ -235,6 +235,31 @@ class Transfer(Modify):
             return self.sum * -1
         else:
             return self.sum
+
+    @classmethod
+    def get_previous_sum_for_days(cls, user: User, **kwargs):
+        result = []
+        if kwargs.get('account_name'):
+            accounts = Account.objects.filter(user=user, name=kwargs.get('account_name'))
+        else:
+            accounts = Account.objects.filter(user=user)
+        for account in accounts:
+            account_data = {'account_name': account.name, 'data': []}
+            q = Q(type='Ввод ДС') | Q(type='Вывод ДС')
+            transfers = cls.objects.filter(q, account_income=account,).annotate(
+                type_sum=Case(
+                    When(type='Вывод ДС', then=F('sum') * -1),
+                    default=F('sum')
+                ),
+                SumAmount=Window(
+                    Sum(F('type_sum')),
+                    order_by=F('execution_date').asc())). \
+                values('execution_date', 'SumAmount')
+            data = list(
+                [{'date': transfer['execution_date'], 'sum': transfer['SumAmount']} for transfer in transfers])
+            account_data['data'] = data
+            result.append(account_data)
+        return result
 
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):

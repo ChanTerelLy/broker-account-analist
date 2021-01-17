@@ -1,8 +1,12 @@
 {% extends '_base.html' %}
 {% load static %}
 {% block content %}
+<script>
+    let queryData = {}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <div class="row">
         <div class="col-md">
             <canvas id="accounts"></canvas>
@@ -26,6 +30,12 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-lg">
+            <select id="report-menu"></select>
+            <div id="curve_chart" style="height: 500px; width: 1100px"></div>
+        </div>
+    </div>
 {% endblock content %}
 {% block extra_scripts %}
 <script src="{% static 'js/assets/charts.js' %}"></script>
@@ -39,12 +49,27 @@ $( document ).ready(async function() {
             avgPercent,
             totalPercent
         },
-        accountChart
+        accountChart,
+        reportAssetEstimateDataset {
+            accountName,
+        data {
+          date,
+          sum,
+          incomeSum
+        }
+      },
+      userAccounts {
+          name
+      }
     }
     `
-    let data = await graphqlQuery(query)
-    accountsChart(data);
-    showXirrValue(data);
+    queryData = await graphqlQuery(query)
+    accountsChart(queryData);
+    showXirrValue(queryData);
+    showReportChart()
+    setReportSelectors()
+    //listners
+    document.getElementById('report-menu').addEventListener('change', updateChart, false);
 })
 </script>
 {% endblock extra_scripts %}
