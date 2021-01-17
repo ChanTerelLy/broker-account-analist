@@ -100,8 +100,11 @@ class ParseReportsFromGmail(graphene.Mutation):
         cred = Credentials(**json.loads(info['credentials']))
         htmls = get_gmail_reports(info['account_name'], cred)
         for html in htmls:
-            data = SberbankReport().parse_html(html)
-            AccountReport.save_from_dict(data)
+            try:
+                data = SberbankReport().parse_html(html)
+                AccountReport.save_from_dict(data)
+            except Exception as e:
+                print(e)
         return ParseReportsFromGmail(success=True)
 
 

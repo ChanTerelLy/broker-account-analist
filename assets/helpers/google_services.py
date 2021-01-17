@@ -25,6 +25,9 @@ def get_gmail_reports(account_name, creds):
     q = f'subject: {account_name}'
     results = service.users().messages().list(userId='me', q=q).execute()
     messages = results.get('messages', [])
+    next_page = results.get('nextPageToken')
+    if next_page:
+        messages.extend(get_all_messages(service, next_page, q=q))
 
     htmls = []
 
@@ -49,6 +52,13 @@ def get_gmail_reports(account_name, creds):
 
     return htmls
 
+def get_all_messages(service, next_page, q):
+    messages = []
+    while(next_page):
+        results = service.users().messages().list(userId='me', q=q, pageToken=next_page).execute()
+        messages.extend(results.get('messages', []))
+        next_page = results.get('nextPageToken')
+    return messages
 
 
 def generate_google_cred_local():
