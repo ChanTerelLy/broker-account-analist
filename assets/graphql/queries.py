@@ -3,6 +3,8 @@ from graphene import relay
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType, ObjectType
 import pandas as pd
+from graphql import GraphQLError
+
 from ..models import *
 from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get
 from django.db.models import Sum, Window, F
@@ -78,6 +80,48 @@ class ReportType(ObjectType):
     account_name = graphene.String()
     data = graphene.List(ReportData)
 
+class PortfolioReportType(ObjectType):
+    name = graphene.String()
+    isin = graphene.String()
+    currency = graphene.String()
+    start_amount = graphene.Int()
+    start_denomination = graphene.Int()
+    start_market_total_sum= graphene.Float()
+    start_market_total_sum_without_nkd = graphene.Float()
+    start_nkd = graphene.Float()
+    end_amount = graphene.Int()
+    end_denomination = graphene.Int()
+    end_market_total_sum= graphene.Float()
+    end_market_total_sum_without_nkd = graphene.Float()
+    end_nkd = graphene.Float()
+    changes_amount = graphene.Int()
+    changes_total_sum = graphene.Float()
+    scheduled_enrolment_amount = graphene.Int()
+    scheduled_charges_amount = graphene.Int()
+    scheduled_outbound_amount = graphene.Int()
+
+    @classmethod
+    def get_map(cls):
+        return {'Наименование': 'name', 'ISIN ценной бумаги': 'isin', 'Валюта рыночной цены': 'currency',
+                'Количество, шт (Начало Периода)': 'start_amount', 'Номинал (Начало Периода)': 'start_denomination',
+                'Рыночная цена  (Начало Периода)': 'start_market_total_sum', 'Рыночная стоимость, без НКД (Начало Периода)': 'start_market_total_sum_without_nkd',
+                'НКД (Начало Периода)': 'start_nkd', 'Количество, шт (Конец Периода)': 'end_amount', 'Номинал (Конец Периода)': 'end_denomination',
+                'Рыночная цена  (Конец Периода)': 'end_market_total_sum', 'Рыночная стоимость, без НКД (Конец Периода)': 'end_market_total_sum_without_nkd',
+                'НКД (Конец Периода)': 'end_nkd', 'Количество, шт (Изменение за период)': 'changes_amount',
+                'Рыночная стоимость (Изменение за период)': 'changes_total_sum', 'Плановые зачисления по сделкам, шт': 'scheduled_enrolment_amount',
+                'Плановые списания по сделкам, шт': 'scheduled_charges_amount', 'Плановый исходящий остаток, шт': 'scheduled_outbound_amount'}
+
+    @classmethod
+    def convert_names(cls, field):
+        map = cls.get_map()
+        return map.get(field)
+
+class PortfolioReportMapType(ObjectType):
+    map = graphene.JSONString()
+    data = graphene.List(PortfolioReportType)
+
+    def resolve_map(self, *args):
+        return PortfolioReportType.get_map()
 
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
@@ -90,6 +134,7 @@ class Query(ObjectType):
     report_asset_estimate_dataset = graphene.List(ReportType, account_name=graphene.String())
     income_transfers_sum = graphene.List(ReportType, account_name=graphene.String())
     user_accounts = graphene.List(AccountNode)
+    portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -204,3 +249,16 @@ class Query(ObjectType):
             return []
         else:
             return Account.objects.filter(user=info.context.user)
+
+    def resolve_portfolio_by_date(self, info, account_name, date):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            account = Account.objects.get(name=account_name, user=info.context.user)
+            report = AccountReport.objects.get(account=account, start_date=date)
+            portfolio = json.loads(report.portfolio)
+            new_portfolio = []
+            for data in portfolio[1:]:
+                new_data = {PortfolioReportType.convert_names(key): convert_devided_number(value) for key, value in data.items()}
+                new_portfolio.append(PortfolioReportType(**new_data))
+            return {'data': new_portfolio, 'map': ''}

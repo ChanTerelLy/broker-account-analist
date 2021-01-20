@@ -122,3 +122,23 @@ function setReportSelectors() {
         $("#report-menu").append(new Option(value.name, index));
     })
 }
+
+function showPortfolioReportTable(queryData){
+        google.charts.load('current', {'packages': ['table']});
+        google.charts.setOnLoadCallback(drawTable);
+        let reportValues = [];
+        $.each(queryData.data.portfolioByDate.data, function(key, value){
+            reportValues.push(Object.values(value))
+        })
+        let map = Object.keys(JSON.parse(queryData.data.portfolioByDate.map));
+        function drawTable() {
+            var data = google.visualization.arrayToDataTable(
+                [map,
+                ...reportValues]
+            );
+
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+
+            table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+        }
+}

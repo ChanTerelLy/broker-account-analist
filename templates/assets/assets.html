@@ -63,7 +63,7 @@ $( document ).ready(async function() {
       }
     }
     `
-    queryData = await graphqlQuery(query)
+    queryData = await graphqlQuery(query);
     accountsChart(queryData);
     showXirrValue(queryData);
     showReportChart()

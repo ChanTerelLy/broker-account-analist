@@ -1,0 +1,51 @@
+{% extends 'assets/_webdatarocket-table.html' %}
+{% load static %}
+{% block title %}Портфель{% endblock %}
+{% block content %}
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <body>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="table_div"></div>
+        </div>
+
+    </div>
+    </body>
+{% endblock content %}
+{% block extra_scripts %}
+<script src="{% static 'js/assets/charts.js' %}"></script>
+<script src="{% static 'js/assets/main.js' %}"></script>
+    <script type="text/javascript">
+$( document ).ready(async function() {
+    query = `
+        query {
+  portfolioByDate(date:"2020-12-01", accountName: "4NDKP"){
+    map,
+    data {
+        name,
+        isin,
+        currency,
+        startAmount,
+        startDenomination,
+        startMarketTotalSum,
+        startMarketTotalSumWithoutNkd,
+        startNkd,
+        endAmount,
+        endDenomination,
+        endMarketTotalSum,
+        endMarketTotalSumWithoutNkd,
+        endNkd,
+        changesAmount,
+        changesTotalSum,
+        scheduledEnrolmentAmount,
+        scheduledChargesAmount,
+        scheduledOutboundAmount,
+    }
+  }
+}
+        `
+    let queryData = await graphqlQuery(query)
+    showPortfolioReportTable(queryData)
+})
+    </script>
+{% endblock extra_scripts %}

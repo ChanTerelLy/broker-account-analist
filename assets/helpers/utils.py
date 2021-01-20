@@ -139,8 +139,14 @@ def find_by_text(soup, text, tag, **kwargs):
 
 
 def convert_devided_number(value):
-    value = ''.join(value.split())
-    return float(value)
+    splited = value.split()
+    if len(splited) > 1 and isinstance(splited[0], str) and splited[0].isnumeric():
+        value = ''.join(splited)
+        try:
+            value = float(value)
+        except:
+            pass
+    return value
 
 
 def safe_list_get(l, idx, default):

@@ -10,6 +10,7 @@ urlpatterns = [
     path('transfers/', login_required(TransfersView.as_view()), name='transfers'),
     path('deals/', login_required(DealsView.as_view()), name='deals'),
     path('corp-bounds/', login_required(CorpBounView.as_view()), name='corp-bounds'),
+    path('report-portfolio/', login_required(ReportPortfolioView.as_view()), name='report-portfolio'),
     path('update-bounds/', login_required(update_bounds), name='update-bounds'),
     path('google-callback/', google_callback, name='google-callback'),
 ]

@@ -68,6 +68,9 @@ class CorpBounView(ListView):
         context['help_text'] = CorpBound.objects.first().help_text_map_table
         return context
 
+class ReportPortfolioView(TemplateView):
+    template_name = 'assets/report-portfolio.html'
+
 
 @provides_credentials
 def google_callback(request):
