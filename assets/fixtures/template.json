@@ -1,0 +1,12 @@
+[
+  {
+    "model": "assets.template",
+    "pk": 1,
+    "fields": {
+      "name": "Transfer template",
+      "description": "Transfer template example",
+      "url": "https://example.com",
+      "key": "transfer"
+    }
+  }
+]

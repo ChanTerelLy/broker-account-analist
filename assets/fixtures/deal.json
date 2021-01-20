@@ -1,0 +1,62 @@
+[
+  {
+    "model": "assets.deal",
+    "pk": "0061e5ba-4ed0-44bc-a0db-a4e98e9ca421",
+    "fields": {
+      "created_at": "2020-11-29T14:46:05.386Z",
+      "updated_at": "2020-11-29T14:46:05.386Z",
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa",
+      "number": "3003323040",
+      "conclusion_date": "2019-08-27T11:48:15Z",
+      "settlement_date": "2019-08-29T06:00:00Z",
+      "isin": "FXJP ETF",
+      "type": "Покупка",
+      "amount": 15,
+      "price": 2321.0,
+      "nkd": 0.0,
+      "volume": 34815.0,
+      "currency": "RUB",
+      "service_fee": 0.0
+    }
+  },
+  {
+    "model": "assets.deal",
+    "pk": "00bffb51-e5c3-4da6-9bf8-b3a90eb2be4b",
+    "fields": {
+      "created_at": "2020-11-29T14:46:09.320Z",
+      "updated_at": "2020-11-29T14:46:09.320Z",
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa",
+      "number": "2935889523",
+      "conclusion_date": "2019-03-04T12:51:32Z",
+      "settlement_date": "2019-03-06T06:00:00Z",
+      "isin": "FXJP",
+      "type": "Продажа",
+      "amount": 1,
+      "price": 2329.0,
+      "nkd": 0.0,
+      "volume": 2329.0,
+      "currency": "RUB",
+      "service_fee": 0.0
+    }
+  },
+  {
+    "model": "assets.deal",
+    "pk": "4c5c4095-3017-497d-af47-dcb1ce575e40",
+    "fields": {
+      "created_at": "2020-11-29T14:46:04.005Z",
+      "updated_at": "2020-11-29T14:46:04.005Z",
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa",
+      "number": "3013040975",
+      "conclusion_date": "2019-09-17T07:14:12Z",
+      "settlement_date": "2019-09-19T06:00:00Z",
+      "isin": "LSNGP",
+      "type": "Покупка",
+      "amount": 20,
+      "price": 129.2,
+      "nkd": 0.0,
+      "volume": 2584.0,
+      "currency": "RUB",
+      "service_fee": 0.0
+    }
+  }
+]

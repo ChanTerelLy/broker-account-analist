@@ -1,0 +1,14 @@
+[
+  {
+    "model": "assets.account",
+    "pk": "14dd63ec-547c-4d56-a353-2be6dc0696aa",
+    "fields": {
+      "created_at": "2021-01-04T18:32:04.939Z",
+      "updated_at": "2021-01-04T18:32:04.940Z",
+      "name": "test",
+      "description": "test",
+      "amount": 100000.0,
+      "user": 1
+    }
+  }
+]
