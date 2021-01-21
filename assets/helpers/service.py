@@ -70,10 +70,12 @@ class Moex:
                 self.headers['content-type'] = 'application/json;charset=UTF-8'
                 response = await session.post('https://iss.moex.com/iss/apps/bondization/securities_portfolio.json?'
                                               'iss.meta=off&iss.json=extended&lang=ru',
-                                              json=chunk, headers=self.headers)
+                                              json=exclude_keys(chunk, 'account'), headers=self.headers)
                 response = await response.json()
                 portfolio = response[1]['portfolio']
                 deals_portfolio = portfolio[:-1]
+                for index, value in enumerate(chunk):
+                    deals_portfolio[index]['account'] = chunk[index]['account']
                 deals += deals_portfolio
                 yield_count += 1
         return deals

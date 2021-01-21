@@ -128,7 +128,7 @@ $('#input-upload-button').on('change', function () {
             contentType: false,
             processData: false,
             success: function (response) {
-                if (response?.data?.uploadTransfers?.success) {
+                if (response?.data?.uploadPortfolio?.success) {
                     alert('Данные загружены успешно')
                     $('.loader').hide();
                     location.reload();

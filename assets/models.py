@@ -159,6 +159,7 @@ class Portfolio(Modify):
                 till_date=deal['TILL'],
                 volume=deal['VOLUME'],
                 yield_percent=deal['YIELD'],
+                account=deal['account']
             )
 
     @method_decorator(transaction.atomic)

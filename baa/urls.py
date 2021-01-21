@@ -5,7 +5,11 @@ from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 from graphene_file_upload.django import FileUploadGraphQLView
+import asyncio
 
+from graphql.execution.executors.asyncio import AsyncioExecutor
+
+executor = AsyncioExecutor(loop=asyncio.get_event_loop())
 urlpatterns = [
     path('', include('social_django.urls', namespace='social')),
     path('admin/', admin.site.urls),

@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import graphene
@@ -5,11 +6,20 @@ import graphene
 from .queries import PortfolioType
 from ..helpers.google_services import get_gmail_reports, provides_credentials
 from ..helpers.service import Moex, SberbankReport
-from ..helpers.utils import parse_file
-from ..models import Portfolio, Transfer, Deal, AccountReport
+from ..helpers.utils import parse_file, timestamp_to_string
+from ..models import Portfolio, Transfer, Deal, AccountReport, Account
 from graphene_file_upload.scalars import Upload
 
 from google.oauth2.credentials import Credentials
+
+
+def asyncio_helper(func, *args, **kwargs):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
+    result = loop.run_until_complete(func(*args, **kwargs))
+    loop.close()
+    return result
 
 class PortfolioInput(graphene.InputObjectType):
     id = graphene.ID()
@@ -42,12 +52,14 @@ class UploadPortfolio(graphene.Mutation):
         for attr in data:
             request_payload.append({
                 "DIVIDENDS": [],
-                "FROM": attr['Дата покупки'],
+                "FROM": timestamp_to_string(attr['Дата покупки']),
                 "SECID": attr['Код финансового инструмента'],
-                "TILL": attr['Дата продажи'],
-                "VOLUME": int(attr['Продано'])
+                "TILL": timestamp_to_string(attr['Дата продажи']),
+                "VOLUME": int(attr['Продано']),
+                "account": Account.objects.get_or_create(name=attr['Договор'], user=info.context.user)[0]
             })
-        portfolio = Moex().get_portfolio(request_payload)
+        func = Moex().get_portfolio
+        portfolio = asyncio_helper(func, request_payload)
         Portfolio.save_from_list(portfolio)
         return UploadTransfers(success=True)
 

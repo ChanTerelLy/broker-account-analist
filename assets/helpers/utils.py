@@ -46,6 +46,12 @@ def dmY_to_date(date):
     else:
         return None
 
+def timestamp_to_string(date):
+    if isinstance(date, Timestamp):
+        return date.strftime('%Y-%m-%d')
+    elif isinstance(date, str):
+        return date
+
 
 def to_camel_case(snake_str):
     components = snake_str.split('_')
@@ -155,3 +161,9 @@ def safe_list_get(l, idx, default):
         return l[idx]
     except IndexError:
         return default
+
+def exclude_keys(list, *args):
+    new_list = []
+    for dict in list:
+        new_list.append({key:value for key, value in dict.items() if key not in args})
+    return new_list
