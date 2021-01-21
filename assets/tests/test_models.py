@@ -14,7 +14,7 @@ class AssetModelTest(TestCase):
         self.deal_base = {
             "created_at": dt.now(),
             "updated_at": dt.now(),
-            "account": self.account.uuid,
+            "account": self.account.id,
             "number": rnd.randint(1000000, 3000000),
             "conclusion_date": dt.now(),
             "settlement_date": dt.now(),
