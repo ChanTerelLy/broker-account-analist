@@ -139,13 +139,14 @@ def find_by_text(soup, text, tag, **kwargs):
 
 
 def convert_devided_number(value):
+    if isinstance(value, (int, float)):
+        return value
     splited = value.split()
-    if len(splited) > 1 and isinstance(splited[0], str) and splited[0].isnumeric():
-        value = ''.join(splited)
-        try:
-            value = float(value)
-        except:
-            pass
+    value = ''.join(splited)
+    try:
+        value = float(value)
+    except:
+        pass
     return value
 
 

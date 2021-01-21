@@ -127,10 +127,10 @@ function showPortfolioReportTable(queryData){
         google.charts.load('current', {'packages': ['table']});
         google.charts.setOnLoadCallback(drawTable);
         let reportValues = [];
-        $.each(queryData.data.portfolioByDate.data, function(key, value){
+        $.each(queryData.data.portfolioCombined.data, function(key, value){
             reportValues.push(Object.values(value))
         })
-        let map = Object.keys(JSON.parse(queryData.data.portfolioByDate.map));
+        let map = Object.keys(JSON.parse(queryData.data.portfolioCombined.map));
         function drawTable() {
             var data = google.visualization.arrayToDataTable(
                 [map,

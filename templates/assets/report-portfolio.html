@@ -8,7 +8,11 @@
         <div class="col-md-12">
             <div id="table_div"></div>
         </div>
-
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="chart_sort_div"></div>
+        </div>
     </div>
     </body>
 {% endblock content %}
@@ -19,7 +23,7 @@
 $( document ).ready(async function() {
     query = `
         query {
-  portfolioByDate(date:"2020-12-01", accountName: "4NDKP"){
+  portfolioCombined{
     map,
     data {
         name,

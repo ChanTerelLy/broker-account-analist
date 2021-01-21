@@ -99,6 +99,11 @@ class PortfolioReportType(ObjectType):
     scheduled_enrolment_amount = graphene.Int()
     scheduled_charges_amount = graphene.Int()
     scheduled_outbound_amount = graphene.Int()
+    account = graphene.String()
+
+    @classmethod
+    def convert_name_for_dict(cls, data):
+        return {cls.convert_names(key): convert_devided_number(value) for key, value in data.items()}
 
     @classmethod
     def get_map(cls):
@@ -135,6 +140,7 @@ class Query(ObjectType):
     income_transfers_sum = graphene.List(ReportType, account_name=graphene.String())
     user_accounts = graphene.List(AccountNode)
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
+    portfolio_combined = graphene.Field(PortfolioReportMapType)
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -262,3 +268,37 @@ class Query(ObjectType):
                 new_data = {PortfolioReportType.convert_names(key): convert_devided_number(value) for key, value in data.items()}
                 new_portfolio.append(PortfolioReportType(**new_data))
             return {'data': new_portfolio, 'map': ''}
+
+    def resolve_portfolio_combined(self, info):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            accounts = Account.objects.filter(user=info.context.user)
+            reports = []
+            for account in accounts:
+                reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
+            portfolious = list([json.loads(r.portfolio) for r in reports if r])
+            assets = {}
+            for portfolio in portfolious:
+                for attr in portfolio:
+                    attr = {key: convert_devided_number(value) for key, value in
+                     attr.items()}
+                    key = attr.get('ISIN ценной бумаги')
+                    if not key:
+                        continue
+                    if key not in assets:
+                        assets[key] = attr
+                    else:
+                        assets[key]['Количество, шт (Начало Периода)'] += attr['Количество, шт (Начало Периода)']
+                        assets[key]['Рыночная стоимость, без НКД (Начало Периода)'] += attr['Рыночная стоимость, без НКД (Начало Периода)']
+                        assets[key]['НКД (Начало Периода)'] += attr['НКД (Начало Периода)']
+                        assets[key]['Количество, шт (Конец Периода)'] += attr['Количество, шт (Конец Периода)']
+                        assets[key]['Рыночная стоимость, без НКД (Конец Периода)'] += attr['Рыночная стоимость, без НКД (Конец Периода)']
+                        assets[key]['НКД (Конец Периода)'] += attr['НКД (Конец Периода)']
+                        assets[key]['Количество, шт (Изменение за период)'] += attr['Количество, шт (Изменение за период)']
+                        assets[key]['Рыночная стоимость (Изменение за период)'] += attr['Рыночная стоимость (Изменение за период)']
+                        assets[key]['Плановые зачисления по сделкам, шт'] += attr['Плановые зачисления по сделкам, шт']
+                        assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
+                        assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
+            conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
+            return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}
