@@ -2,6 +2,22 @@
 {% load static %}
 {% block title %}Портфель{% endblock %}
 {% block content %}
+    <script>
+        let listOfQueryFields = [
+                        "account",
+                        "name",
+                        "isin",
+                        "startAmount",
+                        "startDenomination",
+                        "startMarketTotalSum",
+                        "startMarketTotalSumWithoutNkd",
+                        "startNkd",
+                        "changesAmount",
+                        "changesTotalSum",
+                        "scheduledEnrolmentAmount",
+                        "scheduledChargesAmount",
+                        "scheduledOutboundAmount"]
+    </script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <body>
     <div class="row">
@@ -21,29 +37,12 @@
 <script src="{% static 'js/assets/main.js' %}"></script>
     <script type="text/javascript">
 $( document ).ready(async function() {
-    query = `
+    let query = `
         query {
   portfolioCombined{
     map,
     data {
-        name,
-        isin,
-        currency,
-        startAmount,
-        startDenomination,
-        startMarketTotalSum,
-        startMarketTotalSumWithoutNkd,
-        startNkd,
-        endAmount,
-        endDenomination,
-        endMarketTotalSum,
-        endMarketTotalSumWithoutNkd,
-        endNkd,
-        changesAmount,
-        changesTotalSum,
-        scheduledEnrolmentAmount,
-        scheduledChargesAmount,
-        scheduledOutboundAmount,
+        ${listOfQueryFields.join()}
     }
   }
 }

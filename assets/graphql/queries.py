@@ -80,18 +80,19 @@ class ReportType(ObjectType):
     account_name = graphene.String()
     data = graphene.List(ReportData)
 
+
 class PortfolioReportType(ObjectType):
     name = graphene.String()
     isin = graphene.String()
     currency = graphene.String()
     start_amount = graphene.Int()
     start_denomination = graphene.Int()
-    start_market_total_sum= graphene.Float()
+    start_market_total_sum = graphene.Float()
     start_market_total_sum_without_nkd = graphene.Float()
     start_nkd = graphene.Float()
     end_amount = graphene.Int()
     end_denomination = graphene.Int()
-    end_market_total_sum= graphene.Float()
+    end_market_total_sum = graphene.Float()
     end_market_total_sum_without_nkd = graphene.Float()
     end_nkd = graphene.Float()
     changes_amount = graphene.Int()
@@ -107,26 +108,35 @@ class PortfolioReportType(ObjectType):
 
     @classmethod
     def get_map(cls):
-        return {'Наименование': 'name', 'ISIN ценной бумаги': 'isin', 'Валюта рыночной цены': 'currency',
+        return {'Аккаунт': 'account', 'Наименование': 'name', 'ISIN ценной бумаги': 'isin',
+                'Валюта рыночной цены': 'currency',
                 'Количество, шт (Начало Периода)': 'start_amount', 'Номинал (Начало Периода)': 'start_denomination',
-                'Рыночная цена  (Начало Периода)': 'start_market_total_sum', 'Рыночная стоимость, без НКД (Начало Периода)': 'start_market_total_sum_without_nkd',
-                'НКД (Начало Периода)': 'start_nkd', 'Количество, шт (Конец Периода)': 'end_amount', 'Номинал (Конец Периода)': 'end_denomination',
-                'Рыночная цена  (Конец Периода)': 'end_market_total_sum', 'Рыночная стоимость, без НКД (Конец Периода)': 'end_market_total_sum_without_nkd',
+                'Рыночная цена  (Начало Периода)': 'start_market_total_sum',
+                'Рыночная стоимость, без НКД (Начало Периода)': 'start_market_total_sum_without_nkd',
+                'НКД (Начало Периода)': 'start_nkd', 'Количество, шт (Конец Периода)': 'end_amount',
+                'Номинал (Конец Периода)': 'end_denomination',
+                'Рыночная цена  (Конец Периода)': 'end_market_total_sum',
+                'Рыночная стоимость, без НКД (Конец Периода)': 'end_market_total_sum_without_nkd',
                 'НКД (Конец Периода)': 'end_nkd', 'Количество, шт (Изменение за период)': 'changes_amount',
-                'Рыночная стоимость (Изменение за период)': 'changes_total_sum', 'Плановые зачисления по сделкам, шт': 'scheduled_enrolment_amount',
-                'Плановые списания по сделкам, шт': 'scheduled_charges_amount', 'Плановый исходящий остаток, шт': 'scheduled_outbound_amount'}
+                'Рыночная стоимость (Изменение за период)': 'changes_total_sum',
+                'Плановые зачисления по сделкам, шт': 'scheduled_enrolment_amount',
+                'Плановые списания по сделкам, шт': 'scheduled_charges_amount',
+                'Плановый исходящий остаток, шт': 'scheduled_outbound_amount'
+                }
 
     @classmethod
     def convert_names(cls, field):
         map = cls.get_map()
         return map.get(field)
 
+
 class PortfolioReportMapType(ObjectType):
     map = graphene.JSONString()
     data = graphene.List(PortfolioReportType)
 
     def resolve_map(self, *args):
-        return PortfolioReportType.get_map()
+        return {key: to_camel_case(value) for key, value in PortfolioReportType.get_map().items()}
+
 
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
@@ -246,7 +256,8 @@ class Query(ObjectType):
                             ReportData(date=income['date'], sum=None, income_sum=income['sum'])
                         )
                 if real_income[0]['data']:
-                    ac_dic['data'].append(ReportData(date=datetime.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
+                    ac_dic['data'].append(
+                        ReportData(date=datetime.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
             return result
 
     def resolve_user_accounts(self, info):
@@ -265,7 +276,8 @@ class Query(ObjectType):
             portfolio = json.loads(report.portfolio)
             new_portfolio = []
             for data in portfolio[1:]:
-                new_data = {PortfolioReportType.convert_names(key): convert_devided_number(value) for key, value in data.items()}
+                new_data = {PortfolioReportType.convert_names(key): convert_devided_number(value) for key, value in
+                            data.items()}
                 new_portfolio.append(PortfolioReportType(**new_data))
             return {'data': new_portfolio, 'map': ''}
 
@@ -278,25 +290,32 @@ class Query(ObjectType):
             for account in accounts:
                 reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
             portfolious = list([json.loads(r.portfolio) for r in reports if r])
+            clear_accounts = list([r.account.name for r in reports if r])
             assets = {}
-            for portfolio in portfolious:
+            for index, portfolio in enumerate(portfolious):
                 for attr in portfolio:
                     attr = {key: convert_devided_number(value) for key, value in
-                     attr.items()}
+                            attr.items()}
                     key = attr.get('ISIN ценной бумаги')
                     if not key:
                         continue
                     if key not in assets:
                         assets[key] = attr
+                        assets[key]['Аккаунт'] = clear_accounts[index]
                     else:
+                        assets[key]['Аккаунт'] += ', ' + clear_accounts[index]
                         assets[key]['Количество, шт (Начало Периода)'] += attr['Количество, шт (Начало Периода)']
-                        assets[key]['Рыночная стоимость, без НКД (Начало Периода)'] += attr['Рыночная стоимость, без НКД (Начало Периода)']
+                        assets[key]['Рыночная стоимость, без НКД (Начало Периода)'] += attr[
+                            'Рыночная стоимость, без НКД (Начало Периода)']
                         assets[key]['НКД (Начало Периода)'] += attr['НКД (Начало Периода)']
                         assets[key]['Количество, шт (Конец Периода)'] += attr['Количество, шт (Конец Периода)']
-                        assets[key]['Рыночная стоимость, без НКД (Конец Периода)'] += attr['Рыночная стоимость, без НКД (Конец Периода)']
+                        assets[key]['Рыночная стоимость, без НКД (Конец Периода)'] += attr[
+                            'Рыночная стоимость, без НКД (Конец Периода)']
                         assets[key]['НКД (Конец Периода)'] += attr['НКД (Конец Периода)']
-                        assets[key]['Количество, шт (Изменение за период)'] += attr['Количество, шт (Изменение за период)']
-                        assets[key]['Рыночная стоимость (Изменение за период)'] += attr['Рыночная стоимость (Изменение за период)']
+                        assets[key]['Количество, шт (Изменение за период)'] += attr[
+                            'Количество, шт (Изменение за период)']
+                        assets[key]['Рыночная стоимость (Изменение за период)'] += attr[
+                            'Рыночная стоимость (Изменение за период)']
                         assets[key]['Плановые зачисления по сделкам, шт'] += attr['Плановые зачисления по сделкам, шт']
                         assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
                         assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']

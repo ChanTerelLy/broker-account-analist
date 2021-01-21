@@ -130,10 +130,15 @@ function showPortfolioReportTable(queryData){
         $.each(queryData.data.portfolioCombined.data, function(key, value){
             reportValues.push(Object.values(value))
         })
-        let map = Object.keys(JSON.parse(queryData.data.portfolioCombined.map));
+        let mapJson = JSON.parse(queryData.data.portfolioCombined.map);
+        let map = Object.entries(mapJson).map(function(key, value){
+            if(listOfQueryFields.includes(key[1])){
+                return key[0];
+            }
+        })
         function drawTable() {
             var data = google.visualization.arrayToDataTable(
-                [map,
+                [map.filter(Boolean),
                 ...reportValues]
             );
 
