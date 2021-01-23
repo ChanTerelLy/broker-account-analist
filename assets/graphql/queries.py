@@ -1,4 +1,5 @@
 import graphene
+from codetiming import Timer
 from graphene import relay
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType, ObjectType
@@ -287,6 +288,7 @@ class Query(ObjectType):
                 new_portfolio.append(PortfolioReportType(**new_data))
             return {'data': new_portfolio, 'map': ''}
 
+    @Timer(name="decorator")
     def resolve_portfolio_combined(self, info):
         if not info.context.user.is_authenticated:
             return []
@@ -325,11 +327,11 @@ class Query(ObjectType):
                         assets[key]['Плановые зачисления по сделкам, шт'] += attr['Плановые зачисления по сделкам, шт']
                         assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
                         assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
-            conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
-            isins = [bound['isin'] for index, bound in enumerate(conv_assets)]
-            data = asyncio_helper(Moex().get_coupon_by_isin, isins)
-            data = [d.to_dict() for d in data]
+            isins = list(assets.keys())
+            data = asyncio_helper(Moex().get_coupon_by_isins, isins)
             for index, d in enumerate(data):
-                conv_assets[index]['coupon_percent'] = d.get('valueprc',[None])[0]
-                conv_assets[index]['coupon_date'] = dmY_hyphen_to_date(d.get('recorddate', [None])[0])
+                if len(d):
+                    assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
+                    assets[d[0]['isin']]['Дата выплаты ближайшего купона'] = dmY_hyphen_to_date(d[0].get('coupondate', [None]))
+            conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
             return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}

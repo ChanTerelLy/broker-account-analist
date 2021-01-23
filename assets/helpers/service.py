@@ -2,6 +2,7 @@ import asyncio
 import codecs
 import csv
 import json
+import urllib
 
 import aiohttp
 import aiomoex
@@ -23,6 +24,7 @@ class Moex:
             'user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, likeGecko) Chrome/70.0.3538.110 Safari/537.36'
         self.headers['content-type'] = 'application/x-www-form-urlencoded'
         self.headers['upgrade-insecure-requests'] = '1'
+        self.request_jsons = []
 
     def get_corp_bound_tax_free(self):
         begin_date = (date.today() - timedelta(days=1)).strftime('%d.%m.%Y')
@@ -39,6 +41,21 @@ class Moex:
         data = pd.DataFrame(data)
         return data
 
+    async def aiohttp_generator(self, urls):
+        async with aiohttp.ClientSession(headers=self.headers) as client:
+            await asyncio.gather(*[
+                asyncio.ensure_future(self.extract_request_data(client, item))
+                for item in urls
+            ])
+
+    async def extract_request_data(self, client, url):
+        async with client.get(url) as resp:
+            try:
+                json = await resp.json()
+                self.request_jsons.append(json)
+            except Exception as e:
+                print(e)
+
     async def bounds(self):
         async with aiohttp.ClientSession() as session:
             dict = {
@@ -48,7 +65,7 @@ class Moex:
                 'start': 0,
                 'sec_type': "stock_exchange_bond,stock_corporate_bond"
             }
-            data = await aiomoex.request_helpers.get_long_data(session,
+            data = await aiomoex.request_helpers.get_short_data(session,
                                                                'https://iss.moex.com/iss/apps/infogrid/stock/rates.json',
                                                                'rates',
                                                                dict)
@@ -68,25 +85,31 @@ class Moex:
                 datas.append(data)
         return datas
 
-    async def get_coupon_by_isin(self, isins):
-        dfs = []
-        async with aiohttp.ClientSession() as session:
-            dict = {
-                "from": dt.now().strftime('%Y-%m-%d'),
-                "till": (dt.now() + timedelta(days=365)).strftime('%Y-%m-%d'),
-                "start": 0,
-                'iss.only': 'coupons,coupons.cursor',
-                'limit': 1
-            }
-            for isin in isins:
-                data = await aiomoex.request_helpers.get_long_data(session,
-                                                                   f'https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization/{isin}.json',
-                                                                   'coupons',
-                                                                   dict)
-                dfs.append(pd.DataFrame(data))
-        return dfs
+    async def get_coupon_by_isins(self, isins):
+        query = {
+            "from": dt.now().strftime('%Y-%m-%d'),
+            "till": (dt.now() + timedelta(days=365)).strftime('%Y-%m-%d'),
+            "start": 0,
+            'iss.only': 'coupons,coupons.cursor',
+            'limit': 1
+        }
+        query = urllib.parse.urlencode(query, doseq=False)
+        urls = []
+        data = []
+        for isin in isins:
+            url = f'https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization/{isin}.json'
+            url = await self._build_url(query, url)
+            urls.append(url)
+        await self.aiohttp_generator(urls)
+        data = [pd.DataFrame(j['coupons']['data'],columns=j['coupons']['columns']).to_dict(orient='records') for j in self.request_jsons]
+        return data
+
+    async def _build_url(self, query, url):
+        url = url + '?q=' + query
+        return url
 
     async def get_portfolio(self, data: list) -> list:
+        #TODO: for now is working synchronously replace by aiohttpgenerator
         deals = []
         # moex total response
         yield_count = 0  # calculate avg position from chuncks
@@ -181,5 +204,5 @@ class SberbankReport(Report):
         return string.replace('*','')
 
 if __name__ == '__main__':
-    result = json.loads(asyncio_helper(Moex().get_coupon_by_isin, 'RU000A100T81'))
+    result = json.loads(asyncio_helper(Moex().get_coupon_by_isins, 'RU000A100T81'))
     print(result)

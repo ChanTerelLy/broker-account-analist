@@ -156,12 +156,13 @@ def find_by_text(soup, text, tag, **kwargs):
 def convert_devided_number(value):
     if isinstance(value, (int, float)):
         return value
-    splited = value.split()
-    value = ''.join(splited)
-    try:
-        value = float(value)
-    except:
-        pass
+    if isinstance(value, str):
+        splited = value.split()
+        value = ''.join(splited)
+        try:
+            value = float(value)
+        except:
+            pass
     return value
 
 
