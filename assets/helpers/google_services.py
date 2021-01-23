@@ -2,9 +2,11 @@ from __future__ import print_function
 import pickle
 import os.path
 import base64
+from typing import Optional
 
 import dateutil
 from django.conf import settings
+from django.urls import reverse
 from googleapiclient.discovery import build, Resource
 from google.oauth2.credentials import Credentials
 from google.oauth2 import credentials
@@ -18,11 +20,11 @@ import json
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 
-def get_gmail_reports(account_name: str, credentials: Credentials, max_page=10, limit=2000) -> list:
+def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = None, max_page=10, limit=2000) -> list:
     """Return list of string what contain html pages with sberbank reports"""
     service = build('gmail', 'v1', credentials=credentials)
     # Call the Gmail API
-    q = f'subject: {account_name}'
+    q = f'subject: SBERBANK. Brokerage report {account_name}'
     results = service.users().messages().list(userId='me', q=q).execute()
     messages = results.get('messages', [])
     next_page = results.get('nextPageToken')
@@ -103,7 +105,7 @@ def provides_credentials(func, *args, **kwargs):
         current_path = request.path
         if existing_state:
             secure_uri = request.build_absolute_uri(
-            )
+            ).replace('http://', 'https://')
             location_path = urllib.parse.urlparse(existing_state).path
             flow.fetch_token(
                 authorization_response=secure_uri,
@@ -121,22 +123,15 @@ def provides_credentials(func, *args, **kwargs):
         if not stored_credentials:
             # It's strongly recommended to encrypt state.
             # location is needed in state to remember it.
-            location = request.build_absolute_uri()
+            location = request.build_absolute_uri(reverse('home'))
             # Commence OAuth dance.
             auth_url, _ = flow.authorization_url(state=location)
             return {'success': False, 'redirect_uri': auth_url}
 
         # Hydrate stored credentials.
         cr = json.loads(stored_credentials)
-        credentials = Credentials(
-            token=cr['token'],
-            refresh_token=cr['refresh_token'],
-            token_uri=cr['token_uri'],
-            client_id=cr['client_id'],
-            client_secret=cr['client_secret'],
-            scopes=cr['scopes'],
-            # expiry=cr['expiry'], not working on google library (dateutil.parser.isoparse(cr['expiry']))
-        )
+        cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
+        credentials = Credentials(**cr)
 
         # If credential is expired, refresh it.
         if credentials.expired and credentials.refresh_token:

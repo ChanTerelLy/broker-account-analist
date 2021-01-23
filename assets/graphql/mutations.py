@@ -1,5 +1,6 @@
 import json
 
+import dateutil
 import graphene
 
 from .queries import PortfolioType
@@ -109,7 +110,9 @@ class ParseReportsFromGmail(graphene.Mutation):
 
     @provides_credentials
     def mutate(self, info, **kwargs):
-        info['credentials'] = Credentials(**json.loads(info['credentials']))
+        cr = json.loads(info['credentials'])
+        cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
+        info['credentials'] = Credentials(**cr)
         htmls = get_gmail_reports(**info)
         for html in htmls:
             try:
