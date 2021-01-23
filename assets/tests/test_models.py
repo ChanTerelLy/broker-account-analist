@@ -12,10 +12,7 @@ class AssetModelTest(TestCase):
         self.isins = ['GAZP', 'LSR', 29009, 'SBR']
         self.types = ['Покупка', 'Продажа']
         self.deal_base = {
-            "created_at": dt.now(),
-            "updated_at": dt.now(),
-            "account": self.account.id,
-            "number": rnd.randint(1000000, 3000000),
+            "number": 123456675,
             "conclusion_date": dt.now(),
             "settlement_date": dt.now(),
             "isin": self.isins[0],
@@ -55,6 +52,27 @@ class AssetModelTest(TestCase):
 
         self.assertEquals(len(Deal.objects.all()),3)
 
-    def test_save_from_list(self):
-        pass
+    def test_deal_save_from_list(self):
+        deals = []
+        map = Deal.help_text_map_resolver()
+        for i in range(3):
+            deal = self.deal_base
+            deal['number'] = rnd.randint(1000000, 3000000)
+            deal['isin'] = self.isins[rnd.randint(0, len(self.isins) - 1)]
+            deal['type'] = self.types[rnd.randint(0, len(self.types) - 1)]
+            deal = {map.get(index, 'undefined'): attr for index, attr in deal.items()}
+            deal['Номер договора'] = self.account.name
+            deals.append(deal)
+        Deal.save_from_list(deals)
+        self.assertEquals(len(Deal.objects.all()),6)
+
+    def test_deal_get_avg_price(self):
+        # TODO: add more realistic cases
+        deals = Deal.objects.all()
+        deal1 = Deal.get_avg_price(deals[0].isin, [self.account])
+        deal2 = Deal.get_avg_price(deals[1].isin, [self.account])
+        deal3 = Deal.get_avg_price(deals[2].isin, [self.account])
+        self.assertEqual(deal1, 2321.0)
+        self.assertEqual(deal2, -2329.0)
+        self.assertEqual(deal3, 129.2)
 

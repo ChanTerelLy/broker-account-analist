@@ -29,6 +29,9 @@ class Modify(models.Model):
     def help_text_map_table(self):
         return list([field.help_text for field in self._meta.fields if field.help_text])
 
+    @classmethod
+    def help_text_map_resolver(cls):
+        return {field.attname: field.help_text for field in cls._meta.fields if field.help_text}
 
 class Account(Modify):
     name = models.CharField(max_length=255, help_text='Номер счета или название')

@@ -35,6 +35,8 @@ def dmYHM_to_date(date):
         return dt.strptime(date, "%d.%m.%Y %H:%M").replace(tzinfo=pytz.UTC) if date else None
     elif isinstance(date, Timestamp):
         return date.to_pydatetime().replace(tzinfo=pytz.UTC)
+    elif isinstance(date, dt):
+        return date
     else:
         return None
 
