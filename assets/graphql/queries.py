@@ -5,8 +5,10 @@ from graphene_django.types import DjangoObjectType, ObjectType
 import pandas as pd
 from graphql import GraphQLError
 
+from ..helpers.service import Moex
 from ..models import *
-from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get
+from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get, \
+    asyncio_helper, dmY_hyphen_to_date
 from django.db.models import Sum, Window, F
 
 
@@ -101,6 +103,8 @@ class PortfolioReportType(ObjectType):
     scheduled_charges_amount = graphene.Int()
     scheduled_outbound_amount = graphene.Int()
     account = graphene.String()
+    coupon_percent = graphene.Float()
+    coupon_date = graphene.Date()
 
     @classmethod
     def convert_name_for_dict(cls, data):
@@ -121,7 +125,9 @@ class PortfolioReportType(ObjectType):
                 'Рыночная стоимость (Изменение за период)': 'changes_total_sum',
                 'Плановые зачисления по сделкам, шт': 'scheduled_enrolment_amount',
                 'Плановые списания по сделкам, шт': 'scheduled_charges_amount',
-                'Плановый исходящий остаток, шт': 'scheduled_outbound_amount'
+                'Плановый исходящий остаток, шт': 'scheduled_outbound_amount',
+                'Процент купона': 'coupon_percent',
+                'Дата выплаты ближайшего купона': 'coupon_date'
                 }
 
     @classmethod
@@ -320,4 +326,10 @@ class Query(ObjectType):
                         assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
                         assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
             conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
+            isins = [bound['isin'] for index, bound in enumerate(conv_assets)]
+            data = asyncio_helper(Moex().get_coupon_by_isin, isins)
+            data = [d.to_dict() for d in data]
+            for index, d in enumerate(data):
+                conv_assets[index]['coupon_percent'] = d.get('valueprc',[None])[0]
+                conv_assets[index]['coupon_date'] = dmY_hyphen_to_date(d.get('recorddate', [None])[0])
             return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}

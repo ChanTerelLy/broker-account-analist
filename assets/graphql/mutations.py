@@ -1,4 +1,3 @@
-import asyncio
 import json
 
 import graphene
@@ -6,20 +5,12 @@ import graphene
 from .queries import PortfolioType
 from ..helpers.google_services import get_gmail_reports, provides_credentials
 from ..helpers.service import Moex, SberbankReport
-from ..helpers.utils import parse_file, timestamp_to_string
+from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper
 from ..models import Portfolio, Transfer, Deal, AccountReport, Account
 from graphene_file_upload.scalars import Upload
 
 from google.oauth2.credentials import Credentials
 
-
-def asyncio_helper(func, *args, **kwargs):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(func(*args, **kwargs))
-    loop.close()
-    return result
 
 class PortfolioInput(graphene.InputObjectType):
     id = graphene.ID()

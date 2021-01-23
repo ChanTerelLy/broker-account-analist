@@ -131,10 +131,9 @@ function showPortfolioReportTable(queryData){
             reportValues.push(Object.values(value))
         })
         let mapJson = JSON.parse(queryData.data.portfolioCombined.map);
-        let map = Object.entries(mapJson).map(function(key, value){
-            if(listOfQueryFields.includes(key[1])){
-                return key[0];
-            }
+        let reverseMapJson = swap(mapJson)
+        let map = listOfQueryFields.map(function(value, index){
+            return reverseMapJson[value]
         })
         function drawTable() {
             var data = google.visualization.arrayToDataTable(

@@ -1,22 +1,25 @@
-{% extends 'assets/_webdatarocket-table.html' %}
+{% extends '_base.html' %}
 {% load static %}
 {% block title %}Портфель{% endblock %}
 {% block content %}
     <script>
         let listOfQueryFields = [
                         "account",
+                        "couponPercent",
+                        "couponDate",
                         "name",
                         "isin",
                         "startAmount",
+                        "startMarketTotalSumWithoutNkd",
                         "startDenomination",
                         "startMarketTotalSum",
-                        "startMarketTotalSumWithoutNkd",
                         "startNkd",
                         "changesAmount",
                         "changesTotalSum",
                         "scheduledEnrolmentAmount",
                         "scheduledChargesAmount",
-                        "scheduledOutboundAmount"]
+                        "scheduledOutboundAmount",
+        ]
     </script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <body>

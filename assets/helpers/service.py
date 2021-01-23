@@ -59,6 +59,32 @@ class Moex:
         self.request = self.session.get('https://iss.moex.com/iss/apps/infogrid/stock/columns.json?_'
                                         '=1600420993828&lang=ru&iss.meta=off').json()
         return self.request
+    
+    async def get_secure_by_isin(self, isins):
+        datas = []
+        async with aiohttp.ClientSession() as session:
+            for isin in isins:
+                data = await aiomoex.find_securities(session, isin, None)
+                datas.append(data)
+        return datas
+
+    async def get_coupon_by_isin(self, isins):
+        dfs = []
+        async with aiohttp.ClientSession() as session:
+            dict = {
+                "from": dt.now().strftime('%Y-%m-%d'),
+                "till": (dt.now() + timedelta(days=365)).strftime('%Y-%m-%d'),
+                "start": 0,
+                'iss.only': 'coupons,coupons.cursor',
+                'limit': 1
+            }
+            for isin in isins:
+                data = await aiomoex.request_helpers.get_long_data(session,
+                                                                   f'https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization/{isin}.json',
+                                                                   'coupons',
+                                                                   dict)
+                dfs.append(pd.DataFrame(data))
+        return dfs
 
     async def get_portfolio(self, data: list) -> list:
         deals = []
@@ -155,6 +181,5 @@ class SberbankReport(Report):
         return string.replace('*','')
 
 if __name__ == '__main__':
-    with codecs.open("../../data/examples/4NDKP.html", "r", "utf-8") as html:
-        data = SberbankReport().parse_html(html)
-        print(data)
+    result = json.loads(asyncio_helper(Moex().get_coupon_by_isin, 'RU000A100T81'))
+    print(result)

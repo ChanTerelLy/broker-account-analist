@@ -1,3 +1,4 @@
+import asyncio
 import codecs
 import csv
 import os
@@ -41,6 +42,14 @@ def dmYHM_to_date(date):
 def dmY_to_date(date):
     if isinstance(date, str):
         return dt.strptime(date, "%d.%m.%Y").replace(tzinfo=pytz.UTC) if date else None
+    elif isinstance(date, Timestamp):
+        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
+    else:
+        return None
+
+def dmY_hyphen_to_date(date):
+    if isinstance(date, str):
+        return dt.strptime(date, "%Y-%m-%d").replace(tzinfo=pytz.UTC) if date else None
     elif isinstance(date, Timestamp):
         return date.to_pydatetime().replace(tzinfo=pytz.UTC)
     else:
@@ -167,3 +176,12 @@ def exclude_keys(list, *args):
     for dict in list:
         new_list.append({key:value for key, value in dict.items() if key not in args})
     return new_list
+
+
+def asyncio_helper(func, *args, **kwargs):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
+    result = loop.run_until_complete(func(*args, **kwargs))
+    loop.close()
+    return result
