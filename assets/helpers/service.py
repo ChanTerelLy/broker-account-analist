@@ -89,9 +89,10 @@ class Moex:
         query = {
             "from": dt.now().strftime('%Y-%m-%d'),
             "till": (dt.now() + timedelta(days=365)).strftime('%Y-%m-%d'),
-            "start": 0,
             'iss.only': 'coupons,coupons.cursor',
-            'limit': 1
+            'limit': 1,
+            'sord_order': 'desc',
+            'is_traded': 1
         }
         query = urllib.parse.urlencode(query, doseq=False)
         urls = []
@@ -105,7 +106,7 @@ class Moex:
         return data
 
     async def _build_url(self, query, url):
-        url = url + '?q=' + query
+        url = url + '?' + query
         return url
 
     async def get_portfolio(self, data: list) -> list:
