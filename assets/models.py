@@ -8,7 +8,7 @@ from django.db import models, transaction
 import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
-from assets.helpers.utils import dmYHM_to_date, xirr
+from assets.helpers.utils import dmYHM_to_date, xirr, weird_division
 
 
 class Modify(models.Model):
@@ -91,13 +91,25 @@ class Deal(Modify):
                 service_fee=(deal.get('Комиссия') if deal.get('Комиссия') else 0),
             )
 
+    @classmethod
+    def get_avg_price(cls, isin, accounts):
+        deals = cls.objects.filter(isin=isin, account__in=accounts)
+        purchase_sum = 0
+        amount = 0
+        for deal in deals:
+            purchase_sum += deal.transaction_volume
+            amount += deal.amount
+        return weird_division(purchase_sum, amount)
+
+
+
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
     @property
     def transaction_volume(self):
-        return self.price * self.transaction_number
+        return self.price * self.amount * (1 if self.type == 'Покупка' else -1)
 
     def __str__(self):
         return f'{self.type} - {self.price}'

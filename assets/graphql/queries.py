@@ -106,6 +106,7 @@ class PortfolioReportType(ObjectType):
     account = graphene.String()
     coupon_percent = graphene.Float()
     coupon_date = graphene.Date()
+    purchase_coupon_percent = graphene.Float()
 
     @classmethod
     def convert_name_for_dict(cls, data):
@@ -128,7 +129,8 @@ class PortfolioReportType(ObjectType):
                 'Плановые списания по сделкам, шт': 'scheduled_charges_amount',
                 'Плановый исходящий остаток, шт': 'scheduled_outbound_amount',
                 'Процент купона': 'coupon_percent',
-                'Дата выплаты ближайшего купона': 'coupon_date'
+                'Дата выплаты ближайшего купона': 'coupon_date',
+                'Средний % купона покупки': 'purchase_coupon_percent'
                 }
 
     @classmethod
@@ -297,9 +299,11 @@ class Query(ObjectType):
             reports = []
             for account in accounts:
                 reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
+            #generate data from portfolio report
             portfolious = list([json.loads(r.portfolio) for r in reports if r])
             clear_accounts = list([r.account.name for r in reports if r])
             assets = {}
+            #agrate value from portfolious
             for index, portfolio in enumerate(portfolious):
                 for attr in portfolio:
                     attr = {key: convert_devided_number(value) for key, value in
@@ -327,11 +331,20 @@ class Query(ObjectType):
                         assets[key]['Плановые зачисления по сделкам, шт'] += attr['Плановые зачисления по сделкам, шт']
                         assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
                         assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
+            # get coupon data from moex
             isins = list(assets.keys())
             data = asyncio_helper(Moex().get_coupon_by_isins, isins)
             for index, d in enumerate(data):
                 if len(d):
                     assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
                     assets[d[0]['isin']]['Дата выплаты ближайшего купона'] = dmY_hyphen_to_date(d[0].get('coupondate', [None]))
+            # get data from deals
+            for isin in isins:
+                avg_price = Deal.get_avg_price(isin, accounts)
+                if avg_price:
+                    avg_percent = assets[isin]['Рыночная цена  (Начало Периода)']/avg_price
+                    purchase_coupon_percent = assets[isin]['Процент купона']/avg_percent
+                    assets[isin]['Средний % купона покупки'] = purchase_coupon_percent
+            # convert naming
             conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
             return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}

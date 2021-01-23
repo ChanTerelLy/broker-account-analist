@@ -186,3 +186,6 @@ def asyncio_helper(func, *args, **kwargs):
     result = loop.run_until_complete(func(*args, **kwargs))
     loop.close()
     return result
+
+def weird_division(n, d):
+    return n / d if d else 0
