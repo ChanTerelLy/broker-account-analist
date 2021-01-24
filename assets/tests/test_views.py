@@ -59,7 +59,7 @@ class AssetsViewTest(TestCase):
     def test_update_bounds(self):
         self.client.force_login(self.user)
         response = self.client.get(reverse('update-bounds'))
-        self.assertEqual(response.status_code, 302) # forbidden access except stuff users
+        self.assertEqual(response.status_code, 302)  # forbidden access except stuff users
 
     def test_corp_bounds(self):
         response = self.client.get(reverse('corp-bounds'))
@@ -69,4 +69,3 @@ class AssetsViewTest(TestCase):
         response = self.client.get(reverse('corp-bounds'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'assets/corp-bounds.html')
-
