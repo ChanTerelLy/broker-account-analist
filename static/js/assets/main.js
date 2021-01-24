@@ -50,3 +50,55 @@ function swap(json){
   }
   return ret;
 }
+
+async function updateGmailReports() {
+        let q = `
+        mutation {
+            parseReportsFromGmail(limit:50) {
+                success,
+                redirectUri
+              }
+            }
+        `
+        $('#report-loader').show();
+        let data = await graphqlQuery(q);
+        let uri = data.data?.parseReportsFromGmail?.redirectUri
+        let errors = data?.errors
+        if (uri && !errors) {
+            location.replace(uri)
+            return;
+        }
+        if (data.data?.parseReportsFromGmail?.success && !errors) {
+            alert('Отчеты загружены успешно')
+            $('#report-loader').hide();
+        } else {
+            alert('Произошла ошибка')
+            $('#report-loader').hide();
+        }
+    }
+async function updateMmData() {
+        let q = `
+        mutation {
+            LoadDataFromMoneyManager {
+                success,
+                redirectUri
+              }
+            }
+        `
+        $('#mm-loader').show();
+        let data = await graphqlQuery(q);
+        let uri = data.data?.LoadDataFromMoneyManager?.redirectUri
+        let errors = data?.errors
+        if (uri && !errors) {
+            location.replace(uri)
+            return;
+        }
+        if (data.data?.LoadDataFromMoneyManager?.success && !errors) {
+            alert('Данные загружены успешно')
+            $('#mm-loader').hide();
+        } else {
+            alert('Произошла ошибка')
+            $('#report-loader').hide();
+        }
+    }
+

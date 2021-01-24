@@ -18,10 +18,21 @@
                 </div>
                   <div class="card-body">
                       <h3 class="text-center" id="avg-xirr"></h3>
-                      <button id='update-report-btn' class="btn btn-default">Обновить отчеты</button>
-                      <div id='report-loader' class="spinner-grow text-primary center" style="display: none;" role="status">
-                          <span class="sr-only">Loading...</span>
+                      <div>
+                          <button id='update-report-btn' class="btn btn-default">Обновить отчеты</button>
+                          <div id='report-loader' class="spinner-grow text-primary center" style="display: none;"
+                               role="status">
+                              <span class="sr-only">Loading...</span>
+                          </div>
                       </div>
+                      <div>
+                          <button id='update-mm-btn' class="btn btn-warning">Обновить MM</button>
+                          <div id='mm-loader' class="spinner-grow text-warning center" style="display: none;"
+                               role="status">
+                              <span class="sr-only">Loading...</span>
+                          </div>
+                      </div>
+
                   </div>
             </div>
             <div class="card">
@@ -45,7 +56,7 @@
 <script src="{% static 'js/assets/charts.js' %}"></script>
 <script src="{% static 'js/assets/main.js' %}"></script>
 <script>
-$( document ).ready(async function() {
+    $( document ).ready(async function() {
     let query = `
     query {
         myTransferXirr{
@@ -75,31 +86,12 @@ $( document ).ready(async function() {
     //listners
     document.getElementById('report-menu').addEventListener('change', updateChart, false);
     $('#update-report-btn').click(async function (event) {
-        let q = `
-        mutation {
-            parseReportsFromGmail(limit:50) {
-                success,
-                redirectUri
-              }
-            }
-        `
-        let data = await graphqlQuery(q);
-        $('#report-loader').show();
-        let uri = data.data?.parseReportsFromGmail?.redirectUri
-        let errors = data?.errors
-        if (uri && !errors) {
-            location.replace(uri)
-            return;
-        }
-        if(data.data?.parseReportsFromGmail?.success && !errors){
-            alert('Отчеты загружены успешно')
-            $('#report-loader').hide();
-        } else {
-            alert('Произошла ошибка')
-            $('#report-loader').hide();
-        }
+        await updateGmailReports();
+    });
+    $('#update-mm-btn').click(async function (event) {
+        await updateMmData();
+    });
 
-    })
 })
 </script>
 {% endblock extra_scripts %}
