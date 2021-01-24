@@ -204,6 +204,28 @@ class SberbankReport(Report):
     def _clear_asterics(self, string: str):
         return string.replace('*','')
 
+class MoneyManager:
+
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self.conn = self._connect(db_path)
+
+
+    def _connect(self, db_path):
+        import sqlite3
+        return sqlite3.connect(db_path)
+
+    def get_invest_values(self):
+        c = self.conn.cursor()
+        c.execute("""
+        select NIC_NAME, ZCONTENT, WDATE, DO_TYPE, ZMONEY, I.uid
+        from INOUTCOME I
+                 LEFT JOIN ASSETS A on I.assetUid = A.uid
+                 LEFT JOIN ASSETGROUP AG on A.groupUid = AG.uid
+        where ACC_GROUP_NAME = 'Investments'
+        """)
+        return c.fetchall()
+
 if __name__ == '__main__':
     result = json.loads(asyncio_helper(Moex().get_coupon_by_isins, 'RU000A100T81'))
     print(result)

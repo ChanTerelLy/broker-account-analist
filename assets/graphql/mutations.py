@@ -4,10 +4,10 @@ import dateutil
 import graphene
 
 from .queries import PortfolioType
-from ..helpers.google_services import get_gmail_reports, provides_credentials
-from ..helpers.service import Moex, SberbankReport
+from ..helpers.google_services import get_gmail_reports, provides_credentials, get_money_manager_database
+from ..helpers.service import Moex, SberbankReport, MoneyManager
 from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper
-from ..models import Portfolio, Transfer, Deal, AccountReport, Account
+from ..models import Portfolio, Transfer, Deal, AccountReport, Account, MoneyManagerTransaction
 from graphene_file_upload.scalars import Upload
 
 from google.oauth2.credentials import Credentials
@@ -109,11 +109,11 @@ class ParseReportsFromGmail(graphene.Mutation):
     redirect_uri = graphene.String()
 
     @provides_credentials
-    def mutate(self, info, **kwargs):
-        cr = json.loads(info['credentials'])
+    def mutate(self, info, *args, **kwargs):
+        cr = json.loads(kwargs['credentials'])
         cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
-        info['credentials'] = Credentials(**cr)
-        htmls = get_gmail_reports(**info)
+        kwargs['credentials'] = Credentials(**cr)
+        htmls = get_gmail_reports(**kwargs)
         for html in htmls:
             try:
                 data = SberbankReport().parse_html(html)
@@ -121,6 +121,24 @@ class ParseReportsFromGmail(graphene.Mutation):
             except Exception as e:
                 print(e)
         return ParseReportsFromGmail(success=True)
+
+class LoadDataFromMoneyManager(graphene.Mutation):
+    success = graphene.Boolean()
+    redirect_uri = graphene.String()
+
+    @provides_credentials
+    def mutate(self, info, *args, **kwargs):
+        cr = json.loads(kwargs['credentials'])
+        cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
+        credentials = Credentials(**cr)
+        response = get_money_manager_database(credentials, info.context.user.id)
+        if response.get('error'):
+            return response
+        else:
+            rows = MoneyManager(response['file']).get_invest_values()
+            MoneyManagerTransaction.save_from_rows(rows, info.context.user)
+            return {'success': True}
+        return {}
 
 
 class Mutation(graphene.ObjectType):
@@ -130,3 +148,4 @@ class Mutation(graphene.ObjectType):
     upload_portfolio = UploadPortfolio.Field()
     upload_sberbank_report = UploadSberbankReport.Field()
     parse_reports_from_gmail = ParseReportsFromGmail.Field()
+    LoadDataFromMoneyManager = LoadDataFromMoneyManager.Field()

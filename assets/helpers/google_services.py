@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+import io
 import pickle
 import os.path
 import base64
@@ -7,6 +9,7 @@ from typing import Optional
 import dateutil
 from django.conf import settings
 from django.urls import reverse
+from google.api import http_pb2
 from googleapiclient.discovery import build, Resource
 from google.oauth2.credentials import Credentials
 from google.oauth2 import credentials
@@ -17,7 +20,12 @@ import functools
 import urllib
 import json
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+from googleapiclient.http import MediaIoBaseDownload
+from graphql.execution.tests.utils import resolved
+
+from accounts.models import Profile
+
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/drive.readonly']
 
 
 def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = None, max_page=10, limit=2000) -> list:
@@ -66,6 +74,47 @@ def get_all_messages(service: Resource, next_page: str, q: str, limit: int) -> l
         next_page = results.get('nextPageToken')
     return messages
 
+def get_money_manager_database(credentials: Credentials, user_id):
+    service = build('drive', 'v3', credentials=credentials)
+    folder = service.files().list(q="mimeType = 'application/vnd.google-apps.folder' and name = 'MoneyManager'").execute()
+    folder = folder.get('files', [False])[0]
+    if folder:
+        q = f"'{folder['id']}' in parents"
+        last_backup = service.files().list(q=q, orderBy='modifiedTime desc').execute()
+        last_backup = last_backup.get('files', [None])[0]
+        if last_backup:
+            file = download_file(service, last_backup['id'], user_id)
+            return {'file': file}
+        else:
+            return {'error': 'Backup files not founded'}
+    else:
+        return {'error': 'MoneyManager folder not founded '}
+
+
+def download_file(service, file_id, user_id):
+    """Download a Drive file's content to the local filesystem.
+  
+    Args:
+      service: Drive API Service instance.
+      file_id: ID of the Drive file that will downloaded.
+    """
+    file_name = f'tmp/db_user_{user_id}.mmbak'
+    local_fd = io.FileIO(file_name, 'wb')
+    request = service.files().get_media(fileId=file_id)
+    media_request = MediaIoBaseDownload(local_fd, request)
+    while True:
+        try:
+            download_progress, done = media_request.next_chunk()
+        except Exception as e:
+            print(e)
+            return False
+        if download_progress:
+            print('Download Progress: %d%%' % int(download_progress.progress() * 100))
+        if done:
+            print('Download Complete')
+            return file_name
+
+
 
 def generate_google_cred_local() -> Credentials:
     """Return google Credentials (token.pickle), only for local or development usage"""
@@ -97,6 +146,8 @@ def provides_credentials(func, *args, **kwargs):
         # If OAuth redirect response, get credentials
         if not request:
             request = args[0].context
+        if not request.user.is_authenticated:
+            return {'success': False, 'redirect_uri': resolved('login')}
         flow = InstalledAppFlow.from_client_config(
             json.loads(settings.GOOGLE_CONFIG), SCOPES,
             redirect_uri=settings.GOOGLE_SERVICE_REDIRECT_URI)
@@ -111,7 +162,7 @@ def provides_credentials(func, *args, **kwargs):
                 authorization_response=secure_uri,
                 state=existing_state
             )
-            request.session['credentials'] = flow.credentials.to_json()
+            Profile.objects.update_or_create(user=request.user,defaults={'google_service_token': flow.credentials.to_json()})
             if location_path == current_path:
                 return func(request, flow.credentials)
             # Head back to location stored in state when
@@ -119,7 +170,8 @@ def provides_credentials(func, *args, **kwargs):
             return redirect(existing_state)
 
         # Otherwise, retrieve credential from request session.
-        stored_credentials = request.session.get('credentials', None)
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        stored_credentials = profile.google_service_token
         if not stored_credentials:
             # It's strongly recommended to encrypt state.
             # location is needed in state to remember it.
@@ -138,9 +190,9 @@ def provides_credentials(func, *args, **kwargs):
             credentials.refresh(Request())
 
         # Store JSON representation of credentials in session.
-        request.session['credentials'] = credentials.to_json()
+        Profile.objects.update_or_create(user=request.user, defaults={'google_service_token': credentials.to_json()})
         kwargs['credentials'] = credentials.to_json()
 
-        return func(args, kwargs)
+        return func(args[0], *args, **kwargs)
 
     return wraps

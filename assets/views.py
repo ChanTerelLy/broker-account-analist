@@ -73,5 +73,5 @@ class ReportPortfolioView(TemplateView):
 
 
 @provides_credentials
-def google_callback(request):
+def google_callback(request, *args, **kwargs):
     return HttpResponse('Auth complete!')

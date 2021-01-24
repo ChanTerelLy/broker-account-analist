@@ -2,8 +2,10 @@ import json
 from datetime import datetime
 import pytz
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from pandas import Timestamp
-from django.contrib.auth.models import User
+from accounts.models import User
 from django.db import models, transaction
 import uuid
 from graphene.utils.str_converters import to_camel_case
@@ -316,3 +318,42 @@ class AccountReport(models.Model):
             cls.objects.create(**data)
         except Exception as e:
             print(e)
+
+class MoneyManagerTransaction(Modify):
+    account = models.ForeignKey(Account, models.CASCADE)
+    type = models.CharField(max_length=50)
+    sum = models.FloatField()
+    mm_uid = models.UUIDField(unique=True)
+    operation_date = models.DateField()
+
+    @classmethod
+    def save_from_rows(cls, rows, user):
+        """
+        :param rows: (NIC_NAME, ZCONTENT, WDATE, DO_TYPE, ZMONEY, I.uid)
+        :return:
+        """
+        POSITIVE = [7,4]
+        NEGATIVE = [8,3]
+        for row in rows:
+            account, _ = Account.objects.get_or_create(name=row[0], user=user)
+            type = row[1]
+            operation_date = row[2]
+            sum = float(row[4]) * (-1 if int(row[3]) in NEGATIVE else 1)
+            mm_uid = row[5]
+            try:
+                cls.objects.create(
+                    account=account,
+                    type=type,
+                    operation_date=operation_date,
+                    sum=sum,
+                    mm_uid=mm_uid
+                )
+            except Exception as e:
+                print(e)
+
+@receiver(post_save, sender=MoneyManagerTransaction)
+def update_amount_accounts(sender, **kwargs):
+    account = kwargs['instance'].account
+    account.amount += kwargs['instance'].sum
+    account.save()
+
