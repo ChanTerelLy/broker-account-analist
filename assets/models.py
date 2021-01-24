@@ -25,9 +25,9 @@ class Modify(models.Model):
         l.append({'typeSum': 'Сумма с вычетами'})
         return json.dumps(l)
 
-    @property
-    def help_text_map_table(self):
-        return list([field.help_text for field in self._meta.fields if field.help_text])
+    @staticmethod
+    def help_text_map_table(cls):
+        return list([field.help_text for field in cls._meta.fields if field.help_text])
 
     @classmethod
     def help_text_map_resolver(cls):

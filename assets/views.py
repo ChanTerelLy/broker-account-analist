@@ -1,22 +1,17 @@
 import asyncio
+
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView, ListView
 from .helpers.google_services import provides_credentials
 from .models import *
-from .helpers.service import Moex, SberbankReport
+from .helpers.service import Moex
 import pandas as pd
-from .forms import UploadFile, UploadTransferFile
-# Create your views here.
-from .helpers.utils import parse_file
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-
-from django.shortcuts import redirect
 from django.http import HttpResponse
 
 
+@staff_member_required
 def update_bounds(requests):
     moex = Moex()
     tax_free_bounds = moex.get_corp_bound_tax_free()
@@ -25,7 +20,7 @@ def update_bounds(requests):
     CorpBound.objects.all().delete()
     for index, row in data.iterrows():
         tax_free = True if row['Эмитент'] else False
-        #TODO:find out field match
+        # TODO:find out field match
         CorpBound.objects.create(
             name=row['EMITENTNAME'],
             isin=row['ISIN_x'],
@@ -40,7 +35,7 @@ def update_bounds(requests):
             # demand_volume=row[''],
             # duration=row[''],
             nkd=0,
-            tax_free= tax_free,
+            tax_free=tax_free,
         )
     return JsonResponse({'data': data.to_json()}, safe=False)
 
@@ -48,14 +43,18 @@ def update_bounds(requests):
 def assets(request):
     return render(request, 'assets/assets.html')
 
-class PortfolioView(TemplateView):
-    template_name = 'assets/portfolio.html'
+
+class MoexPortfolioView(TemplateView):
+    template_name = 'assets/moex-portfolio.html'
+
 
 class TransfersView(TemplateView):
     template_name = 'assets/transfers.html'
 
+
 class DealsView(TemplateView):
     template_name = 'assets/deals.html'
+
 
 class CorpBounView(ListView):
     template_name = 'assets/corp-bounds.html'
@@ -65,8 +64,9 @@ class CorpBounView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['help_text'] = CorpBound.objects.first().help_text_map_table
+        context['help_text'] = CorpBound.help_text_map_table
         return context
+
 
 class ReportPortfolioView(TemplateView):
     template_name = 'assets/report-portfolio.html'

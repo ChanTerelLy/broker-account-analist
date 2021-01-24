@@ -4,7 +4,7 @@ from datetime import datetime as dt
 import random as rnd
 
 class AssetModelTest(TestCase):
-    fixtures = ['account.json', 'user.json', 'deal.json']
+    fixtures = ['account.json', 'user.json', 'deal.json', 'portfolio.json']
 
     def setUp(self):
         self.user = User.objects.first()
@@ -75,4 +75,7 @@ class AssetModelTest(TestCase):
         self.assertEqual(deal1, 2321.0)
         self.assertEqual(deal2, -2329.0)
         self.assertEqual(deal3, 129.2)
+
+    def test_portfolio(self):
+        self.assertEqual(len(Portfolio.objects.all()), 5)
 

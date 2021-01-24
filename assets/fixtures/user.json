@@ -10,7 +10,7 @@
       "first_name": "",
       "last_name": "",
       "email": "test@gmail.com",
-      "is_staff": true,
+      "is_staff": false,
       "is_active": true,
       "date_joined": "2021-01-04T17:12:03Z",
       "user_permissions": []

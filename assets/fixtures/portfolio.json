@@ -1,0 +1,107 @@
+[
+  {
+    "model": "assets.portfolio",
+    "pk": "0181e09d-39a1-4187-a151-c4a8f983783f",
+    "fields": {
+      "created_at": "2021-01-21T11:32:44.759Z",
+      "updated_at": "2021-01-21T11:32:44.759Z",
+      "buycloseprice": 3760.0,
+      "buysum": 52640.0,
+      "cashflow": 0.0,
+      "earnings": 637.0,
+      "error": null,
+      "from_date": "2019-03-26",
+      "secid": "MGNT",
+      "sellcloseprice": 3805.5,
+      "sellsum": 53277.0,
+      "till_date": "2019-06-20",
+      "volume": 14,
+      "yield_percent": 5.2376,
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa"
+    }
+  },
+  {
+    "model": "assets.portfolio",
+    "pk": "01b86f42-ad9b-4aac-91ad-fdfcdb8e2104",
+    "fields": {
+      "created_at": "2021-01-21T11:32:44.724Z",
+      "updated_at": "2021-01-21T11:32:44.724Z",
+      "buycloseprice": 124.25,
+      "buysum": 49700.0,
+      "cashflow": 0.0,
+      "earnings": 540.0,
+      "error": null,
+      "from_date": "2019-09-10",
+      "secid": "LSNGP",
+      "sellcloseprice": 125.6,
+      "sellsum": 50240.0,
+      "till_date": "2019-09-17",
+      "volume": 400,
+      "yield_percent": 75.6787,
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa"
+    }
+  },
+  {
+    "model": "assets.portfolio",
+    "pk": "035a7a05-b99a-4bc2-853e-37c9b289cd01",
+    "fields": {
+      "created_at": "2021-01-21T11:32:42.049Z",
+      "updated_at": "2021-01-21T11:32:42.049Z",
+      "buycloseprice": 747.5,
+      "buysum": 29900.0,
+      "cashflow": 0.0,
+      "earnings": 880.0,
+      "error": null,
+      "from_date": "2019-06-20",
+      "secid": "POLY",
+      "sellcloseprice": 769.5,
+      "sellsum": 30780.0,
+      "till_date": "2019-06-24",
+      "volume": 40,
+      "yield_percent": 1310.9617,
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa"
+    }
+  },
+  {
+    "model": "assets.portfolio",
+    "pk": "0500a553-7d0d-4270-bf0c-5dfe3a2666d5",
+    "fields": {
+      "created_at": "2021-01-21T11:37:56.606Z",
+      "updated_at": "2021-01-21T11:37:56.606Z",
+      "buycloseprice": 427.0,
+      "buysum": 25620.0,
+      "cashflow": 0.0,
+      "earnings": 66.0,
+      "error": null,
+      "from_date": "2019-09-19",
+      "secid": "ROSN",
+      "sellcloseprice": 428.1,
+      "sellsum": 25686.0,
+      "till_date": "2019-09-17",
+      "volume": 60,
+      "yield_percent": -37.4708,
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa"
+    }
+  },
+  {
+    "model": "assets.portfolio",
+    "pk": "066c0b5a-505d-4ac3-abb7-3472c8584ea4",
+    "fields": {
+      "created_at": "2021-01-21T11:37:56.560Z",
+      "updated_at": "2021-01-21T11:37:56.560Z",
+      "buycloseprice": 125.0,
+      "buysum": 146250.0,
+      "cashflow": 0.0,
+      "earnings": 9617.4,
+      "error": null,
+      "from_date": "2019-10-24",
+      "secid": "NLMK",
+      "sellcloseprice": 133.22,
+      "sellsum": 155867.4,
+      "till_date": "2019-11-07",
+      "volume": 1170,
+      "yield_percent": 426.1632,
+      "account": "14dd63ec-547c-4d56-a353-2be6dc0696aa"
+    }
+  }
+]
