@@ -157,7 +157,7 @@ class Query(ObjectType):
     get_template_by_key = graphene.List(TemplateType, key=graphene.String())
     report_asset_estimate_dataset = graphene.List(ReportType, account_name=graphene.String())
     income_transfers_sum = graphene.List(ReportType, account_name=graphene.String())
-    user_accounts = graphene.List(AccountNode)
+    user_accounts = graphene.List(AccountNode, exclude=graphene.String())
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
 
@@ -239,9 +239,9 @@ class Query(ObjectType):
         else:
             result = []
             if kwargs.get('account_name'):
-                accounts = Account.objects.filter(user=info.context.user, name=kwargs.get('account_name'))
+                accounts = Account.objects.filter(user=info.context.user, name=kwargs.get('account_name')).exclude(accountreport__isnull=True)
             else:
-                accounts = Account.objects.filter(user=info.context.user)
+                accounts = Account.objects.filter(user=info.context.user).exclude(accountreport__isnull=True)
             for account in accounts:
                 reports = AccountReport.objects.filter(account=account).order_by('start_date')
                 ac_dic = {'account_name': account.name, 'data': []}
@@ -269,18 +269,21 @@ class Query(ObjectType):
                         ReportData(date=datetime.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
             return result
 
-    def resolve_user_accounts(self, info):
+    def resolve_user_accounts(self, info, exclude=None):
         """Return accounts owned by active user"""
         if not info.context.user.is_authenticated:
             return []
         else:
-            return Account.objects.filter(user=info.context.user)
+            if exclude == 'without-report':
+                return Account.objects.filter(user=info.context.user).exclude(accountreport__isnull=True)
+            else:
+                return Account.objects.filter(user=info.context.user)
 
     def resolve_portfolio_by_date(self, info, account_name, date):
         if not info.context.user.is_authenticated:
             return []
         else:
-            account = Account.objects.get(name=account_name, user=info.context.user)
+            account = Account.objects.get(name=account_name, user=info.context.user).exclude(accountreport__isnull=True)
             report = AccountReport.objects.get(account=account, start_date=date)
             portfolio = json.loads(report.portfolio)
             new_portfolio = []
@@ -295,7 +298,7 @@ class Query(ObjectType):
         if not info.context.user.is_authenticated:
             return []
         else:
-            accounts = Account.objects.filter(user=info.context.user)
+            accounts = Account.objects.filter(user=info.context.user).exclude(accountreport__isnull=True)
             reports = []
             for account in accounts:
                 reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
