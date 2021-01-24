@@ -124,8 +124,9 @@ function setReportSelectors() {
 }
 
 function showPortfolioReportTable(queryData){
-        google.charts.load('current', {'packages': ['table']});
+        google.charts.load('current', {'packages': ['table', 'corechart']});
         google.charts.setOnLoadCallback(drawTable);
+        google.charts.setOnLoadCallback(drawPieChart);
         let reportValues = [];
         $.each(queryData.data.portfolioCombined.data, function(key, value){
             reportValues.push(Object.values(value))
@@ -144,5 +145,22 @@ function showPortfolioReportTable(queryData){
             var table = new google.visualization.Table(document.getElementById('table_div'));
 
             table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+        }
+        function drawPieChart() {
+            let pieData = [];
+            $.each(queryData.data.portfolioCombined.data, function(key, value){
+                pieData.push([value.name,value.startMarketTotalSumWithoutNkd])
+            })
+            var data = google.visualization.arrayToDataTable([
+                ['Наименование', 'Сумма'],
+                ...pieData
+            ]);
+            var options = {
+                title: 'Сборная диаграмма'
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+            chart.draw(data, options);
         }
 }
