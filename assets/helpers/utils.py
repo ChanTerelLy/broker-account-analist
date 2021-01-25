@@ -191,3 +191,14 @@ def asyncio_helper(func, *args, **kwargs):
 
 def weird_division(n, d):
     return n / d if d else 0
+
+def conver_to_number(value):
+    if not value:
+        return 0
+    if isinstance(value, (int, float)):
+        return abs(value)
+    else:
+        return abs(float(value))
+
+def get_value(obj):
+    return None if not obj else obj.value

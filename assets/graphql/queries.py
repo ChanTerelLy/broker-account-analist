@@ -6,10 +6,12 @@ from graphene_django.types import DjangoObjectType, ObjectType
 import pandas as pd
 from graphql import GraphQLError
 
-from ..helpers.service import Moex
+from accounts.models import Profile
+from ..helpers.service import Moex, TinkoffApi
 from ..models import *
 from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get, \
     asyncio_helper, dmY_hyphen_to_date
+from datetime import datetime as dt, timedelta
 from django.db.models import Sum, Window, F
 
 
@@ -146,6 +148,23 @@ class PortfolioReportMapType(ObjectType):
     def resolve_map(self, *args):
         return {key: to_camel_case(value) for key, value in PortfolioReportType.get_map().items()}
 
+class TinkoffPrice(ObjectType):
+    currency = graphene.String()
+    value = graphene.Float()
+
+class TinkoffPortfolioType(ObjectType):
+    name = graphene.String()
+    average_position_price = graphene.Field(TinkoffPrice)
+    average_position_price_no_nkd = graphene.Field(TinkoffPrice)
+    balance = graphene.Float()
+    blocked = graphene.Float()
+    expected_yield = graphene.Field(TinkoffPrice)
+    figi = graphene.String()
+    instrument_type = graphene.String()
+    isin = graphene.String()
+    lots = graphene.Int()
+    ticker = graphene.String()
+
 
 class Query(ObjectType):
     account = relay.Node.Field(AccountNode)
@@ -160,6 +179,8 @@ class Query(ObjectType):
     user_accounts = graphene.List(AccountNode, exclude=graphene.String())
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
+    tinkoff_portfolio = graphene.List(TinkoffPortfolioType)
+    tinkoff_operations = graphene.Boolean()
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -239,9 +260,9 @@ class Query(ObjectType):
         else:
             result = []
             if kwargs.get('account_name'):
-                accounts = Account.objects.filter(user=info.context.user, name=kwargs.get('account_name')).exclude(accountreport__isnull=True)
+                account = Account.get_with_reports(user=info.context.user, name=kwargs.get('account_name'))
             else:
-                accounts = Account.objects.filter(user=info.context.user).exclude(accountreport__isnull=True)
+                accounts = Account.get_with_reports(user=info.context.user)
             for account in accounts:
                 reports = AccountReport.objects.filter(account=account).order_by('start_date')
                 ac_dic = {'account_name': account.name, 'data': []}
@@ -275,7 +296,7 @@ class Query(ObjectType):
             return []
         else:
             if exclude == 'without-report':
-                return Account.objects.filter(user=info.context.user).exclude(accountreport__isnull=True)
+                return Account.get_with_reports(user=info.context.user)
             else:
                 return Account.objects.filter(user=info.context.user)
 
@@ -283,7 +304,7 @@ class Query(ObjectType):
         if not info.context.user.is_authenticated:
             return []
         else:
-            account = Account.objects.get(name=account_name, user=info.context.user).exclude(accountreport__isnull=True)
+            account = Account.get_with_reports(name=account_name, user=info.context.user)
             report = AccountReport.objects.get(account=account, start_date=date)
             portfolio = json.loads(report.portfolio)
             new_portfolio = []
@@ -298,7 +319,7 @@ class Query(ObjectType):
         if not info.context.user.is_authenticated:
             return []
         else:
-            accounts = Account.objects.filter(user=info.context.user).exclude(accountreport__isnull=True)
+            accounts = Account.get_with_reports(user=info.context.user)
             reports = []
             for account in accounts:
                 reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
@@ -351,3 +372,31 @@ class Query(ObjectType):
             # convert naming
             conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
             return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}
+
+    def resolve_tinkoff_portfolio(self, info, **kwargs):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
+            if TOKEN:
+                tapi = TinkoffApi(TOKEN)
+                portfolio = asyncio_helper(tapi.get_portfolio)
+                return [TinkoffPortfolioType(**p) for p in json.loads(portfolio)['positions']]
+            else:
+                GraphQLError('No token provided')
+
+    def resolve_tinkoff_operations(self, info, **kwargs):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
+            if TOKEN:
+                account, _ = Account.objects.get_or_create(user=info.context.user, name='Tinkoff')
+                tapi = TinkoffApi(TOKEN)
+                operations = asyncio_helper(tapi.get_operations, dt.now() - timedelta(days=365), dt.now())
+                for operation in operations:
+                    if operation.operation_type.value in ['Buy', 'Sell']:
+                        Deal.convert_tinkoff_deal(operation, account)
+                    else:
+                        Transfer.convert_tinkoff_transfer(operation, account)
+                return True

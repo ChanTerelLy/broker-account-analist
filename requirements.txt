@@ -47,6 +47,7 @@ psycopg2==2.8.4
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
+pydantic==1.7.3
 PyJWT==2.0.0
 python-dateutil==2.8.1
 python-dotenv==0.14.0
@@ -65,6 +66,7 @@ social-auth-core==4.0.3
 soupsieve==2.1
 sqlparse==0.3.1
 termcolor==1.1.0
+tinvest==3.0.1
 toolz==0.11.1
 typing-extensions==3.7.4.3
 Unidecode==1.1.1

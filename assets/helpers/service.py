@@ -7,6 +7,9 @@ import urllib
 import aiohttp
 import aiomoex
 import re
+
+import tinvest
+from tinvest import AsyncClient
 from aiomoex.request_helpers import get_long_data
 import requests
 import pandas as pd
@@ -226,6 +229,42 @@ class MoneyManager:
         """)
         return c.fetchall()
 
+class TinkoffApi:
+
+    _operation_type_map = {
+        'Dividend': 'Зачисление дивидентов',
+        'Buy': 'Покупка',
+        'Sell': 'Продажа',
+        'BrokerCommission': 'Списание Комиссии',
+        'ServiceCommission': 'Сервисная комиссия',
+        'PayIn': 'Ввод ДС',
+        'PayOut': 'Вывод ДС'
+    }
+
+    _instrument_type_map = {
+        'Stock': 'Акции',
+        'Bound': 'Облигации'
+    }
+
+    def __init__(self, token):
+        self.TOKEN = token
+
+    @classmethod
+    def resolve_operation_type(cls, field):
+        return cls._operation_type_map.get(field, 'Undefined type')
+    
+    async def get_portfolio(self, ):
+        client = AsyncClient(self.TOKEN)
+        response = await client.get_portfolio()
+        await client.close()
+        return response.payload.json()
+
+    async def get_operations(self, from_, to):
+        client = AsyncClient(self.TOKEN)
+        response = await client.get_operations(from_, to)
+        await client.close()
+        return response.payload.operations
+
 if __name__ == '__main__':
-    result = json.loads(asyncio_helper(Moex().get_coupon_by_isins, 'RU000A100T81'))
-    print(result)
+    response = asyncio_helper(TinkoffApi('token').get_portfolio)
+    print(response)

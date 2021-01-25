@@ -10,7 +10,9 @@ from django.db import models, transaction
 import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
-from assets.helpers.utils import dmYHM_to_date, xirr, weird_division
+
+from assets.helpers.service import TinkoffApi
+from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value
 
 
 class Modify(models.Model):
@@ -40,6 +42,10 @@ class Account(Modify):
     description = models.TextField(null=True, blank=True, help_text='Описание')
     amount = models.FloatField(default=0, help_text='Итоговая сумма')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @classmethod
+    def get_with_reports(cls, **kwargs):
+        return cls.objects.filter(**kwargs).exclude(accountreport__isnull=True)
 
     def __str__(self):
         return f'{self.user} - {self.name} - {self.amount}'
@@ -105,6 +111,25 @@ class Deal(Modify):
             purchase_sum += deal.transaction_volume
             amount += deal.amount
         return weird_division(purchase_sum, amount)
+
+    @classmethod
+    def convert_tinkoff_deal(cls, operation, account):
+        if Deal.objects.filter(account=account, number=operation.id).exists():
+            return
+        Deal.objects.create(
+            account=account,
+            number=operation.id,
+            conclusion_date=operation.date,
+            settlement_date=operation.date,
+            isin=operation.figi,
+            type=TinkoffApi.resolve_operation_type(get_value(operation.operation_type)),
+            amount=operation.quantity,
+            price=conver_to_number(operation.price),
+            nkd=0,
+            volume=conver_to_number(operation.payment),
+            currency=get_value(operation.currency),
+            service_fee=conver_to_number(operation.commission.value)
+        )
 
 
 
@@ -204,6 +229,31 @@ class Transfer(Modify):
     currency = models.CharField(max_length=5, help_text='Валюта')
     description = models.CharField(max_length=255, help_text='Содержание операции', blank=True, null=True)
     status = models.CharField(max_length=50, help_text='Статус')
+    transfer_id = models.CharField(max_length=50, blank=True, null=True, help_text='ID операции')
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['account_income', 'date_of_application', 'execution_date', 'type', 'sum', 'currency'],
+                name='unique_transfer')
+        ]
+
+    @classmethod
+    def convert_tinkoff_transfer(cls, operation, account):
+        if Transfer.objects.filter(account_income=account, transfer_id=operation.id).count():
+            return
+        descriptions = [operation.figi,get_value(operation.instrument_type),get_value(operation.operation_type)]
+        Transfer.objects.create(
+            account_income=account,
+            date_of_application=operation.date,
+            execution_date=operation.date,
+            type=TinkoffApi.resolve_operation_type(get_value(operation.operation_type)),
+            sum=conver_to_number(operation.payment) + conver_to_number(operation.commission),
+            currency=get_value(operation.currency),
+            description=' '.join(descriptions),
+            status='Исполнено',
+            transfer_id=operation.id
+        )
 
     @property
     def type_sum(self):
@@ -235,7 +285,7 @@ class Transfer(Modify):
                 continue
             if not account_income:
                 account_income = Account.objects.create(name=transfer['Номер договора'])
-            Transfer.objects.create(
+            cls.objects.create(
                 account_income=account_income,
                 # account_charge=account_charge,
                 date_of_application=dmYHM_to_date(transfer.get('Дата подачи поручения')),
