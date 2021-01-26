@@ -7,12 +7,15 @@ import pandas as pd
 from graphql import GraphQLError
 
 from accounts.models import Profile
-from ..helpers.service import Moex, TinkoffApi
+from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get, \
     asyncio_helper, dmY_hyphen_to_date
 from datetime import datetime as dt, timedelta
 from django.db.models import Sum, Window, F
+
+DT_NOW = dt.now()
+DT_YEAR_BEFORE = dt.now() - timedelta(days=365)
 
 
 class AccountNode(DjangoObjectType):
@@ -180,7 +183,8 @@ class Query(ObjectType):
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
     tinkoff_portfolio = graphene.List(TinkoffPortfolioType)
-    tinkoff_operations = graphene.Boolean()
+    tinkoff_operations = graphene.Boolean(_from=graphene.String(), till=graphene.String())
+    test = graphene.Boolean()
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -267,11 +271,16 @@ class Query(ObjectType):
                 reports = AccountReport.objects.filter(account=account).order_by('start_date')
                 ac_dic = {'account_name': account.name, 'data': []}
                 for report in reports:
-                    data = json.loads(report.asset_estimate)
-                    sum = data[-1]['Оценка, руб.']
-                    ac_dic['data'].append(
-                        ReportData(date=report.start_date, sum=convert_devided_number(sum), income_sum=None)
-                    )
+                    if report.source == 'sberbank':
+                        data = json.loads(report.asset_estimate)
+                        sum = data[-1]['Оценка, руб.']
+                        ac_dic['data'].append(
+                            ReportData(date=report.start_date, sum=convert_devided_number(sum), income_sum=None)
+                        )
+                    elif report.source == 'tinkoff':
+                        ac_dic['data'].append(
+                            ReportData(date=report.start_date, sum=report.asset_estimate, income_sum=None)
+                        )
                 result.append(ac_dic)
                 real_income = Transfer.get_previous_sum_for_days(user=info.context.user, account_name=account.name)
                 for income in real_income[0]['data']:
@@ -324,37 +333,14 @@ class Query(ObjectType):
             for account in accounts:
                 reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
             #generate data from portfolio report
-            portfolious = list([json.loads(r.portfolio) for r in reports if r])
-            clear_accounts = list([r.account.name for r in reports if r])
+            portfolious = list(
+                [{'portfolio': json.loads(r.portfolio), 'account': r.account.name, 'source': r.source} for r in reports
+                 if r])
             assets = {}
             #agrate value from portfolious
-            for index, portfolio in enumerate(portfolious):
-                for attr in portfolio:
-                    attr = {key: convert_devided_number(value) for key, value in
-                            attr.items()}
-                    key = attr.get('ISIN ценной бумаги')
-                    if not key:
-                        continue
-                    if key not in assets:
-                        assets[key] = attr
-                        assets[key]['Аккаунт'] = clear_accounts[index]
-                    else:
-                        assets[key]['Аккаунт'] += ', ' + clear_accounts[index]
-                        assets[key]['Количество, шт (Начало Периода)'] += attr['Количество, шт (Начало Периода)']
-                        assets[key]['Рыночная стоимость, без НКД (Начало Периода)'] += attr[
-                            'Рыночная стоимость, без НКД (Начало Периода)']
-                        assets[key]['НКД (Начало Периода)'] += attr['НКД (Начало Периода)']
-                        assets[key]['Количество, шт (Конец Периода)'] += attr['Количество, шт (Конец Периода)']
-                        assets[key]['Рыночная стоимость, без НКД (Конец Периода)'] += attr[
-                            'Рыночная стоимость, без НКД (Конец Периода)']
-                        assets[key]['НКД (Конец Периода)'] += attr['НКД (Конец Периода)']
-                        assets[key]['Количество, шт (Изменение за период)'] += attr[
-                            'Количество, шт (Изменение за период)']
-                        assets[key]['Рыночная стоимость (Изменение за период)'] += attr[
-                            'Рыночная стоимость (Изменение за период)']
-                        assets[key]['Плановые зачисления по сделкам, шт'] += attr['Плановые зачисления по сделкам, шт']
-                        assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
-                        assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
+            for value in portfolious:
+                if value['source'] == 'sberbank':
+                    assets = SberbankReport.extract_assets(assets, value)
             # get coupon data from moex
             isins = list(assets.keys())
             data = asyncio_helper(Moex().get_coupon_by_isins, isins)
@@ -379,24 +365,46 @@ class Query(ObjectType):
         else:
             TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
             if TOKEN:
+                account = Account.get_or_create_tinkoff_account(user=info.context.user)
                 tapi = TinkoffApi(TOKEN)
                 portfolio = asyncio_helper(tapi.get_portfolio)
-                return [TinkoffPortfolioType(**p) for p in json.loads(portfolio)['positions']]
+                j_positions = portfolio['positions']
+                AccountReport.save_from_tinkoff(
+                    **{
+                        'account': account,
+                        'start_date': DT_NOW,
+                        'end_date': DT_NOW,
+                        'asset_estimate': {},
+                        'iis_income': {},
+                        'portfolio': json.dumps(j_positions),
+                        'money_flow': {},
+                        'tax': {},
+                        'handbook': {},
+                        'source': 'tinkoff'
+                    }
+                )
+                return [TinkoffPortfolioType(**p) for p in j_positions]
             else:
                 GraphQLError('No token provided')
 
-    def resolve_tinkoff_operations(self, info, **kwargs):
+    def resolve_tinkoff_operations(self, info, _from=DT_YEAR_BEFORE, till=DT_NOW, **kwargs):
         if not info.context.user.is_authenticated:
             return []
         else:
             TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
             if TOKEN:
-                account, _ = Account.objects.get_or_create(user=info.context.user, name='Tinkoff')
+                account = Account.get_or_create_tinkoff_account(user=info.context.user)
                 tapi = TinkoffApi(TOKEN)
-                operations = asyncio_helper(tapi.get_operations, dt.now() - timedelta(days=365), dt.now())
+                operations = asyncio_helper(tapi.get_operations, _from, till)
                 for operation in operations:
                     if operation.operation_type.value in ['Buy', 'Sell']:
                         Deal.convert_tinkoff_deal(operation, account)
                     else:
                         Transfer.convert_tinkoff_transfer(operation, account)
                 return True
+
+    def resolve_test(self, info, *args, **kwargs):
+        TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
+        if TOKEN:
+            result = asyncio_helper(TinkoffApi(TOKEN).get_portfolio_currencies)
+            return True

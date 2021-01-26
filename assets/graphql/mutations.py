@@ -93,7 +93,7 @@ class UploadSberbankReport(graphene.Mutation):
         files = info.context.FILES
         html = parse_file(files['0'])
         data = SberbankReport().parse_html(html)
-        AccountReport.save_from_dict(data)
+        AccountReport.save_from_dict(data, source='sberbank')
         return UploadSberbankReport(success=True)
 
 class ParseReportsFromGmail(graphene.Mutation):
@@ -117,7 +117,8 @@ class ParseReportsFromGmail(graphene.Mutation):
         for html in htmls:
             try:
                 data = SberbankReport().parse_html(html)
-                AccountReport.save_from_dict(data)
+                source = 'sberbank'
+                AccountReport.save_from_dict(data, source)
             except Exception as e:
                 print(e)
         return ParseReportsFromGmail(success=True)

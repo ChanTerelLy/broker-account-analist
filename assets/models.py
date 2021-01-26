@@ -42,10 +42,16 @@ class Account(Modify):
     description = models.TextField(null=True, blank=True, help_text='Описание')
     amount = models.FloatField(default=0, help_text='Итоговая сумма')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    broker_id = models.CharField(max_length=50, blank=True, null=True)
 
     @classmethod
     def get_with_reports(cls, **kwargs):
         return cls.objects.filter(**kwargs).exclude(accountreport__isnull=True)
+
+    @classmethod
+    def get_or_create_tinkoff_account(cls, **kwarg):
+        account, _ = cls.objects.get_or_create(**kwarg, name='Tinkoff')
+        return account
 
     def __str__(self):
         return f'{self.user} - {self.name} - {self.amount}'
@@ -250,7 +256,7 @@ class Transfer(Modify):
             type=TinkoffApi.resolve_operation_type(get_value(operation.operation_type)),
             sum=conver_to_number(operation.payment) + conver_to_number(operation.commission),
             currency=get_value(operation.currency),
-            description=' '.join(descriptions),
+            description=' '.join(filter(None, descriptions)),
             status='Исполнено',
             transfer_id=operation.id
         )
@@ -351,6 +357,7 @@ class AccountReport(models.Model):
     money_flow = models.JSONField()
     tax = models.JSONField()
     handbook = models.JSONField()
+    source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
 
     class Meta:
         constraints = [
@@ -358,16 +365,25 @@ class AccountReport(models.Model):
         ]
 
     @classmethod
-    def save_from_dict(cls, data):
+    def save_from_dict(cls, data, source):
         data['account'] = Account.objects.filter(name=data['account']).first()
         data['asset_estimate'] = json.dumps(data['asset_estimate'])
         data['portfolio'] = json.dumps(data['portfolio'])
         data['handbook'] = json.dumps(data['handbook'])
         data['money_flow'] = json.dumps(data['money_flow'])
+        data['source'] = source
         try:
             cls.objects.create(**data)
         except Exception as e:
             print(e)
+
+    @classmethod
+    def save_from_tinkoff(cls, **kwargs):
+        try:
+            cls.objects.create(**kwargs)
+        except Exception as e:
+            print(e)
+
 
 class MoneyManagerTransaction(Modify):
     account = models.ForeignKey(Account, models.CASCADE)

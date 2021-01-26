@@ -186,6 +186,36 @@ class SberbankReport(Report):
             'money_flow': json_money_flow
         }
 
+    @classmethod
+    def extract_assets(self, assets, value):
+        portfolio, account = value['portfolio'], value['account']
+        for attr in portfolio:
+            attr = {key: convert_devided_number(value) for key, value in
+                    attr.items()}
+            key = attr.get('ISIN ценной бумаги')
+            if not key:
+                continue
+            if key not in assets:
+                assets[key] = attr
+                assets[key]['Аккаунт'] = account
+            else:
+                assets[key]['Аккаунт'] += ', ' + account
+                assets[key]['Количество, шт (Начало Периода)'] += attr['Количество, шт (Начало Периода)']
+                assets[key]['Рыночная стоимость, без НКД (Начало Периода)'] += attr[
+                    'Рыночная стоимость, без НКД (Начало Периода)']
+                assets[key]['НКД (Начало Периода)'] += attr['НКД (Начало Периода)']
+                assets[key]['Количество, шт (Конец Периода)'] += attr['Количество, шт (Конец Периода)']
+                assets[key]['Рыночная стоимость, без НКД (Конец Периода)'] += attr[
+                    'Рыночная стоимость, без НКД (Конец Периода)']
+                assets[key]['НКД (Конец Периода)'] += attr['НКД (Конец Периода)']
+                assets[key]['Количество, шт (Изменение за период)'] += attr[
+                    'Количество, шт (Изменение за период)']
+                assets[key]['Рыночная стоимость (Изменение за период)'] += attr[
+                    'Рыночная стоимость (Изменение за период)']
+                assets[key]['Плановые зачисления по сделкам, шт'] += attr['Плановые зачисления по сделкам, шт']
+                assets[key]['Плановые списания по сделкам, шт'] += attr['Плановые списания по сделкам, шт']
+                assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
+        return assets
 
 
     def _get_dates(self, dates: str):
@@ -249,21 +279,41 @@ class TinkoffApi:
     def __init__(self, token):
         self.TOKEN = token
 
+    @property
+    def client(self):
+        return AsyncClient(self.TOKEN)
+
     @classmethod
     def resolve_operation_type(cls, field):
         return cls._operation_type_map.get(field, 'Undefined type')
-    
+
+    async def gather_requests(self, list, func):
+        return await asyncio.gather(*[asyncio.ensure_future(func(item)) for item in list])
+
     async def get_portfolio(self, ):
-        client = AsyncClient(self.TOKEN)
-        response = await client.get_portfolio()
-        await client.close()
-        return response.payload.json()
+        response = await self.client.get_portfolio()
+        return response.payload.dict()
 
     async def get_operations(self, from_, to):
-        client = AsyncClient(self.TOKEN)
-        response = await client.get_operations(from_, to)
-        await client.close()
+        response = await self.client.get_operations(from_, to)
         return response.payload.operations
+
+    async def get_portfolio_currencies(self):
+        result = await self.client.get_portfolio_currencies()
+        return result
+
+    async def get_accounts(self):
+        return await self.client.get_accounts()
+
+    async def get_market_currencies(self):
+        return await self.client.get_market_currencies()
+
+    async def get_market_search_by_figi(self, figi):
+        return await self.client.get_market_search_by_figi(figi)
+
+    async def resolve_list_figis(self, figis):
+        return await self.gather_requests(figis, self.client.get_market_search_by_figi)
+
 
 if __name__ == '__main__':
     response = asyncio_helper(TinkoffApi('token').get_portfolio)
