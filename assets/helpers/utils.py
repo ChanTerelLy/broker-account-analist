@@ -202,3 +202,11 @@ def conver_to_number(value):
 
 def get_value(obj):
     return None if not obj else obj.value
+
+def xstr(s):
+    if s is None:
+        return ''
+    return str(s)
+
+def list_to_dict(list):
+    return {k: v for element in list for k, v in element.items()}

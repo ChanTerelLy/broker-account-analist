@@ -11,7 +11,7 @@ import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
-from assets.helpers.service import TinkoffApi
+from assets.helpers.service import TinkoffApi as tapi
 from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value
 
 
@@ -119,7 +119,7 @@ class Deal(Modify):
         return weird_division(purchase_sum, amount)
 
     @classmethod
-    def convert_tinkoff_deal(cls, operation, account):
+    def convert_tinkoff_deal(cls, operation, account, figis):
         if Deal.objects.filter(account=account, number=operation.id).exists():
             return
         Deal.objects.create(
@@ -127,8 +127,8 @@ class Deal(Modify):
             number=operation.id,
             conclusion_date=operation.date,
             settlement_date=operation.date,
-            isin=operation.figi,
-            type=TinkoffApi.resolve_operation_type(get_value(operation.operation_type)),
+            isin=tapi.extract_figi(operation.figi, figis),
+            type=tapi.resolve_operation_type(get_value(operation.operation_type)),
             amount=operation.quantity,
             price=conver_to_number(operation.price),
             nkd=0,
@@ -245,15 +245,17 @@ class Transfer(Modify):
         ]
 
     @classmethod
-    def convert_tinkoff_transfer(cls, operation, account):
+    def convert_tinkoff_transfer(cls, operation, account, figis):
         if Transfer.objects.filter(account_income=account, transfer_id=operation.id).count():
             return
-        descriptions = [operation.figi,get_value(operation.instrument_type),get_value(operation.operation_type)]
+        figi = tapi.extract_figi(operation.figi, figis) if operation.figi else None
+        descriptions = [figi, get_value(operation.instrument_type),
+                        get_value(operation.operation_type)]
         Transfer.objects.create(
             account_income=account,
             date_of_application=operation.date,
             execution_date=operation.date,
-            type=TinkoffApi.resolve_operation_type(get_value(operation.operation_type)),
+            type=tapi.resolve_operation_type(get_value(operation.operation_type)),
             sum=conver_to_number(operation.payment) + conver_to_number(operation.commission),
             currency=get_value(operation.currency),
             description=' '.join(filter(None, descriptions)),

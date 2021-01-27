@@ -24,6 +24,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from graphql.execution.tests.utils import resolved
 
 from accounts.models import Profile
+from assets.helpers.utils import xstr
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/drive.readonly']
 
@@ -32,7 +33,7 @@ def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = No
     """Return list of string what contain html pages with sberbank reports"""
     service = build('gmail', 'v1', credentials=credentials)
     # Call the Gmail API
-    q = f'subject: SBERBANK. Brokerage report {account_name}'
+    q = f'subject: SBERBANK. Brokerage report ' + xstr(account_name)
     results = service.users().messages().list(userId='me', q=q).execute()
     messages = results.get('messages', [])
     next_page = results.get('nextPageToken')

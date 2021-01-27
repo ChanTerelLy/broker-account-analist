@@ -278,6 +278,7 @@ class TinkoffApi:
 
     def __init__(self, token):
         self.TOKEN = token
+        self.figis = []
 
     @property
     def client(self):
@@ -296,7 +297,7 @@ class TinkoffApi:
 
     async def get_operations(self, from_, to):
         response = await self.client.get_operations(from_, to)
-        return response.payload.operations
+        return response.payload
 
     async def get_portfolio_currencies(self):
         result = await self.client.get_portfolio_currencies()
@@ -309,10 +310,17 @@ class TinkoffApi:
         return await self.client.get_market_currencies()
 
     async def get_market_search_by_figi(self, figi):
-        return await self.client.get_market_search_by_figi(figi)
+        response = await self.client.get_market_search_by_figi(figi)
+        return {figi: response.payload}
 
     async def resolve_list_figis(self, figis):
-        return await self.gather_requests(figis, self.client.get_market_search_by_figi)
+        result = await self.gather_requests(figis, self.get_market_search_by_figi)
+        self.figis = result
+        return result
+
+    @staticmethod
+    def extract_figi(figi, figis):
+        return figis[figi].ticker
 
 
 if __name__ == '__main__':

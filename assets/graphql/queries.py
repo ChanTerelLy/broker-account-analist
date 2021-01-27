@@ -10,7 +10,7 @@ from accounts.models import Profile
 from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import dmYHM_to_date, xirr, get_total_xirr_percent, convert_devided_number, safe_list_get, \
-    asyncio_helper, dmY_hyphen_to_date
+    asyncio_helper, dmY_hyphen_to_date, list_to_dict
 from datetime import datetime as dt, timedelta
 from django.db.models import Sum, Window, F
 
@@ -395,16 +395,15 @@ class Query(ObjectType):
             if TOKEN:
                 account = Account.get_or_create_tinkoff_account(user=info.context.user)
                 tapi = TinkoffApi(TOKEN)
-                operations = asyncio_helper(tapi.get_operations, _from, till)
+                payload = asyncio_helper(tapi.get_operations, _from, till)
+                operations = payload.operations
+                figis = [item['figi'] for item in payload.dict()['operations']]
+                figis = list(set(filter(None, figis)))
+                figis = asyncio_helper(tapi.resolve_list_figis, figis)
+                figis = list_to_dict(figis)
                 for operation in operations:
                     if operation.operation_type.value in ['Buy', 'Sell']:
-                        Deal.convert_tinkoff_deal(operation, account)
+                        Deal.convert_tinkoff_deal(operation, account, figis)
                     else:
-                        Transfer.convert_tinkoff_transfer(operation, account)
+                        Transfer.convert_tinkoff_transfer(operation, account, figis)
                 return True
-
-    def resolve_test(self, info, *args, **kwargs):
-        TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
-        if TOKEN:
-            result = asyncio_helper(TinkoffApi(TOKEN).get_portfolio_currencies)
-            return True
