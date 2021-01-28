@@ -293,7 +293,7 @@ class TinkoffApi:
 
     async def get_portfolio(self, ):
         response = await self.client.get_portfolio()
-        return response.payload.dict()
+        return response.payload.json()
 
     async def get_operations(self, from_, to):
         response = await self.client.get_operations(from_, to)

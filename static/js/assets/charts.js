@@ -128,10 +128,10 @@ function showPortfolioReportTable(queryData){
         google.charts.setOnLoadCallback(drawTable);
         google.charts.setOnLoadCallback(drawPieChart);
         let reportValues = [];
-        $.each(queryData.data.portfolioCombined.data, function(key, value){
+        $.each(queryData.data, function(key, value){
             reportValues.push(Object.values(value))
         })
-        let mapJson = JSON.parse(queryData.data.portfolioCombined.map);
+        let mapJson = JSON.parse(queryData.map);
         let reverseMapJson = swap(mapJson)
         let map = listOfQueryFields.map(function(value, index){
             return reverseMapJson[value]
@@ -148,7 +148,7 @@ function showPortfolioReportTable(queryData){
         }
         function drawPieChart() {
             let pieData = [];
-            $.each(queryData.data.portfolioCombined.data, function(key, value){
+            $.each(queryData.data, function(key, value){
                 pieData.push([value.name,value.startMarketTotalSumWithoutNkd])
             })
             var data = google.visualization.arrayToDataTable([

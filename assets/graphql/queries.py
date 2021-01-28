@@ -157,16 +157,65 @@ class TinkoffPrice(ObjectType):
 
 class TinkoffPortfolioType(ObjectType):
     name = graphene.String()
-    average_position_price = graphene.Field(TinkoffPrice)
-    average_position_price_no_nkd = graphene.Field(TinkoffPrice)
+    average_position_price = graphene.Float()
+    average_position_price_no_nkd = graphene.Float()
     balance = graphene.Float()
     blocked = graphene.Float()
-    expected_yield = graphene.Field(TinkoffPrice)
+    expected_yield = graphene.Float()
     figi = graphene.String()
     instrument_type = graphene.String()
     isin = graphene.String()
     lots = graphene.Int()
     ticker = graphene.String()
+    currency = graphene.String()
+    start_market_total_sum_without_nkd = graphene.Float()
+
+    def resolve_average_position_price(self, info, *args):
+        self.currency = self.average_position_price['currency']
+        return self.average_position_price['value']
+
+    def resolve_average_position_price_no_nkd(self, info):
+        return self.average_position_price_no_nkd['value'] if self.average_position_price_no_nkd else None
+
+    def resolve_expected_yield(self, info):
+        return self.expected_yield['value']
+
+    def resolve_start_market_total_sum_without_nkd(self, info):
+        return self.average_position_price['value'] * self.balance
+
+
+    @staticmethod
+    def joined_value(value):
+        if value:
+            amount = "{:10.1f}".format(value['value']) if value['value'] else ''
+            return amount + ' ' + value['currency']
+        else:
+            return ''
+
+    @staticmethod
+    def get_map():
+        return {
+            'Наименование': "name",
+            'Средняя цена покупки': "average_position_price",
+            'Средняя цена покупки (без НКД)': "average_position_price_no_nkd",
+            'Баланс': "balance",
+            'Заблокировано': "blocked",
+            'Ликвидационная доходность': "expected_yield",
+            'FIGI': "figi",
+            'Тип инструмента': "instrument_type",
+            'ISIN': "isin",
+            'Колличество': "lots",
+            'Тикер': "ticker",
+            'Валюта': "currency",
+            'Ликвидационная сумма': "start_market_total_sum_without_nkd"
+        }
+
+class TinkoffPortfolioMapType(ObjectType):
+    map = graphene.JSONString()
+    data = graphene.List(TinkoffPortfolioType)
+
+    def resolve_map(self, *args):
+        return {key: to_camel_case(value) for key, value in TinkoffPortfolioType.get_map().items()}
 
 
 class Query(ObjectType):
@@ -182,7 +231,7 @@ class Query(ObjectType):
     user_accounts = graphene.List(AccountNode, exclude=graphene.String())
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
-    tinkoff_portfolio = graphene.List(TinkoffPortfolioType)
+    tinkoff_portfolio = graphene.Field(TinkoffPortfolioMapType)
     tinkoff_operations = graphene.Boolean(_from=graphene.String(), till=graphene.String())
     test = graphene.Boolean()
 
@@ -368,7 +417,7 @@ class Query(ObjectType):
                 account = Account.get_or_create_tinkoff_account(user=info.context.user)
                 tapi = TinkoffApi(TOKEN)
                 portfolio = asyncio_helper(tapi.get_portfolio)
-                j_positions = portfolio['positions']
+                j_positions = json.loads(portfolio)['positions']
                 AccountReport.save_from_tinkoff(
                     **{
                         'account': account,
@@ -383,7 +432,8 @@ class Query(ObjectType):
                         'source': 'tinkoff'
                     }
                 )
-                return [TinkoffPortfolioType(**p) for p in j_positions]
+                data = [TinkoffPortfolioType(**p) for p in j_positions]
+                return {'data': data, 'map': ''}
             else:
                 GraphQLError('No token provided')
 
