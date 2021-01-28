@@ -44,6 +44,11 @@ class Moex:
         data = pd.DataFrame(data)
         return data
 
+    def get_usd(self):
+        request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json')
+        response = request.json()['cbrf']['data'][0]
+        return response
+
     async def aiohttp_generator(self, urls):
         async with aiohttp.ClientSession(headers=self.headers) as client:
             await asyncio.gather(*[
@@ -301,13 +306,16 @@ class TinkoffApi:
 
     async def get_portfolio_currencies(self):
         result = await self.client.get_portfolio_currencies()
-        return result
+        result = result.payload.json()
+        return json.loads(result)['currencies']
 
     async def get_accounts(self):
         return await self.client.get_accounts()
 
     async def get_market_currencies(self):
-        return await self.client.get_market_currencies()
+        result = await self.client.get_market_currencies()
+        result = result.payload.json()
+        return json.loads(result)['instruments']
 
     async def get_market_search_by_figi(self, figi):
         response = await self.client.get_market_search_by_figi(figi)

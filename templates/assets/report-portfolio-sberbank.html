@@ -57,7 +57,7 @@ $( document ).ready(async function() {
 }
         `
     let queryData = await graphqlQuery(query)
-    showPortfolioReportTable(queryData)
+    showPortfolioReportTable(queryData.data.portfolioCombined)
 })
     </script>
 {% endblock extra_scripts %}

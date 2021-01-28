@@ -26,6 +26,13 @@
                           </div>
                       </div>
                       <div>
+                          <button id='update-tinkoff-btn' class="btn btn-danger">Обновить tinkoff</button>
+                          <div id='tinkoff-loader' class="spinner-grow text-primary center" style="display: none;"
+                               role="status">
+                              <span class="sr-only">Loading...</span>
+                          </div>
+                      </div>
+                      <div>
                           <button id='update-mm-btn' class="btn btn-warning">Обновить MM</button>
                           <div id='mm-loader' class="spinner-grow text-warning center" style="display: none;"
                                role="status">
@@ -87,6 +94,9 @@
     document.getElementById('report-menu').addEventListener('change', updateChart, false);
     $('#update-report-btn').click(async function (event) {
         await updateGmailReports();
+    });
+    $('#update-tinkoff-btn').click(async function (event) {
+        await updateTinkoffReports();
     });
     $('#update-mm-btn').click(async function (event) {
         await updateMmData();

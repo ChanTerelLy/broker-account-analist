@@ -16,6 +16,7 @@ from django.db.models import Sum, Window, F
 
 DT_NOW = dt.now()
 DT_YEAR_BEFORE = dt.now() - timedelta(days=365)
+USD_PRICE = 0
 
 
 class AccountNode(DjangoObjectType):
@@ -157,31 +158,37 @@ class TinkoffPrice(ObjectType):
 
 class TinkoffPortfolioType(ObjectType):
     name = graphene.String()
-    average_position_price = graphene.Float()
-    average_position_price_no_nkd = graphene.Float()
-    balance = graphene.Float()
-    blocked = graphene.Float()
-    expected_yield = graphene.Float()
+    average_position_price = graphene.Int()
+    average_position_price_no_nkd = graphene.Int()
+    balance = graphene.Int()
+    blocked = graphene.Int()
+    expected_yield = graphene.Int()
     figi = graphene.String()
     instrument_type = graphene.String()
     isin = graphene.String()
     lots = graphene.Int()
     ticker = graphene.String()
     currency = graphene.String()
-    start_market_total_sum_without_nkd = graphene.Float()
+    start_market_total_sum_without_nkd = graphene.Int()
+    usd_price = graphene.Float()
 
     def resolve_average_position_price(self, info, *args):
-        self.currency = self.average_position_price['currency']
-        return self.average_position_price['value']
+        return self.average_position_price.get('value')
 
     def resolve_average_position_price_no_nkd(self, info):
-        return self.average_position_price_no_nkd['value'] if self.average_position_price_no_nkd else None
+        return self.average_position_price_no_nkd.get('value') if self.average_position_price_no_nkd else None
 
     def resolve_expected_yield(self, info):
-        return self.expected_yield['value']
+        price = self.expected_yield.get('value')
+        if self.currency == 'USD' and self.instrument_type != 'Currency':
+            price *= self.usd_price
+        return price
 
     def resolve_start_market_total_sum_without_nkd(self, info):
-        return self.average_position_price['value'] * self.balance
+        price = self.average_position_price.get('value') * self.balance
+        if self.currency == 'USD' and self.instrument_type != 'Currency':
+            price *= self.usd_price
+        return price
 
 
     @staticmethod
@@ -322,7 +329,7 @@ class Query(ObjectType):
                 for report in reports:
                     if report.source == 'sberbank':
                         data = json.loads(report.asset_estimate)
-                        sum = data[-1]['Оценка, руб.']
+                        sum = data[-1]['Оценка портфеля ЦБ, руб.']
                         ac_dic['data'].append(
                             ReportData(date=report.start_date, sum=convert_devided_number(sum), income_sum=None)
                         )
@@ -418,21 +425,40 @@ class Query(ObjectType):
                 tapi = TinkoffApi(TOKEN)
                 portfolio = asyncio_helper(tapi.get_portfolio)
                 j_positions = json.loads(portfolio)['positions']
-                AccountReport.save_from_tinkoff(
-                    **{
+                portfolio_currencies = asyncio_helper(tapi.get_portfolio_currencies)
+                portfolio_currencies = [cur for cur in portfolio_currencies if cur['currency'] == 'RUB']
+                usd_price = Moex().get_usd()[0]
+                data = [TinkoffPortfolioType(**p, usd_price=usd_price, currency=p['average_position_price']['currency'])
+                        for p in j_positions]
+                data.append(
+                    TinkoffPortfolioType(
+                        name='Российский рубль',
+                        average_position_price={'value': 1, 'currency': 'RUB'},
+                        average_position_price_no_nkd={'value': 1, 'currency': 'RUB'},
+                        balance=portfolio_currencies[0]['balance'],
+                        blocked=None,
+                        expected_yield=None,
+                        figi=None,
+                        instrument_type='Currency',
+                        isin=None,
+                        lots=None,
+                        ticker="RUB",
+                        currency="RUB"
+                    )
+                )
+                total_sum = [asset.resolve_start_market_total_sum_without_nkd(None) for asset in data]
+                AccountReport.save_from_tinkoff(**{
                         'account': account,
                         'start_date': DT_NOW,
                         'end_date': DT_NOW,
-                        'asset_estimate': {},
+                        'asset_estimate': sum(total_sum),
                         'iis_income': {},
                         'portfolio': json.dumps(j_positions),
                         'money_flow': {},
                         'tax': {},
                         'handbook': {},
                         'source': 'tinkoff'
-                    }
-                )
-                data = [TinkoffPortfolioType(**p) for p in j_positions]
+                    })
                 return {'data': data, 'map': ''}
             else:
                 GraphQLError('No token provided')

@@ -48,13 +48,13 @@ class AssetsViewTest(TestCase):
         self.assertTemplateUsed(response, 'assets/deals.html')
 
     def test_report_portfolio(self):
-        response = self.client.get(reverse('report-portfolio'))
+        response = self.client.get(reverse('report-portfolio-sberbank'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('login') + '?next=/report-portfolio/')
+        self.assertRedirects(response, reverse('login') + '?next=/report-portfolio-sberbank/')
         self.client.force_login(self.user)
-        response = self.client.get(reverse('report-portfolio'))
+        response = self.client.get(reverse('report-portfolio-sberbank'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'assets/report-portfolio.html')
+        self.assertTemplateUsed(response, 'assets/report-portfolio-sberbank.html')
 
     def test_update_bounds(self):
         self.client.force_login(self.user)

@@ -76,6 +76,23 @@ async function updateGmailReports() {
             $('#report-loader').hide();
         }
     }
+async function updateTinkoffReports() {
+        let q = `
+            query {
+                tinkoffOperations
+                }
+        `
+        $('#tinkoff-loader').show();
+        let data = await graphqlQuery(q);
+        let errors = data?.errors
+        if (data.data?.tinkoffOperations && !errors) {
+            alert('Отчеты загружены успешно')
+            $('#tinkoff-loader').hide();
+        } else {
+            alert('Произошла ошибка')
+            $('#tinkoff-loader').hide();
+        }
+    }
 async function updateMmData() {
         let q = `
         mutation {
