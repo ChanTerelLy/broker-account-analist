@@ -106,3 +106,8 @@ venv.bak/
 .env
 credentials/*
 data/examples/*
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
