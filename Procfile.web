@@ -1,0 +1,2 @@
+django: gunicorn baa.wsgi --bind=127.0.0.1:8000 --log-file -
+web: npm run serve
