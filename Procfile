@@ -1,2 +1,3 @@
 release: python manage.py migrate
-web: gunicorn baa.wsgi --bind=0.0.0.0:$PORT --log-file -
+web: npm run serve
+django: gunicorn baa.wsgi --bind=0.0.0.0:8000 --log-file -
