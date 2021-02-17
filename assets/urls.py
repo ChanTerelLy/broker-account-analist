@@ -21,4 +21,5 @@ urlpatterns = [
 
     # other
     path('google-callback/', google_callback, name='google-callback'),
+    path('test-vue/', VueTest.as_view(), name='test-vue'),
 ]

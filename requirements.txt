@@ -21,6 +21,7 @@ django-filter==2.4.0
 django-guardian==2.3.0
 django-heroku==0.3.1
 django-redis==4.12.1
+django-webpack-loader==0.7.0
 django-widget-tweaks==1.4.8
 fastdiff==0.2.0
 google-api-core==1.24.1
@@ -65,11 +66,13 @@ social-auth-app-django==4.0.0
 social-auth-core==4.0.3
 soupsieve==2.1
 sqlparse==0.3.1
+style==1.1.0
 termcolor==1.1.0
 tinvest==3.0.1
 toolz==0.11.1
 typing-extensions==3.7.4.3
 Unidecode==1.1.1
+update==0.0.1
 uritemplate==3.0.1
 urllib3==1.25.10
 whitenoise==5.2.0
