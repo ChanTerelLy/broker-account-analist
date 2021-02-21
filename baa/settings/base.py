@@ -112,6 +112,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 VUE_FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 
+#TODO: solve issue with img
 WEBPACK_LOADER = {
     'DEFAULT': {
         'CACHE': not DEBUG,
