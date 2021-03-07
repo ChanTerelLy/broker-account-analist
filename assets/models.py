@@ -12,7 +12,7 @@ from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
 from assets.helpers.service import TinkoffApi as tapi
-from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value
+from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value, dmY_to_date
 
 
 class Modify(models.Model):
@@ -36,6 +36,7 @@ class Modify(models.Model):
     @classmethod
     def help_text_map_resolver(cls):
         return {field.attname: field.help_text for field in cls._meta.fields if field.help_text}
+
 
 class Account(Modify):
     name = models.CharField(max_length=255, help_text='Номер счета или название')
@@ -136,8 +137,6 @@ class Deal(Modify):
             currency=get_value(operation.currency),
             service_fee=conver_to_number(operation.commission.value)
         )
-
-
 
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
@@ -240,7 +239,7 @@ class Transfer(Modify):
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=['account_income', 'date_of_application', 'execution_date', 'type', 'sum', 'currency'],
+                fields=['account_income', 'execution_date', 'type', 'sum', 'currency'],
                 name='unique_transfer')
         ]
 
@@ -305,6 +304,41 @@ class Transfer(Modify):
                 status=transfer.get('Статус'),
             )
 
+    @classmethod
+    def save_from_sberbank_report(cls, rows: list, account: Account):
+        map = {
+            # other
+            'Перевод д/с для проведения расчетов по клирингу': 'Другое',
+            'Сделка от': 'Другое',
+            # commission
+            'Списание комиссии': 'Списание комиссии',
+            'Комиссия Биржи': 'Списание комиссии',
+            'Комиссия Брокера': 'Списание комиссии',
+            # outcome money
+            'Перевод д/с': 'Вывод ДС',
+            'Списание д/с': 'Вывод ДС',
+            # income money
+            'Зачисление купона': 'Зачисление купона',
+            'Амортизация по': 'Зачисление суммы от погашения ЦБ',
+            'Зачисление д/с': 'Зачисление купона',
+        }
+        for row in rows[:-1]:
+            type = [v for k, v in map.items() if row.get('Описание операции').startswith(k)]
+            type = type[0] if type else 'Другое'
+            if not type:
+                print(row.get('Описание операции'))
+            date = dmY_to_date(row.get('Дата'))
+            cls.objects.create(
+                execution_date=date,
+                date_of_application=date,
+                type=type,
+                currency=row.get('Валюта'),
+                sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
+                status='Исполнено',
+                description=row.get('Описание операции'),
+                account_income=account
+            )
+
     @property
     def xirr_sum(self):
         if self.type == self.TYPE_CHOICES[0][0]:
@@ -322,7 +356,7 @@ class Transfer(Modify):
         for account in accounts:
             account_data = {'account_name': account.name, 'data': []}
             q = Q(type='Ввод ДС') | Q(type='Вывод ДС')
-            transfers = cls.objects.filter(q, account_income=account,).annotate(
+            transfers = cls.objects.filter(q, account_income=account, ).annotate(
                 type_sum=Case(
                     When(type='Вывод ДС', then=F('sum') * -1),
                     default=F('sum')
@@ -351,14 +385,15 @@ class Template(models.Model):
 
 class AccountReport(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    asset_estimate = models.JSONField()
-    iis_income = models.JSONField()
-    portfolio = models.JSONField()
-    money_flow = models.JSONField()
-    tax = models.JSONField()
-    handbook = models.JSONField()
+    start_date = models.DateField(help_text='Дата начала отчета')
+    end_date = models.DateField(help_text='Дата конца отчета')
+    asset_estimate = models.JSONField(help_text='Оценка активов')
+    iis_income = models.JSONField(help_text='Информация о зачислениях денежных средств на ИИС')
+    portfolio = models.JSONField(help_text='Портфель Ценных Бумаг')
+    money_flow = models.JSONField(help_text='Денежные средства')
+    tax = models.JSONField(help_text='Расчет и удержание налога')
+    handbook = models.JSONField(help_text='Справочник Ценных Бумаг')
+    transfers = models.JSONField(help_text='Движение денежных средств за период')
     source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
 
     class Meta:
@@ -368,11 +403,11 @@ class AccountReport(models.Model):
 
     @classmethod
     def save_from_dict(cls, data, source):
-        data['account'] = Account.objects.filter(name=data['account']).first()
         data['asset_estimate'] = json.dumps(data['asset_estimate'])
         data['portfolio'] = json.dumps(data['portfolio'])
         data['handbook'] = json.dumps(data['handbook'])
         data['money_flow'] = json.dumps(data['money_flow'])
+        data['transfers'] = json.dumps(data['transfers'])
         data['source'] = source
         try:
             cls.objects.create(**data)
@@ -400,8 +435,8 @@ class MoneyManagerTransaction(Modify):
         :param rows: (NIC_NAME, ZCONTENT, WDATE, DO_TYPE, ZMONEY, I.uid)
         :return:
         """
-        POSITIVE = [7,4]
-        NEGATIVE = [8,3]
+        POSITIVE = [7, 4]
+        NEGATIVE = [8, 3]
         for row in rows:
             account, _ = Account.objects.get_or_create(name=row[0], user=user)
             type = row[1]
@@ -419,9 +454,19 @@ class MoneyManagerTransaction(Modify):
             except Exception as e:
                 print(e)
 
+
+# Signals
 @receiver(post_save, sender=MoneyManagerTransaction)
 def update_amount_accounts(sender, **kwargs):
     account = kwargs['instance'].account
     account.amount += kwargs['instance'].sum
     account.save()
 
+
+@receiver(post_save, sender=AccountReport)
+def update_transfers_from_sbr_report(sender, **kwargs):
+    json_transfers = kwargs['instance'].transfers
+    if json_transfers:
+        json_transfers = json.loads(json_transfers)
+        account = kwargs['instance'].account
+        Transfer.save_from_sberbank_report(json_transfers, account)

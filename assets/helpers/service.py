@@ -1,21 +1,14 @@
-import asyncio
-import codecs
-import csv
 import json
 import urllib
-
 import aiohttp
 import aiomoex
-import re
-
-import tinvest
 from tinvest import AsyncClient
 from aiomoex.request_helpers import get_long_data
 import requests
-import pandas as pd
 from datetime import date, timedelta
 from bs4 import BeautifulSoup
 from assets.helpers.utils import *
+import assets.models
 
 
 class Moex:
@@ -30,6 +23,7 @@ class Moex:
         self.request_jsons = []
 
     def get_corp_bound_tax_free(self):
+        """Legacy, all bounds are taxed now from 01.01.2021"""
         begin_date = (date.today() - timedelta(days=1)).strftime('%d.%m.%Y')
         self.data = f'__EVENTTARGET=ctl00%24PageContent%24ctrlPrivilege%24DownCSV&__EVENTARGUMENT=&__VIEWSTATE=&__EVENTVALIDATION=%2FwEdABCvVXD1oYELeveMr0vHCmYPwaDSaUlVxBvR8swwp5V2bkCrzVsnCXEftxh8yu5XrI1wsOBwYZCjQDcRnEDHN%2FoVT8KU5%2Bz2UsdG3ULNV4%2BdsCzk2G%2BZ3EJfyjp1rhAoEp84DZs%2FwSUfyvtEF83piNDc%2B%2FPivpJxB7iJpU3%2B%2BtL1%2FoNvurASTA64JjG%2FUDcxYwsNirEaq0XvNcxGTLQrUOVNbQd6BXdjKzUgM6fhlk13Kighytrs7iWDvRido%2FVpD31dDWT41Pph6cnCUUhoab%2F9LSx3pPZlZJaAE2o5gPcXP0BWD1vP%2FwqkkPMp0nZeRXPqwbIccLdsbMTH014a4s0LoKLELXuIKxhOyEQBrhpqi1bfa%2F9dDsMxo9LUHBt8cL4%3D&ctl00%24PageContent%24ctrlPrivilege%24hidden_sort_column=&ctl00%24PageContent%24ctrlPrivilege%24hidden_current_page_index=0&ctl00%24PageContent%24ctrlPrivilege%24hidden_current_page_index_change=&ctl00%24PageContent%24ctrlPrivilege%24hidden_direction_desc=&ctl00%24PageContent%24ctrlPrivilege%24beginDate={begin_date}&ctl00%24PageContent%24ctrlPrivilege%24txtSearch='
         self.request = self.session.post('https://www.moex.com/ru/markets/stock/privilegeindividuals.aspx',
@@ -45,6 +39,7 @@ class Moex:
         return data
 
     def get_usd(self):
+        """Return current value of USD in RUB"""
         request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json')
         response = request.json()['cbrf']['data'][0]
         return response
@@ -163,6 +158,7 @@ class SberbankReport(Report):
             match = re.search(r'Торговый код:(.*)', account)
             if match:
                 account = full_strip(match.group(1))
+                account = assets.models.Account.objects.filter(name=account).first()
         #asset estimate table
         asset_estimate_table = find_by_text(soup, 'Оценка активов', 'p').find_next_sibling('table')
         table_data = [[cell.text.strip() for cell in row("td")] for row in asset_estimate_table.find_all('tr')]
@@ -179,16 +175,24 @@ class SberbankReport(Report):
         money_flow_table = find_by_text(soup, 'Денежные средства', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in money_flow_table.find_all('tr')]
         json_money_flow = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
+        #transfers
+        transfer_text = find_by_text(soup, 'Движение денежных средств за период', 'p')
+        json_transfers = {}
+        if transfer_text:
+            transfers_table = transfer_text.find_next_sibling('table')
+            table_data = [self._cell_generator(row) for row in transfers_table.find_all('tr')]
+            json_transfers = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
         return {
             'account': account,
             'start_date': start_date,
             'end_date': end_date,
             'asset_estimate': json_asset_estimate,
-            'iis_income': '',
+            'iis_income': {},
             'portfolio': json_portfolio,
-            'tax': '',
+            'tax': {},
             'handbook': json_handbook,
-            'money_flow': json_money_flow
+            'money_flow': json_money_flow,
+            'transfers': json_transfers
         }
 
     @classmethod
@@ -256,11 +260,11 @@ class MoneyManager:
     def get_invest_values(self):
         c = self.conn.cursor()
         c.execute("""
-        select NIC_NAME, ZCONTENT, WDATE, DO_TYPE, ZMONEY, I.uid
-        from INOUTCOME I
-                 LEFT JOIN ASSETS A on I.assetUid = A.uid
-                 LEFT JOIN ASSETGROUP AG on A.groupUid = AG.uid
-        where ACC_GROUP_NAME = 'Investments'
+        SELECT NIC_NAME, ZCONTENT, WDATE, DO_TYPE, ZMONEY, I.uid
+        FROM INOUTCOME I
+        LEFT JOIN ASSETS A on I.assetUid = A.uid
+        LEFT JOIN ASSETGROUP AG on A.groupUid = AG.uid
+        WHERE ACC_GROUP_NAME = 'Investments'
         """)
         return c.fetchall()
 

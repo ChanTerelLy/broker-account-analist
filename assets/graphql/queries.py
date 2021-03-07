@@ -343,7 +343,7 @@ class Query(ObjectType):
                     elem = [i for i in ac_dic['data'] if income['date'] == i.date]
                     index = None
                     if elem:
-                        index = ac_dic['data'].index(elem)
+                        index = ac_dic['data'].index(elem[0])
                     if index:
                         ac_dic['data'][index].income_sum = income['sum']
                     else:

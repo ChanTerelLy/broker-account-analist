@@ -198,6 +198,7 @@ def conver_to_number(value):
     if isinstance(value, (int, float)):
         return abs(value)
     else:
+        value = ''.join(value.split())
         return abs(float(value))
 
 def get_value(obj):
