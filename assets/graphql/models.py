@@ -42,7 +42,6 @@ class ChoicesPropertyEnum(graphene.Enum):
 class DealsType(DjangoObjectType):
     help_text_map = graphene.String()
     transaction_volume = graphene.Int()
-    type = ChoicesPropertyEnum()
 
     class Meta:
         model = Deal
