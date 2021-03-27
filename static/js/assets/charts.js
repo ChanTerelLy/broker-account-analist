@@ -82,7 +82,6 @@ function getReportDataByIndex(index=0){
     return queryData.data.reportAssetEstimateDataset[index].data
 }
 
-
 function showReportChart(index=0) {
     google.charts.load('current', {'packages': ['corechart']});
     var reportInstanceData = getReportDataByIndex(index)
@@ -127,6 +126,7 @@ function showPortfolioReportTable(queryData){
         google.charts.load('current', {'packages': ['table', 'corechart']});
         google.charts.setOnLoadCallback(drawTable);
         google.charts.setOnLoadCallback(drawPieChart);
+        google.charts.setOnLoadCallback(piePositionChart);
         let reportValues = [];
         $.each(queryData.data, function(key, value){
             reportValues.push(Object.values(value))
@@ -160,6 +160,29 @@ function showPortfolioReportTable(queryData){
             };
 
             var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+            chart.draw(data, options);
+        }
+        function piePositionChart() {
+            let pieData = [];
+            let groupedPieData = {};
+            $.each(queryData.data, function(key, value){
+                if(groupedPieData[value.instrumentType]){
+                    groupedPieData[value.instrumentType] += value.startMarketTotalSumWithoutNkd;
+                } else {
+                    groupedPieData[value.instrumentType] = value.startMarketTotalSumWithoutNkd
+                }
+            })
+            pieData = Object.keys(groupedPieData).map((key) => [key, groupedPieData[key]]);
+            var data = google.visualization.arrayToDataTable([
+                ['Тип', 'Сумма'],
+                ...pieData
+            ]);
+            var options = {
+                title: 'Анализ по типу'
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('pie-position-chart'));
 
             chart.draw(data, options);
         }
