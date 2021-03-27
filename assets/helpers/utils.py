@@ -2,6 +2,7 @@ import asyncio
 import codecs
 import csv
 import os
+from decimal import Decimal
 from io import StringIO
 from datetime import datetime as dt
 import pandas as pd
@@ -195,7 +196,7 @@ def weird_division(n, d):
 def conver_to_number(value):
     if not value:
         return 0
-    if isinstance(value, (int, float)):
+    if isinstance(value, (int, float, Decimal)):
         return abs(value)
     else:
         value = ''.join(value.split())

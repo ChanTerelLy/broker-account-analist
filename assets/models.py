@@ -393,7 +393,7 @@ class AccountReport(models.Model):
     money_flow = models.JSONField(help_text='Денежные средства')
     tax = models.JSONField(help_text='Расчет и удержание налога')
     handbook = models.JSONField(help_text='Справочник Ценных Бумаг')
-    transfers = models.JSONField(help_text='Движение денежных средств за период')
+    transfers = models.JSONField(help_text='Движение денежных средств за период', default=dict)
     source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
 
     class Meta:
