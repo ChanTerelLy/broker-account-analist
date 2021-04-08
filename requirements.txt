@@ -13,7 +13,7 @@ codetiming==1.2.0
 cryptography==3.3.2
 defusedxml==0.7.0rc2
 dj-database-url==0.5.0
-Django==3.1.6
+Django==3.1.8
 django-bootstrap-pagination==1.7.1
 django-crispy-forms==1.9.2
 django-environ==0.4.5
