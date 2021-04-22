@@ -17,8 +17,6 @@ class AssetsViewTest(TestCase):
         response = self.client.get(reverse('assets'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'assets/assets.html')
-        self.assertContains(response, 'AVG доходность за год')
-        self.assertContains(response, 'Доход за все время')
 
     def test_moex_portfolio(self):
         response = self.client.get(reverse('moex-portfolio'))

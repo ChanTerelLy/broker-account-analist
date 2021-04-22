@@ -193,13 +193,18 @@ function showAvgIncome(queryData){
     google.charts.setOnLoadCallback(drawTable);
     let reportValues = [];
     $.each(queryData.data.myTransferXirr, function(key, value){
+        for (const key in value){
+            if(key == 'avgPercent' || key == 'totalPercent'){
+                let v = value[key]
+                value[key] = Math.round(strip((v * 100))) + '%'
+            }
+        }
         let ar = Object.values(value);
-        ar = ar.map(x => isNaN(x) ? x : Math.round(strip((x * 100))) + '%')
         reportValues.push(ar)
     })
     function drawTable() {
             var data = google.visualization.arrayToDataTable(
-                [['Счет', 'Средний за год', 'Средний за все время'],
+                [['Счет', 'Средний за год', 'Средний за все время', 'Доход'],
                 ...reportValues]
             );
 

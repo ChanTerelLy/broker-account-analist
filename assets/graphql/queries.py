@@ -79,6 +79,11 @@ class Query(ObjectType):
                                                     type__in=['Вывод ДС', 'Ввод ДС']).order_by('execution_date').all()
                 if not transfers:
                     continue
+                income_sum = transfers.filter(type='Ввод ДС').aggregate(Sum('sum'))['sum__sum']
+                outcome_sum = transfers.filter(type='Вывод ДС').aggregate(Sum('sum'))['sum__sum']
+                outcome_sum = 0 if outcome_sum is None else outcome_sum
+                total_income_outcome = income_sum - outcome_sum
+                earn_sum = account.amount - total_income_outcome
                 dates = list([t.execution_date for t in transfers])
                 sum = list([t.xirr_sum for t in transfers])
                 dates.append(datetime.now(tz=pytz.UTC))  # get current date
@@ -94,6 +99,7 @@ class Query(ObjectType):
                     'account_name': account.name,
                     'avg_percent': round(x, 3),
                     'total_percent': round(y, 3),
+                    'earn_sum': round(earn_sum, 0)
                 })
             return result
 

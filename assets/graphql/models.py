@@ -61,6 +61,7 @@ class XirrType(ObjectType):
     account_name = graphene.String()
     avg_percent = graphene.Float()
     total_percent = graphene.Float()
+    earn_sum = graphene.Float()
 
 
 class ReportData(ObjectType):
