@@ -1,4 +1,5 @@
 import json
+import traceback
 from datetime import datetime
 import pytz
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
@@ -6,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from pandas import Timestamp
 from accounts.models import User
-from django.db import models, transaction
+from django.db import models, transaction, IntegrityError
 import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
@@ -320,24 +321,27 @@ class Transfer(Modify):
             # income money
             'Зачисление купона': 'Зачисление купона',
             'Амортизация по': 'Зачисление суммы от погашения ЦБ',
-            'Зачисление д/с': 'Зачисление купона',
+            'Зачисление д/с (амортизация': 'Зачисление суммы от погашения ЦБ',
+            'Зачисление д/с (купон': 'Зачисление купона',
+            'Зачисление д/с': 'Ввод ДС',
         }
-        for row in rows[:-1]:
-            type = [v for k, v in map.items() if row.get('Описание операции').startswith(k)]
-            type = type[0] if type else 'Другое'
-            if not type:
-                print(row.get('Описание операции'))
-            date = dmY_to_date(row.get('Дата'))
-            cls.objects.create(
-                execution_date=date,
-                date_of_application=date,
-                type=type,
-                currency=row.get('Валюта'),
-                sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
-                status='Исполнено',
-                description=row.get('Описание операции'),
-                account_income=account
-            )
+        if isinstance(rows, list):
+            for row in rows[:-1]:
+                type = [v for k, v in map.items() if row.get('Описание операции').startswith(k)]
+                type = type[0] if type else 'Другое'
+                if not type:
+                    print(row.get('Описание операции'))
+                date = dmY_to_date(row.get('Дата'))
+                cls.objects.create(
+                    execution_date=date,
+                    date_of_application=date,
+                    type=type,
+                    currency=row.get('Валюта'),
+                    sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
+                    status='Исполнено',
+                    description=row.get('Описание операции'),
+                    account_income=account
+                )
 
     @property
     def xirr_sum(self):
@@ -395,6 +399,8 @@ class AccountReport(models.Model):
     handbook = models.JSONField(help_text='Справочник Ценных Бумаг')
     transfers = models.JSONField(help_text='Движение денежных средств за период', default=dict)
     source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -412,7 +418,10 @@ class AccountReport(models.Model):
         try:
             cls.objects.create(**data)
         except Exception as e:
-            print(e)
+            if isinstance(e, IntegrityError):
+                print(e)
+            else:
+                print(traceback.format_exc())
 
     @classmethod
     def save_from_tinkoff(cls, **kwargs):

@@ -121,7 +121,7 @@ class Query(ObjectType):
                 for report in reports:
                     if report.source == 'sberbank':
                         data = json.loads(report.asset_estimate)
-                        sum = data[-1]['Оценка портфеля ЦБ, руб.']
+                        sum = data[-1]['Оценка, руб.']
                         ac_dic['data'].append(
                             ReportData(date=report.start_date, sum=convert_devided_number(sum), income_sum=None)
                         )
