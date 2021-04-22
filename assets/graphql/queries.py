@@ -88,7 +88,7 @@ class Query(ObjectType):
                     'execution_date': dates
                 })
                 x = xirr(df)
-                days = (transfers.reverse()[0].execution_date - transfers[0].execution_date).days
+                days = (account.updated_at - transfers[0].execution_date).days
                 y = get_total_xirr_percent(x, days)
                 result.append({
                     'account_name': account.name,

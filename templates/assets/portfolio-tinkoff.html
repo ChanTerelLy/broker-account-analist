@@ -4,15 +4,15 @@
 {% block content %}
     <script>
         let listOfQueryFields = [
-                        "name",
-                        "averagePositionPrice",
-                        "startMarketTotalSumWithoutNkd",
-                        "balance",
-                        "expectedYield",
-                        "figi",
-                        "instrumentType",
-                        "ticker",
-                        "currency",
+            "name",
+            "averagePositionPrice",
+            "startMarketTotalSumWithoutNkd",
+            "balance",
+            "expectedYield",
+            "figi",
+            "instrumentType",
+            "ticker",
+            "currency",
         ]
     </script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -40,11 +40,11 @@
     </body>
 {% endblock content %}
 {% block extra_scripts %}
-<script src="{% static 'js/assets/charts.js' %}"></script>
-<script src="{% static 'js/assets/main.js' %}"></script>
+    <script src="{% static 'js/assets/charts.js' %}"></script>
+    <script src="{% static 'js/assets/main.js' %}"></script>
     <script type="text/javascript">
-$( document ).ready(async function() {
-    let query = `
+        $(document).ready(async function () {
+            let query = `
         query {
   tinkoffPortfolio{
     map,
@@ -54,8 +54,8 @@ $( document ).ready(async function() {
   }
 }
         `
-    let queryData = await graphqlQuery(query)
-    showPortfolioReportTable(queryData.data.tinkoffPortfolio)
-})
+            let queryData = await graphqlQuery(query)
+            showPortfolioReportTable(queryData.data.tinkoffPortfolio)
+        })
     </script>
 {% endblock extra_scripts %}

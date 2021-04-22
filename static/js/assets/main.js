@@ -51,6 +51,8 @@ function swap(json){
   return ret;
 }
 
+//Update buttons
+
 async function updateGmailReports() {
         let q = `
         mutation {
@@ -76,6 +78,7 @@ async function updateGmailReports() {
             $('#report-loader').hide();
         }
     }
+
 async function updateTinkoffReports() {
         let q = `
             query {
@@ -93,6 +96,7 @@ async function updateTinkoffReports() {
             $('#tinkoff-loader').hide();
         }
     }
+
 async function updateMmData() {
         let q = `
         mutation {

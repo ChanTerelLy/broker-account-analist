@@ -187,3 +187,24 @@ function showPortfolioReportTable(queryData){
             chart.draw(data, options);
         }
 }
+
+function showAvgIncome(queryData){
+    google.charts.load('current', {'packages': ['table']});
+    google.charts.setOnLoadCallback(drawTable);
+    let reportValues = [];
+    $.each(queryData.data.myTransferXirr, function(key, value){
+        let ar = Object.values(value);
+        ar = ar.map(x => isNaN(x) ? x : Math.round(strip((x * 100))) + '%')
+        reportValues.push(ar)
+    })
+    function drawTable() {
+            var data = google.visualization.arrayToDataTable(
+                [['Счет', 'Средний за год', 'Средний за все время'],
+                ...reportValues]
+            );
+
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+
+            table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+        }
+}
