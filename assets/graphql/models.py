@@ -47,7 +47,6 @@ class DealsType(DjangoObjectType):
         model = Deal
         fields = ('__all__')
         interfaces = (relay.Node,)
-        exclude_fields = ['type']
 
 
 class TemplateType(DjangoObjectType):

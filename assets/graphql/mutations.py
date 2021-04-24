@@ -146,6 +146,22 @@ class LoadDataFromMoneyManager(graphene.Mutation):
             return {'success': True}
         return {}
 
+class ClearReportsInfo(graphene.Mutation):
+    success = graphene.Boolean()
+
+    class Arguments:
+        report_count = graphene.Int()
+        type = graphene.String()
+
+    @staticmethod
+    def mutate(cls, info, report_count, type):
+        if info.context.user.is_authenticated:
+            last_rows = AccountReport.objects.filter(source=type)[:report_count]
+            [row.delete() for row in last_rows]
+            return {'success': True}
+        else:
+            return {'success': False}
+
 
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()
@@ -154,4 +170,5 @@ class Mutation(graphene.ObjectType):
     upload_portfolio = UploadPortfolio.Field()
     upload_sberbank_report = UploadSberbankReport.Field()
     parse_reports_from_gmail = ParseReportsFromGmail.Field()
-    LoadDataFromMoneyManager = LoadDataFromMoneyManager.Field()
+    load_data_from_money_manager = LoadDataFromMoneyManager.Field()
+    clear_reports_info = ClearReportsInfo.Field()

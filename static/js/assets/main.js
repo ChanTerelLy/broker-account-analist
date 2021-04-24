@@ -100,7 +100,7 @@ async function updateTinkoffReports() {
 async function updateMmData() {
         let q = `
         mutation {
-            LoadDataFromMoneyManager {
+            loadDataFromMoneyManager {
                 success,
                 redirectUri
               }
@@ -108,13 +108,13 @@ async function updateMmData() {
         `
         $('#mm-loader').show();
         let data = await graphqlQuery(q);
-        let uri = data.data?.LoadDataFromMoneyManager?.redirectUri
+        let uri = data.data?.loadDataFromMoneyManager?.redirectUri
         let errors = data?.errors
         if (uri && !errors) {
             location.replace(uri)
             return;
         }
-        if (data.data?.LoadDataFromMoneyManager?.success && !errors) {
+        if (data.data?.loadDataFromMoneyManager?.success && !errors) {
             alert('Данные загружены успешно')
             $('#mm-loader').hide();
         } else {

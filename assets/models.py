@@ -214,6 +214,49 @@ class Portfolio(Modify):
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
+class AccountReport(models.Model):
+    account = models.ForeignKey(Account, models.CASCADE)
+    start_date = models.DateField(help_text='Дата начала отчета')
+    end_date = models.DateField(help_text='Дата конца отчета')
+    asset_estimate = models.JSONField(help_text='Оценка активов')
+    iis_income = models.JSONField(help_text='Информация о зачислениях денежных средств на ИИС')
+    portfolio = models.JSONField(help_text='Портфель Ценных Бумаг')
+    money_flow = models.JSONField(help_text='Денежные средства')
+    tax = models.JSONField(help_text='Расчет и удержание налога')
+    handbook = models.JSONField(help_text='Справочник Ценных Бумаг')
+    transfers = models.JSONField(help_text='Движение денежных средств за период', default=dict)
+    source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['start_date', 'end_date', 'account_id'], name='unique_report')
+        ]
+
+    @classmethod
+    def save_from_dict(cls, data, source):
+        data['asset_estimate'] = json.dumps(data['asset_estimate'])
+        data['portfolio'] = json.dumps(data['portfolio'])
+        data['handbook'] = json.dumps(data['handbook'])
+        data['money_flow'] = json.dumps(data['money_flow'])
+        data['transfers'] = json.dumps(data['transfers'])
+        data['source'] = source
+        try:
+            cls.objects.create(**data)
+        except Exception as e:
+            if isinstance(e, IntegrityError):
+                print(e)
+            else:
+                print(traceback.format_exc())
+
+    @classmethod
+    def save_from_tinkoff(cls, **kwargs):
+        try:
+            cls.objects.create(**kwargs)
+        except Exception as e:
+            print(e)
+
 
 class Transfer(Modify):
     TYPE_CHOICES = (('Ввод ДС', 'Ввод ДС'), ("Вывод ДС", "Вывод ДС"),
@@ -236,6 +279,7 @@ class Transfer(Modify):
     description = models.CharField(max_length=255, help_text='Содержание операции', blank=True, null=True)
     status = models.CharField(max_length=50, help_text='Статус')
     transfer_id = models.CharField(max_length=50, blank=True, null=True, help_text='ID операции')
+    report = models.ForeignKey(to=AccountReport, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -306,7 +350,7 @@ class Transfer(Modify):
             )
 
     @classmethod
-    def save_from_sberbank_report(cls, rows: list, account: Account):
+    def save_from_sberbank_report(cls, rows: list, params):
         map = {
             # other
             'Перевод д/с для проведения расчетов по клирингу': 'Другое',
@@ -340,7 +384,8 @@ class Transfer(Modify):
                     sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
                     status='Исполнено',
                     description=row.get('Описание операции'),
-                    account_income=account
+                    account_income=params['account'],
+                    report=params['report']
                 )
 
     @property
@@ -386,49 +431,6 @@ class Template(models.Model):
     url = models.URLField()
     key = models.CharField(max_length=25)
 
-
-class AccountReport(models.Model):
-    account = models.ForeignKey(Account, models.CASCADE)
-    start_date = models.DateField(help_text='Дата начала отчета')
-    end_date = models.DateField(help_text='Дата конца отчета')
-    asset_estimate = models.JSONField(help_text='Оценка активов')
-    iis_income = models.JSONField(help_text='Информация о зачислениях денежных средств на ИИС')
-    portfolio = models.JSONField(help_text='Портфель Ценных Бумаг')
-    money_flow = models.JSONField(help_text='Денежные средства')
-    tax = models.JSONField(help_text='Расчет и удержание налога')
-    handbook = models.JSONField(help_text='Справочник Ценных Бумаг')
-    transfers = models.JSONField(help_text='Движение денежных средств за период', default=dict)
-    source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        constraints = [
-            UniqueConstraint(fields=['start_date', 'end_date', 'account_id'], name='unique_report')
-        ]
-
-    @classmethod
-    def save_from_dict(cls, data, source):
-        data['asset_estimate'] = json.dumps(data['asset_estimate'])
-        data['portfolio'] = json.dumps(data['portfolio'])
-        data['handbook'] = json.dumps(data['handbook'])
-        data['money_flow'] = json.dumps(data['money_flow'])
-        data['transfers'] = json.dumps(data['transfers'])
-        data['source'] = source
-        try:
-            cls.objects.create(**data)
-        except Exception as e:
-            if isinstance(e, IntegrityError):
-                print(e)
-            else:
-                print(traceback.format_exc())
-
-    @classmethod
-    def save_from_tinkoff(cls, **kwargs):
-        try:
-            cls.objects.create(**kwargs)
-        except Exception as e:
-            print(e)
 
 
 class MoneyManagerTransaction(Modify):
@@ -476,6 +478,8 @@ def update_amount_accounts(sender, **kwargs):
 def update_transfers_from_sbr_report(sender, **kwargs):
     json_transfers = kwargs['instance'].transfers
     if json_transfers:
+        params = {}
         json_transfers = json.loads(json_transfers)
-        account = kwargs['instance'].account
-        Transfer.save_from_sberbank_report(json_transfers, account)
+        params['report'] = kwargs['instance']
+        params['account'] =  kwargs['instance'].account
+        Transfer.save_from_sberbank_report(json_transfers, params)
