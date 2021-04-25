@@ -216,3 +216,7 @@ class TinkoffPortfolioMapType(ObjectType):
 class PortfolioInput(graphene.InputObjectType):
     id = graphene.ID()
     name = graphene.String()
+
+class CouponAggregated(ObjectType):
+    date = graphene.Date()
+    sum = graphene.Float()

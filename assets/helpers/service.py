@@ -272,7 +272,7 @@ class MoneyManager:
 class TinkoffApi:
 
     _operation_type_map = {
-        'Dividend': 'Зачисление дивидентов',
+        'Dividend': 'Зачисление дивидендов',
         'Buy': 'Покупка',
         'Sell': 'Продажа',
         'BrokerCommission': 'Списание Комиссии',
@@ -358,8 +358,3 @@ class TinkoffApi:
     @staticmethod
     def extract_figi(figi, figis):
         return figis[figi].ticker
-
-
-if __name__ == '__main__':
-    response = asyncio_helper(TinkoffApi('t.Y9QfgPPnKqIdBr8CDdVlTx04CluKg6Oi8hvlVMUZawSIH6BSfzsGB0xmikJhGNKyqSV7WtN_nakuu6J6956ibQ').get_market_bonds)
-    print(response)

@@ -74,6 +74,9 @@ class ReportPortfolioView(TemplateView):
 class TinkoffPortfolioView(TemplateView):
     template_name = 'assets/portfolio-tinkoff.html'
 
+class CouponsDividendsView(TemplateView):
+    template_name = 'assets/coupons-dividends.html'
+
 class VueTest(TemplateView):
     template_name = 'assets/test_vue.html'
 

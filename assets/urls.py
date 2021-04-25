@@ -14,6 +14,7 @@ urlpatterns = [
     path('deals/', login_required(DealsView.as_view()), name='deals'),
     path('report-portfolio-sberbank/', login_required(ReportPortfolioView.as_view()), name='report-portfolio-sberbank'),
     path('portfolio-tinkoff/', login_required(TinkoffPortfolioView.as_view()), name='portfolio-tinkoff'),
+    path('coupons-dividends/', login_required(CouponsDividendsView.as_view()), name='coupons-dividends'),
 
     # Moex operations
     path('update-bounds/', login_required(update_bounds), name='update-bounds'),

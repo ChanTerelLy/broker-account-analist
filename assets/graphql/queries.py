@@ -1,3 +1,5 @@
+import datetime
+
 import graphene
 from codetiming import Timer
 from django.db.models import Count
@@ -35,6 +37,7 @@ class Query(ObjectType):
     tinkoff_portfolio = graphene.Field(TinkoffPortfolioMapType)
     tinkoff_operations = graphene.Boolean(_from=graphene.String(), till=graphene.String())
     test = graphene.Boolean()
+    coupon_chart = graphene.List(CouponAggregated)
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -291,3 +294,17 @@ class Query(ObjectType):
                     else:
                         Transfer.convert_tinkoff_transfer(operation, account, figis)
                 return True
+
+    def resolve_coupon_chart(self, info):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            aggr_by_month = Transfer.objects.filter(type='Зачисление купона')\
+                .values('execution_date__month', 'execution_date__year')\
+                .annotate(sum=Sum('sum')).order_by('execution_date__year', 'execution_date__month')
+            for index, month in enumerate(aggr_by_month):
+                date = datetime(month['execution_date__year'], month['execution_date__month'], 1)
+                aggr_by_month[index]['date'] = date
+                del aggr_by_month[index]['execution_date__month']
+                del aggr_by_month[index]['execution_date__year']
+            return [CouponAggregated(**aggr) for aggr in aggr_by_month]

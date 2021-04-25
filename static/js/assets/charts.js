@@ -217,3 +217,26 @@ function showAvgIncome(queryData){
             table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
         }
 }
+
+function showDividentChart(queryData) {
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            let darrays = [];
+            $.each(queryData.data.couponChart, function (index, value) {
+                darrays.push([new Date(value.date), value.sum])
+            })
+            var data = google.visualization.arrayToDataTable(
+                [
+                    ['Дата', 'Сумма'],
+                    ...darrays
+                ]
+            );
+            var options = {
+                legend: {position: 'bottom'}
+            };
+            var chart = new google.visualization.ColumnChart(document.getElementById('column_chart'));
+            chart.draw(data, options);
+        }
+}

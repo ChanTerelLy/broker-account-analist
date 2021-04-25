@@ -1,0 +1,31 @@
+{% extends '_base.html' %}
+{% load static %}
+{% block title %}Дивиденты{% endblock %}
+{% block content %}
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <body>
+    <div class="row">
+        <div class="col-12">
+            <div id="column_chart"></div>
+        </div>
+    </div>
+    </body>
+{% endblock content %}
+{% block extra_scripts %}
+    <script src="{% static 'js/assets/charts.js' %}"></script>
+    <script src="{% static 'js/assets/main.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(async function () {
+            let query = `
+query {
+  couponChart{
+    date,
+    sum
+  }
+}
+        `
+            let queryData = await graphqlQuery(query)
+            showDividentChart(queryData)
+        })
+    </script>
+{% endblock extra_scripts %}
