@@ -5,6 +5,7 @@ from graphene import relay
 from graphene_django.types import ObjectType
 import pandas as pd
 from graphql import GraphQLError
+from tinvest import CandleResolution
 
 from accounts.models import Profile
 from .models import *

@@ -297,7 +297,7 @@ class TinkoffApi:
     async def gather_requests(self, list, func):
         return await asyncio.gather(*[asyncio.ensure_future(func(item)) for item in list])
 
-    async def get_portfolio(self, ):
+    async def get_portfolio(self):
         async with AsyncClient(self.TOKEN) as client:
             response = await client.get_portfolio()
         return response.payload.json()
@@ -328,10 +328,32 @@ class TinkoffApi:
             response = await client.get_market_search_by_figi(figi)
         return {figi: response.payload}
 
+    async def get_market_bonds(self):
+        async with AsyncClient(self.TOKEN) as client:
+            response = await client.get_market_bonds()
+        return response
+
+    async def get_market_stocks(self):
+        async with AsyncClient(self.TOKEN) as client:
+            response = await client.get_market_stocks()
+        return response
+
+    async def get_market_candles(self, figi, from_, to, interval):
+        async with AsyncClient(self.TOKEN) as client:
+            return await client.get_market_candles(figi, from_, to, interval)
+
+    async def get_market_etfs(self):
+        async with AsyncClient(self.TOKEN) as client:
+            return await client.get_market_etfs()
+
     async def resolve_list_figis(self, figis):
         result = await self.gather_requests(figis, self.get_market_search_by_figi)
         self.figis = result
         return result
+
+    async def get_market_orderbook(self, figi, depth):
+        async with AsyncClient(self.TOKEN) as client:
+            return await client.get_market_orderbook(figi, depth)
 
     @staticmethod
     def extract_figi(figi, figis):
@@ -339,5 +361,5 @@ class TinkoffApi:
 
 
 if __name__ == '__main__':
-    response = asyncio_helper(TinkoffApi('token').get_portfolio)
+    response = asyncio_helper(TinkoffApi('t.Y9QfgPPnKqIdBr8CDdVlTx04CluKg6Oi8hvlVMUZawSIH6BSfzsGB0xmikJhGNKyqSV7WtN_nakuu6J6956ibQ').get_market_bonds)
     print(response)

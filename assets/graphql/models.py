@@ -171,7 +171,8 @@ class TinkoffPortfolioType(ObjectType):
         return price
 
     def resolve_start_market_total_sum_without_nkd(self, info):
-        price = self.average_position_price.get('value') * self.balance
+        expected_yield = self.expected_yield.get('value') if self.expected_yield else 0
+        price = self.average_position_price.get('value') * self.balance + expected_yield
         if self.currency == 'USD' and self.instrument_type != 'Currency':
             price *= self.usd_price
         return price
