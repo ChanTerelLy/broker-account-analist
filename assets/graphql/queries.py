@@ -1,5 +1,6 @@
 import graphene
 from codetiming import Timer
+from django.db.models import Count
 from graphene import relay
 from graphene_django.types import ObjectType
 import pandas as pd
@@ -101,6 +102,14 @@ class Query(ObjectType):
                     'total_percent': round(y, 3),
                     'earn_sum': round(earn_sum, 0)
                 })
+            for income in AdditionalInvestmentIncome.objects.filter(user=info.context.user).values('type').annotate(total=Sum('sum')):
+                result.append(
+                    {'account_name': income['type'],
+                     'avg_percent': 0,
+                     'total_percent': 0,
+                     'earn_sum': income['total']
+                     }
+                )
             return result
 
     def resolve_get_template_by_key(self, info, key):

@@ -214,6 +214,7 @@ class Portfolio(Modify):
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
+
 class AccountReport(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
     start_date = models.DateField(help_text='Дата начала отчета')
@@ -432,7 +433,6 @@ class Template(models.Model):
     key = models.CharField(max_length=25)
 
 
-
 class MoneyManagerTransaction(Modify):
     account = models.ForeignKey(Account, models.CASCADE)
     type = models.CharField(max_length=50)
@@ -465,6 +465,13 @@ class MoneyManagerTransaction(Modify):
             except Exception as e:
                 print(e)
 
+
+class AdditionalInvestmentIncome(Modify):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    type = models.CharField(max_length=50, choices=[('Налоговый вычет', 'nalog')])
+    sum = models.FloatField()
+    receipt_date = models.DateField()
+    note = models.TextField(blank=True, null=True)
 
 # Signals
 @receiver(post_save, sender=MoneyManagerTransaction)

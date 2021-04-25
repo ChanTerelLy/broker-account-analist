@@ -202,6 +202,10 @@ function showAvgIncome(queryData){
         let ar = Object.values(value);
         reportValues.push(ar)
     })
+    var totalSum = reportValues.reduce(function (sum, current) {
+        return sum + current[3];
+    }, 0);
+    reportValues.push(['Итог', '-', '-', totalSum])
     function drawTable() {
             var data = google.visualization.arrayToDataTable(
                 [['Счет', 'Средний за год', 'Средний за все время', 'Доход'],
