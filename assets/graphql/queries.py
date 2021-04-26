@@ -216,12 +216,17 @@ class Query(ObjectType):
                     assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
                     assets[d[0]['isin']]['Дата выплаты ближайшего купона'] = dmY_hyphen_to_date(d[0].get('coupondate', [None]))
             # get data from deals
-            for isin in isins:
-                avg_price = Deal.get_avg_price(isin, accounts)
+            isins_with_balance_price = Deal.get_balance_price(isins, accounts)
+            avg_percents = asyncio_helper(Moex().coupon_calculator, isins_with_balance_price)
+            isins_with_avg_percents = {}
+            for v in avg_percents:
+                isin = v['calculated']['SECID']
+                percent = v['calculated']['CURRENTYIELD']
+                isins_with_avg_percents[isin] = percent
+            for isin, percent in isins_with_avg_percents.items():
+                avg_price = isin
                 if avg_price:
-                    avg_percent = assets[isin]['Рыночная цена  (Начало Периода)']/avg_price
-                    purchase_coupon_percent = assets[isin]['Процент купона']/avg_percent
-                    assets[isin]['Средний % купона покупки'] = purchase_coupon_percent
+                    assets[isin]['Средний % купона покупки'] = percent
             # convert naming
             conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
             return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}

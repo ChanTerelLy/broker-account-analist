@@ -2,7 +2,7 @@ import json
 import traceback
 from datetime import datetime
 import pytz
-from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
+from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When, Count
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from pandas import Timestamp
@@ -146,6 +146,40 @@ class Deal(Modify):
     @property
     def transaction_volume(self):
         return self.price * self.amount * (1 if self.type == 'Покупка' else -1)
+
+    @classmethod
+    def get_balance_price(self, isins, accounts):
+        values = []
+        for isin in isins:
+            aggr_deals = Deal.objects.filter(isin=isin, account__in=accounts).annotate(
+                type_sum=Case(
+                    When(type='Продажа', then=F('volume') * -1),
+                    default=F('volume')
+                ),
+                amount_sum=Case(
+                    When(type='Продажа', then=F('amount') * -1),
+                    default=F('amount')
+                ),
+                nkd_sum=Case(
+                    When(type='Покупка', then=F('nkd')),
+                    default=0
+                ),
+                sum_volume=Window(
+                    expression=Sum(F('type_sum')),
+                ),
+                sum_amount=Window(
+                    expression=Sum(F('amount_sum'))
+                ),
+                sum_nkd=Window(
+                    expression=Sum(F('nkd_sum'))
+                )
+            ).values('sum_volume', 'sum_amount', 'sum_nkd').distinct()
+            aggr_deals = [i for i in aggr_deals]
+            if aggr_deals:
+                aggr_deals[0]['avg_price'] = (aggr_deals[0]['sum_volume']/aggr_deals[0]['sum_amount'])/10
+                aggr_deals[0]['isin'] = isin
+            values.append(aggr_deals)
+        return values
 
     def __str__(self):
         return f'{self.type} - {self.price}'

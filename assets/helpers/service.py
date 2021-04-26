@@ -108,6 +108,26 @@ class Moex:
         data = [pd.DataFrame(j['coupons']['data'],columns=j['coupons']['columns']).to_dict(orient='records') for j in self.request_jsons]
         return data
 
+    async def coupon_calculator(self, isins_values):
+        urls = []
+        data = []
+        for isin in isins_values:
+            if len(isin) and isin[0].get('avg_price'):
+                query = {
+                    "tradedate": dt.now().strftime('%Y-%m-%d'),
+                    'calc_value': isin[0].get('avg_price'),
+                    'secid': isin[0].get('isin'),
+                    'calc_method': 'by_price_to_offer',
+                    'accint_source': 't0'
+                }
+                query = urllib.parse.urlencode(query, doseq=False)
+                url = f'https://iss.moex.com/iss/apps/bondization/yieldscalculator'
+                url = await self._build_url(query, url)
+                urls.append(url)
+        await self.aiohttp_generator(urls)
+        data = self.request_jsons
+        return data
+
     async def _build_url(self, query, url):
         url = url + '?' + query
         return url
