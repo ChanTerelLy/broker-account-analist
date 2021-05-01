@@ -13,11 +13,10 @@ from accounts.models import Profile
 from .models import *
 from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
-from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, dmY_hyphen_to_date, list_to_dict
+from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
+    dmY_hyphen_to_date, list_to_dict, DT_YEAR_BEFORE, DT_NOW
 from datetime import datetime as dt, timedelta
 
-DT_NOW = dt.now()
-DT_YEAR_BEFORE = dt.now() - timedelta(days=365)
 USD_PRICE = 0
 
 
@@ -35,7 +34,6 @@ class Query(ObjectType):
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
     tinkoff_portfolio = graphene.Field(TinkoffPortfolioMapType)
-    tinkoff_operations = graphene.Boolean(_from=graphene.String(), till=graphene.String())
     test = graphene.Boolean()
     coupon_chart = graphene.List(CouponAggregated)
 
@@ -279,26 +277,6 @@ class Query(ObjectType):
             else:
                 GraphQLError('No token provided')
 
-    def resolve_tinkoff_operations(self, info, _from=DT_YEAR_BEFORE, till=DT_NOW, **kwargs):
-        if not info.context.user.is_authenticated:
-            return []
-        else:
-            TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
-            if TOKEN:
-                account = Account.get_or_create_tinkoff_account(user=info.context.user)
-                tapi = TinkoffApi(TOKEN)
-                payload = asyncio_helper(tapi.get_operations, _from, till)
-                operations = payload.operations
-                figis = [item['figi'] for item in payload.dict()['operations']]
-                figis = list(set(filter(None, figis)))
-                figis = asyncio_helper(tapi.resolve_list_figis, figis)
-                figis = list_to_dict(figis)
-                for operation in operations:
-                    if operation.operation_type.value in ['Buy', 'Sell']:
-                        Deal.convert_tinkoff_deal(operation, account, figis)
-                    else:
-                        Transfer.convert_tinkoff_transfer(operation, account, figis)
-                return True
 
     def resolve_coupon_chart(self, info):
         if not info.context.user.is_authenticated:

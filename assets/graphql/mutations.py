@@ -3,10 +3,11 @@ import json
 import dateutil
 import graphene
 
+from accounts.models import Profile
 from .models import *
 from ..helpers.google_services import get_gmail_reports, provides_credentials, get_money_manager_database
-from ..helpers.service import Moex, SberbankReport, MoneyManager
-from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper
+from ..helpers.service import Moex, SberbankReport, MoneyManager, TinkoffApi
+from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper, list_to_dict, DT_YEAR_BEFORE, DT_NOW
 from ..models import Portfolio, Transfer, Deal, AccountReport, Account, MoneyManagerTransaction
 from graphene_file_upload.scalars import Upload
 
@@ -162,6 +163,35 @@ class ClearReportsInfo(graphene.Mutation):
         else:
             return {'success': False}
 
+class UpdateTinkoffOperations(graphene.Mutation):
+    success = graphene.Boolean()
+
+    class Arguments:
+        _from = graphene.Date(required=False)
+        till = graphene.Date(required=False)
+
+    @staticmethod
+    def mutate(cls, info, _from=DT_YEAR_BEFORE, till=DT_NOW):
+        if not info.context.user.is_authenticated:
+            return {'success': False}
+        else:
+            TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
+            if TOKEN:
+                account = Account.get_or_create_tinkoff_account(user=info.context.user)
+                tapi = TinkoffApi(TOKEN)
+                payload = asyncio_helper(tapi.get_operations, _from, till)
+                operations = payload.operations
+                figis = [item['figi'] for item in payload.dict()['operations']]
+                figis = list(set(filter(None, figis)))
+                figis = asyncio_helper(tapi.resolve_list_figis, figis)
+                figis = list_to_dict(figis)
+                for operation in operations:
+                    if operation.operation_type.value in ['Buy', 'Sell']:
+                        Deal.convert_tinkoff_deal(operation, account, figis)
+                    else:
+                        Transfer.convert_tinkoff_transfer(operation, account, figis)
+                return {'success': True}
+
 
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()
@@ -172,3 +202,4 @@ class Mutation(graphene.ObjectType):
     parse_reports_from_gmail = ParseReportsFromGmail.Field()
     load_data_from_money_manager = LoadDataFromMoneyManager.Field()
     clear_reports_info = ClearReportsInfo.Field()
+    update_tinkoff_operations = UpdateTinkoffOperations.Field()

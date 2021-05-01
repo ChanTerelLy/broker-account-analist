@@ -4,11 +4,13 @@ import csv
 import os
 from decimal import Decimal
 from io import StringIO
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 import pandas as pd
 import pytz
 from pandas import Timestamp
 
+DT_NOW = dt.now()
+DT_YEAR_BEFORE = dt.now() - timedelta(days=365)
 
 def parse_file(uploaded_file):
     if uploaded_file.name.endswith('.csv'):

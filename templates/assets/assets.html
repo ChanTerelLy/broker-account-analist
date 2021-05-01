@@ -12,35 +12,23 @@
             <canvas id="accounts"></canvas>
         </div>
         <div class="col-md" id="table_div"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-1">
+            <div>
+                <select id="report-menu"></select>
+            </div>
+        </div>
         <div>
-            <div>
-                <button id='update-report-btn' class="btn btn-default">Обновить отчеты</button>
-                <div id='report-loader' class="spinner-grow text-primary center" style="display: none;"
-                     role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </div>
-            <div>
-                <button id='update-tinkoff-btn' class="btn btn-danger">Обновить tinkoff</button>
-                <div id='tinkoff-loader' class="spinner-grow text-primary center" style="display: none;"
-                     role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </div>
-            <div>
-                <button id='update-mm-btn' class="btn btn-warning">Обновить MM</button>
-                <div id='mm-loader' class="spinner-grow text-warning center" style="display: none;"
-                     role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
+            <button id='update-report-btn' class="btn btn-default">Обновить отчеты</button>
+            <div id='report-loader' class="spinner-grow text-primary center" style="display: none;"
+                 role="status">
+                <span class="sr-only">Loading...</span>
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-lg">
-            <select id="report-menu"></select>
             <div id="curve_chart" style="height: 500px; width: 1100px"></div>
-        </div>
     </div>
 {% endblock content %}
 {% block extra_scripts %}
@@ -78,13 +66,7 @@
             //listeners
             document.getElementById('report-menu').addEventListener('change', updateChart, false);
             $('#update-report-btn').click(async function (event) {
-                await updateGmailReports();
-            });
-            $('#update-tinkoff-btn').click(async function (event) {
-                await updateTinkoffReports();
-            });
-            $('#update-mm-btn').click(async function (event) {
-                await updateMmData();
+                await updateReports();
             });
 
         })

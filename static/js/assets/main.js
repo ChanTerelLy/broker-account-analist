@@ -51,62 +51,25 @@ function swap(json){
   return ret;
 }
 
-//Update buttons
+//Update button
 
-async function updateGmailReports() {
-        let q = `
-        mutation {
-            parseReportsFromGmail(limit:50) {
-                success,
-                redirectUri
-              }
-            }
-        `
-        $('#report-loader').show();
-        let data = await graphqlQuery(q);
-        let uri = data.data?.parseReportsFromGmail?.redirectUri
-        let errors = data?.errors
-        if (uri && !errors) {
-            location.replace(uri)
-            return;
-        }
-        if (data.data?.parseReportsFromGmail?.success && !errors) {
-            alert('Отчеты загружены успешно')
-            $('#report-loader').hide();
-        } else {
-            alert('Произошла ошибка')
-            $('#report-loader').hide();
-        }
-    }
-
-async function updateTinkoffReports() {
-        let q = `
-            query {
-                tinkoffOperations
-                }
-        `
-        $('#tinkoff-loader').show();
-        let data = await graphqlQuery(q);
-        let errors = data?.errors
-        if (data.data?.tinkoffOperations && !errors) {
-            alert('Отчеты загружены успешно')
-            $('#tinkoff-loader').hide();
-        } else {
-            alert('Произошла ошибка')
-            $('#tinkoff-loader').hide();
-        }
-    }
-
-async function updateMmData() {
-        let q = `
+async function updateReports() {
+            let q = `
         mutation {
             loadDataFromMoneyManager {
                 success,
                 redirectUri
               }
+            parseReportsFromGmail(limit:5) {
+                success,
+                redirectUri
+              }
+            updateTinkoffOperations {
+                success
+              }
             }
         `
-        $('#mm-loader').show();
+        $('#report-loader').show();
         let data = await graphqlQuery(q);
         let uri = data.data?.loadDataFromMoneyManager?.redirectUri
         let errors = data?.errors
@@ -114,12 +77,19 @@ async function updateMmData() {
             location.replace(uri)
             return;
         }
-        if (data.data?.loadDataFromMoneyManager?.success && !errors) {
-            alert('Данные загружены успешно')
-            $('#mm-loader').hide();
+        let loadDataFromMoneyManager = data.data?.loadDataFromMoneyManager?.success
+        let parseReportsFromGmail = data.data?.parseReportsFromGmail?.success
+        let updateTinkoffOperations = data.data?.updateTinkoffOperations?.success
+        if (!errors) {
+            alert(`
+            Обновлены:
+            - MoneyManager - ${loadDataFromMoneyManager}
+            - Отчеты Сбербанк - ${parseReportsFromGmail}
+            - Отчеты Тинькофф - ${updateTinkoffOperations}
+            `)
+            $('#report-loader').hide();
         } else {
             alert('Произошла ошибка')
             $('#report-loader').hide();
         }
-    }
-
+}
