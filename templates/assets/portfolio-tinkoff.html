@@ -55,7 +55,7 @@
 }
         `
             let queryData = await graphqlQuery(query)
-            showPortfolioReportTable(queryData.data.tinkoffPortfolio)
+            showPortfolioReportTable(queryData.data.tinkoffPortfolio, 'tinkoff')
         })
     </script>
 {% endblock extra_scripts %}

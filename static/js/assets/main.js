@@ -51,6 +51,12 @@ function swap(json){
   return ret;
 }
 
+function calculateSum(reportValues, col) {
+    return reportValues.reduce(function (sum, current) {
+        return sum + current[col];
+    }, 0);
+}
+
 //Update button
 
 async function updateReports() {

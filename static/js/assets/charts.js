@@ -122,7 +122,7 @@ function setReportSelectors() {
     })
 }
 
-function showPortfolioReportTable(queryData){
+function showPortfolioReportTable(queryData, reportType='sberbank'){
         google.charts.load('current', {'packages': ['table', 'corechart']});
         google.charts.setOnLoadCallback(drawTable);
         google.charts.setOnLoadCallback(drawPieChart);
@@ -131,20 +131,35 @@ function showPortfolioReportTable(queryData){
         $.each(queryData.data, function(key, value){
             reportValues.push(Object.values(value))
         })
+        let totalStyle = 'font-size:1.5rem';
         let mapJson = JSON.parse(queryData.map);
         let reverseMapJson = swap(mapJson)
         let map = listOfQueryFields.map(function(value, index){
             return reverseMapJson[value]
         })
-        function drawTable() {
-            var data = google.visualization.arrayToDataTable(
-                [map.filter(Boolean),
-                ...reportValues]
-            );
 
-            var table = new google.visualization.Table(document.getElementById('table_div'));
+    function styling(data) {
+        let formatter = new google.visualization.ArrowFormat()
+        if(reportType==='tinkoff') {
+            var totalSum = calculateSum(reportValues, 2)
+            var totalEarn = calculateSum(reportValues, 4)
+            let index = data.addRow(['Итог', null, totalSum, null, totalEarn, null, null, null, null])
+            data.setProperty(index, 2, 'style', totalStyle);
+            data.setProperty(index, 4, 'style', totalStyle);
+            formatter.format(data, 4);
+        } else {
 
-            table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+        }
+    }
+
+    function drawTable() {
+        var data = google.visualization.arrayToDataTable(
+            [map.filter(Boolean),
+            ...reportValues]
+        );
+        styling(data);
+        var table = new google.visualization.Table(document.getElementById('table_div'));
+        table.draw(data, {allowHtml: true, showRowNumber: true, width: '100%', height: '100%'});
         }
         function drawPieChart() {
             let pieData = [];
@@ -196,15 +211,14 @@ function showAvgIncome(queryData){
         for (const key in value){
             if(key == 'avgPercent' || key == 'totalPercent'){
                 let v = value[key]
-                value[key] = Math.round(strip((v * 100))) + '%'
+                let n = Math.round(strip((v * 100)))
+                value[key] = {v:n, f: n + '%'}
             }
         }
         let ar = Object.values(value);
         reportValues.push(ar)
     })
-    var totalSum = reportValues.reduce(function (sum, current) {
-        return sum + current[3];
-    }, 0);
+    var totalSum = calculateSum(reportValues, 3)
     reportValues.push(['Итог', '-', '-', totalSum])
     function drawTable() {
             var data = google.visualization.arrayToDataTable(
@@ -213,8 +227,10 @@ function showAvgIncome(queryData){
             );
 
             var table = new google.visualization.Table(document.getElementById('table_div'));
-
-            table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+            let formatter = new google.visualization.ArrowFormat()
+            formatter.format(data, 2);
+            formatter.format(data, 1);
+            table.draw(data, {allowHtml: true,showRowNumber: true, width: '100%', height: '100%'});
         }
 }
 
