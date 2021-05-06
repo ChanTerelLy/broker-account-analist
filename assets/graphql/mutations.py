@@ -28,7 +28,6 @@ class UploadTransfers(graphene.Mutation):
         Transfer.save_from_list(transfers)
         return UploadTransfers(success=True)
 
-
 class UploadPortfolio(graphene.Mutation):
     class Arguments:
         file = Upload(required=True)
@@ -53,7 +52,6 @@ class UploadPortfolio(graphene.Mutation):
         Portfolio.save_from_list(portfolio)
         return UploadTransfers(success=True)
 
-
 class UploadDeals(graphene.Mutation):
     """Get income file from client and save values to Deals table"""
 
@@ -67,7 +65,6 @@ class UploadDeals(graphene.Mutation):
         deals = parse_file(files['0'])
         Deal.save_from_list(deals)
         return UploadTransfers(success=True)
-
 
 class CreatePortfolio(graphene.Mutation):
     """Get income file from client and save values to Portfolio (MOEX) table"""
@@ -83,7 +80,6 @@ class CreatePortfolio(graphene.Mutation):
         portfolio_instance.save()
         return CreatePortfolio(name=portfolio_instance)
 
-
 class UploadSberbankReport(graphene.Mutation):
     """Get income file from client and save values to Report table"""
 
@@ -98,7 +94,6 @@ class UploadSberbankReport(graphene.Mutation):
         data = SberbankReport().parse_html(html)
         AccountReport.save_from_dict(data, source='sberbank')
         return UploadSberbankReport(success=True)
-
 
 class ParseReportsFromGmail(graphene.Mutation):
     """IF user already grant permissions, start uploading report from gmail
@@ -127,7 +122,6 @@ class ParseReportsFromGmail(graphene.Mutation):
             except Exception as e:
                 print(e)
         return ParseReportsFromGmail(success=True)
-
 
 class LoadDataFromMoneyManager(graphene.Mutation):
     success = graphene.Boolean()

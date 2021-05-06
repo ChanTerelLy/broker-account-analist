@@ -276,6 +276,7 @@ class AccountReport(models.Model):
         data['handbook'] = json.dumps(data['handbook'])
         data['money_flow'] = json.dumps(data['money_flow'])
         data['transfers'] = json.dumps(data['transfers'])
+        data['iis_income'] = json.dumps(data['iis_income'])
         data['source'] = source
         try:
             cls.objects.create(**data)
@@ -507,6 +508,33 @@ class AdditionalInvestmentIncome(Modify):
     receipt_date = models.DateField()
     note = models.TextField(blank=True, null=True)
 
+class IISIncome(Modify):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    report = models.ForeignKey(AccountReport, on_delete=models.CASCADE)
+    operation_date = models.DateField()
+    sum = models.FloatField()
+    description = models.TextField()
+    remainder_limit = models.FloatField()
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['operation_date', 'sum', 'account'], name='unique_iis_income')
+        ]
+
+
+    @classmethod
+    def save_from_sberbank_report(cls, data, params):
+        for income in data:
+            cls(
+                account=params['account'],
+                report=params['report'],
+                operation_date=dmY_to_date(income['Дата операции']),
+                sum=conver_to_number(income['Сумма, руб.']),
+                description=income['Основание операции'],
+                remainder_limit=conver_to_number(income['Остаток лимита (сумма к внесению), руб.']),
+            ).save()
+
+
 # Signals
 @receiver(post_save, sender=MoneyManagerTransaction)
 def update_amount_accounts(sender, **kwargs):
@@ -518,9 +546,13 @@ def update_amount_accounts(sender, **kwargs):
 @receiver(post_save, sender=AccountReport)
 def update_transfers_from_sbr_report(sender, **kwargs):
     json_transfers = kwargs['instance'].transfers
+    json_iis_income = kwargs['instance'].iis_income
+    params = {}
+    params['report'] = kwargs['instance']
+    params['account'] = kwargs['instance'].account
     if json_transfers:
-        params = {}
         json_transfers = json.loads(json_transfers)
-        params['report'] = kwargs['instance']
-        params['account'] =  kwargs['instance'].account
         Transfer.save_from_sberbank_report(json_transfers, params)
+    if json_iis_income:
+        json_iis_income = json.loads(json_iis_income)
+        IISIncome.save_from_sberbank_report(json_iis_income, params)

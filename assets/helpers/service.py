@@ -202,12 +202,19 @@ class SberbankReport(Report):
             transfers_table = transfer_text.find_next_sibling('table')
             table_data = [self._cell_generator(row) for row in transfers_table.find_all('tr')]
             json_transfers = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
+        #iis_income
+        iis_income_text = find_by_text(soup, 'Информация о зачислениях денежных средств на ИИС', 'p')
+        json_iis_income = {}
+        if iis_income_text:
+            iis_table = iis_income_text.find_next_sibling('table')
+            table_data = [self._cell_generator(row) for row in iis_table.find_all('tr')]
+            json_iis_income = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
         return {
             'account': account,
             'start_date': start_date,
             'end_date': end_date,
             'asset_estimate': json_asset_estimate,
-            'iis_income': {},
+            'iis_income': json_iis_income,
             'portfolio': json_portfolio,
             'tax': {},
             'handbook': json_handbook,
