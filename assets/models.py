@@ -1,11 +1,8 @@
 import json
 import traceback
-from datetime import datetime
-import pytz
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When, Count
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from pandas import Timestamp
 from accounts.models import User
 from django.db import models, transaction, IntegrityError
 import uuid
@@ -59,20 +56,6 @@ class Account(Modify):
         return f'{self.user} - {self.name} - {self.amount}'
 
 
-class Asset(Modify):
-    full_name = models.CharField(max_length=255)
-    short_name = models.CharField(max_length=50, null=True, blank=True)
-    isin = models.CharField(max_length=50)
-    current_price = models.FloatField()
-    buying_price = models.FloatField()
-    current_return = models.FloatField()
-    buying_return = models.FloatField()
-    account = models.ManyToManyField(Account)
-
-    def __str__(self):
-        return f'{self.short_name} - {self.current_return}'
-
-
 class Deal(Modify):
     account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
     number = models.CharField(max_length=50, help_text='Номер сделки')
@@ -95,17 +78,27 @@ class Deal(Modify):
             account_income = Account.objects.filter(name=deal['Номер договора']).first()
             if not account_income:
                 account_income = Account.objects.create(name=deal['Номер договора'])
+            isin = deal.get('Код финансового инструмента')
+            isin = isin if isin else deal.get('Код ЦБ')
+            type = deal.get('Операция')
+            type = type if type else deal.get('Вид')
+            amount = deal.get('Количество')
+            amount = amount if amount else deal.get('Количество, шт.')
+            price = deal.get('Цена')
+            price = price if price else conver_to_number(deal.get('Цена**'))
+            volume = deal.get('Объём сделки')
+            volume = volume if volume else conver_to_number(deal.get('Сумма'))
             Deal.objects.create(
                 account=account_income,
                 number=deal.get('Номер сделки'),
                 conclusion_date=dmYHM_to_date(deal.get('Дата заключения')),
                 settlement_date=dmYHM_to_date(deal.get('Дата расчётов')),
-                isin=deal.get('Код финансового инструмента'),
-                type=deal.get('Операция'),
-                amount=deal.get('Количество'),
-                price=deal.get('Цена'),
+                isin=isin,
+                type=type,
+                amount=amount,
+                price=price,
                 nkd=deal.get('НКД'),
-                volume=deal.get('Объём сделки'),
+                volume=volume,
                 currency=deal.get('Валюта'),
                 service_fee=(deal.get('Комиссия') if deal.get('Комиссия') else 0),
             )
@@ -260,6 +253,7 @@ class AccountReport(models.Model):
     tax = models.JSONField(help_text='Расчет и удержание налога')
     handbook = models.JSONField(help_text='Справочник Ценных Бумаг')
     transfers = models.JSONField(help_text='Движение денежных средств за период', default=dict)
+    deals = models.JSONField(help_text='Сделки купли/продажи ценных бумаг', default=dict)
     source = models.CharField(max_length=50, choices=(('sberbank', 'sberbank'), ('tinkoff', 'tinkoff')))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -507,6 +501,7 @@ class AdditionalInvestmentIncome(Modify):
     sum = models.FloatField()
     receipt_date = models.DateField()
     note = models.TextField(blank=True, null=True)
+
 
 class IISIncome(Modify):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)

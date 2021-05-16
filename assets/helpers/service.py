@@ -209,6 +209,13 @@ class SberbankReport(Report):
             iis_table = iis_income_text.find_next_sibling('table')
             table_data = [self._cell_generator(row) for row in iis_table.find_all('tr')]
             json_iis_income = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
+        #iis_income
+        deals_text = find_by_text(soup, 'Сделки купли/продажи ценных бумаг', 'p')
+        json_deals = {}
+        if deals_text:
+            deal_table = deals_text.find_next_sibling('table')
+            table_data = [self._cell_generator(row) for row in deal_table.find_all('tr')]
+            json_deals = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
         return {
             'account': account,
             'start_date': start_date,
@@ -219,7 +226,8 @@ class SberbankReport(Report):
             'tax': {},
             'handbook': json_handbook,
             'money_flow': json_money_flow,
-            'transfers': json_transfers
+            'transfers': json_transfers,
+            'deals': json_deals
         }
 
     @classmethod
