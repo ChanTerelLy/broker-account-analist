@@ -2,6 +2,7 @@ import json
 import urllib
 import aiohttp
 import aiomoex
+from django.core.cache import cache
 from tinvest import AsyncClient
 from aiomoex.request_helpers import get_long_data
 import requests
@@ -40,8 +41,12 @@ class Moex:
 
     def get_usd(self):
         """Return current value of USD in RUB"""
-        request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json')
-        response = request.json()['cbrf']['data'][0]
+        if cache.get('usd'):
+            return cache.get('usd')
+        else:
+            request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json')
+            response = request.json()['cbrf']['data'][0]
+            cache.set('usd', response, 86400)
         return response
 
     async def aiohttp_generator(self, urls):

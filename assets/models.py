@@ -9,7 +9,7 @@ import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
-from assets.helpers.service import TinkoffApi as tapi
+from assets.helpers.service import TinkoffApi as tapi, Moex
 from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value, dmY_to_date
 
 
@@ -420,14 +420,17 @@ class Transfer(Modify):
 
     @property
     def xirr_sum(self):
+        sum = self.sum
+        if self.currency == 'USD':
+            sum = sum * Moex().get_usd()[0]
         if self.type == self.TYPE_CHOICES[0][0]:
-            return self.sum * -1
-        else:
-            return self.sum
+            sum = sum * -1
+        return sum
 
     @classmethod
     def get_previous_sum_for_days(cls, user: User, **kwargs):
         result = []
+        usd = Moex().get_usd()[0]
         if kwargs.get('account_name'):
             accounts = Account.objects.filter(user=user, name=kwargs.get('account_name'))
         else:
@@ -435,9 +438,11 @@ class Transfer(Modify):
         for account in accounts:
             account_data = {'account_name': account.name, 'data': []}
             q = Q(type='Ввод ДС') | Q(type='Вывод ДС')
-            transfers = cls.objects.filter(q, account_income=account, ).annotate(
+            transfers = cls.objects.filter(q, account_income=account).annotate(
                 type_sum=Case(
-                    When(type='Вывод ДС', then=F('sum') * -1),
+                    When(type='Вывод ДС', currency='USD', then=F('sum') * -1 * usd),
+                    When(type='Вывод ДС', currency='RUB', then=F('sum') * -1),
+                    When(type='Ввод ДС', currency='USD', then=F('sum') * usd),
                     default=F('sum')
                 ),
                 SumAmount=Window(
@@ -449,6 +454,19 @@ class Transfer(Modify):
             account_data['data'] = data
             result.append(account_data)
         return result
+
+    @staticmethod
+    def get_sum_with_converted_currency(transfers, type):
+        income_sum = transfers.filter(type=type).values('currency').annotate(sum=Sum('sum'))
+        total_sum = 0
+        usd = Moex().get_usd()[0]
+        for sum in income_sum:
+            if sum['currency'] == 'RUB':
+                total_sum += sum['sum']
+            elif sum['currency'] == 'USD':
+                total_sum += usd * sum['sum']
+        return total_sum
+
 
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):

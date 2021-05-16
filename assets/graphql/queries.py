@@ -1,6 +1,5 @@
-import datetime
-
 import graphene
+import pytz
 from codetiming import Timer
 from django.db.models import Count
 from graphene import relay
@@ -8,14 +7,13 @@ from graphene_django.types import ObjectType
 import pandas as pd
 from graphql import GraphQLError
 from tinvest import CandleResolution
-
+from datetime import datetime as dt, timedelta
 from accounts.models import Profile
 from .models import *
 from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
     dmY_hyphen_to_date, list_to_dict, DT_YEAR_BEFORE, DT_NOW
-from datetime import datetime as dt, timedelta
 
 USD_PRICE = 0
 
@@ -79,17 +77,17 @@ class Query(ObjectType):
             result = []
             for account in Account.objects.filter(user=info.context.user):
                 transfers = Transfer.objects.filter(account_income=account,
-                                                    type__in=['Вывод ДС', 'Ввод ДС']).order_by('execution_date').all()
+                                                    type__in=['Вывод ДС', 'Ввод ДС']).all()
                 if not transfers:
                     continue
-                income_sum = transfers.filter(type='Ввод ДС').aggregate(Sum('sum'))['sum__sum']
-                outcome_sum = transfers.filter(type='Вывод ДС').aggregate(Sum('sum'))['sum__sum']
+                income_sum =  Transfer.get_sum_with_converted_currency(transfers, 'Ввод ДС')
+                outcome_sum =  Transfer.get_sum_with_converted_currency(transfers, 'Вывод ДС')
                 outcome_sum = 0 if outcome_sum is None else outcome_sum
                 total_income_outcome = income_sum - outcome_sum
                 earn_sum = account.amount - total_income_outcome
                 dates = list([t.execution_date for t in transfers])
                 sum = list([t.xirr_sum for t in transfers])
-                dates.append(datetime.now(tz=pytz.UTC))  # get current date
+                dates.append(dt.now(tz=pytz.UTC))  # get current date
                 sum.append(account.amount)
                 df = pd.DataFrame({
                     'sum': sum,
@@ -161,7 +159,7 @@ class Query(ObjectType):
                         )
                 if real_income[0]['data']:
                     ac_dic['data'].append(
-                        ReportData(date=datetime.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
+                        ReportData(date=dt.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
             return result
 
     def resolve_user_accounts(self, info, exclude=None):
@@ -286,7 +284,7 @@ class Query(ObjectType):
                 .values('execution_date__month', 'execution_date__year')\
                 .annotate(sum=Sum('sum')).order_by('execution_date__year', 'execution_date__month')
             for index, month in enumerate(aggr_by_month):
-                date = datetime(month['execution_date__year'], month['execution_date__month'], 1)
+                date = dt(month['execution_date__year'], month['execution_date__month'], 1)
                 aggr_by_month[index]['date'] = date
                 del aggr_by_month[index]['execution_date__month']
                 del aggr_by_month[index]['execution_date__year']
