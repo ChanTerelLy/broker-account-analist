@@ -3,7 +3,7 @@ version: '3.7'
 services:
   django:
     build: .
-    command: gunicorn baa.wsgi:application --bind 0.0.0.0:80
+    command: gunicorn baa.wsgi_heroku:application --bind 0.0.0.0:80
     volumes:
       - .:/code
     ports:

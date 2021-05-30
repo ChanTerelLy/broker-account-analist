@@ -10,7 +10,6 @@ WORKDIR /code
 
 # Install dependencies
 COPY requirements.txt .
-COPY .env .
 RUN pip install -r requirements.txt
 
 # Copy project
