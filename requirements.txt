@@ -121,7 +121,7 @@ typing-extensions==3.7.4.3
 Unidecode==1.1.1
 update==0.0.1
 uritemplate==3.0.1
-urllib3==1.25.10
+urllib3==1.26.5
 wasmer==1.0.0
 wcwidth==0.2.5
 webencodings==0.5.1
