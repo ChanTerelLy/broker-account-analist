@@ -49,7 +49,7 @@ def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = No
         attach_id = None
         for attach in attachments:
             if '.html' in attach['filename']:
-                attach_id = attach['body']['attachmentId']
+                attach_id = attach['body'].get('attachmentId')
                 break
         if attach_id:
             data = service.users().messages().attachments().get(userId='me', messageId=message['id'],
