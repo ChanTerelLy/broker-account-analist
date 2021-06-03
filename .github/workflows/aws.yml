@@ -7,7 +7,7 @@ name: CD
 
 jobs:
   docker:
-    name: Deploy
+    name: Docker
     runs-on: ubuntu-latest
     environment: production
 
@@ -36,7 +36,7 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 
   aws:
-    name: Deploy
+    name: AWS
     runs-on: ubuntu-latest
     environment: production
     env:

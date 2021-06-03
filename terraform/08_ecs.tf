@@ -2,8 +2,13 @@ resource "aws_ecs_cluster" "production" {
   name = "${var.ecs_cluster_name}-cluster"
 }
 
+resource "random_string" "rns" {
+  length           = 3
+  special          = false
+}
+
 resource "aws_launch_configuration" "ecs" {
-  name                        = "${var.ecs_cluster_name}-cluster"
+  name_prefix                 = random_string.rns.lower
   image_id                    = lookup(var.amis, var.region)
   instance_type               = var.instance_type
   security_groups             = [aws_security_group.ecs.id]
@@ -11,6 +16,10 @@ resource "aws_launch_configuration" "ecs" {
   key_name                    = aws_key_pair.production.key_name
   associate_public_ip_address = true
   user_data                   = data.template_file.bootstrap.rendered
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 data "template_file" "bootstrap" {
@@ -45,8 +54,8 @@ data "template_file" "app" {
     admin_email = var.admin_email
     google_service_redirect_uri = var.google_service_redirect_uri
     social_auth_google_oauth_2_key = var.social_auth_google_oauth_2_key
-    social_auth_google_oauth_2_secret = var.social_auth_google_oauth_2_secret
-    google_config = var.google_config
+    social_auth_google_oauth_2_secret = tostring(var.social_auth_google_oauth_2_secret)
+    google_config = jsonencode(var.google_config)
   }
 }
 

@@ -165,5 +165,5 @@ variable "social_auth_google_oauth_2_secret" {
   type = string
 }
 variable "google_config" {
-  type = "map"
+  type = map(any)
 }

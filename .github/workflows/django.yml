@@ -56,12 +56,12 @@ jobs:
           SECRET_KEY: 123
           DEBUG: 0
           DB_NAME: postgres
-          DB_USER: postgres
+          DB_USERNAME: postgres
           DB_PASSWORD: postgres
-          DB_HOST: localhost
+          DB_HOSTNAME: localhost
           DB_ENGINE: django.db.backends.postgresql
           DB_PORT: 5432
           REDIS_URL: redis://localhost:6379
         run: |
-          python manage.py collectstatic
-          python manage.py test
+          python manage.py collectstatic --settings=baa.settings.development
+          python manage.py test --settings=baa.settings.development
