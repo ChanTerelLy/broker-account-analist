@@ -2,13 +2,7 @@ resource "aws_ecs_cluster" "production" {
   name = "${var.ecs_cluster_name}-cluster"
 }
 
-resource "random_string" "rns" {
-  length           = 3
-  special          = false
-}
-
 resource "aws_launch_configuration" "ecs" {
-  name_prefix                 = random_string.rns.lower
   image_id                    = lookup(var.amis, var.region)
   instance_type               = var.instance_type
   security_groups             = [aws_security_group.ecs.id]
