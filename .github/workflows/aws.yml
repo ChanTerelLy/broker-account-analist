@@ -51,21 +51,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download task definition
+      -
+        name: Force deployment
         run: |
-          aws ecs --region us-west-1 describe-task-definition --task-definition ${{ secrets.TASK_DEFENITION }} --query taskDefinition > task-definition.json
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: django-app
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/baa-service:latest
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: production-service
-          cluster: production-cluster
+            aws ecs update-service --cluster production-cluster --service production-service --force-new-deployment
