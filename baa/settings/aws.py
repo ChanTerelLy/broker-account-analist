@@ -33,4 +33,5 @@ os.environ['GOOGLE_CONFIG'] = get_env('GOOGLE_CONFIG')
 
 from .base import *
 
+SOCIAL_AUTH_REDIRECT_IS_HTTPS=True
 ALLOWED_HOSTS = ['*']
