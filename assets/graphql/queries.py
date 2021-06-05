@@ -1,4 +1,9 @@
+import collections
+import operator
+from functools import reduce
+
 import graphene
+import numpy
 import pytz
 from codetiming import Timer
 from django.db.models import Count
@@ -13,7 +18,7 @@ from .models import *
 from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
-    dmY_hyphen_to_date, list_to_dict, DT_YEAR_BEFORE, DT_NOW
+    dmY_hyphen_to_date, list_to_dict, DT_YEAR_BEFORE, DT_NOW, dt_to_date, get_summed_values
 
 USD_PRICE = 0
 
@@ -130,6 +135,7 @@ class Query(ObjectType):
                 account = Account.get_with_reports(user=info.context.user, name=kwargs.get('account_name'))
             else:
                 accounts = Account.get_with_reports(user=info.context.user)
+            total_account = []
             for account in accounts:
                 reports = AccountReport.objects.filter(account=account).order_by('start_date')
                 ac_dic = {'account_name': account.name, 'data': []}
@@ -138,11 +144,11 @@ class Query(ObjectType):
                         data = json.loads(report.asset_estimate)
                         sum = data[-1]['Оценка, руб.']
                         ac_dic['data'].append(
-                            ReportData(date=report.start_date, sum=convert_devided_number(sum), income_sum=None)
+                            ReportData(date=dt_to_date(report.start_date), sum=convert_devided_number(sum), income_sum=None)
                         )
                     elif report.source == 'tinkoff':
                         ac_dic['data'].append(
-                            ReportData(date=report.start_date, sum=report.asset_estimate, income_sum=None)
+                            ReportData(date=dt_to_date(report.start_date), sum=report.asset_estimate, income_sum=None)
                         )
                 result.append(ac_dic)
                 real_income = Transfer.get_previous_sum_for_days(user=info.context.user, account_name=account.name)
@@ -155,12 +161,14 @@ class Query(ObjectType):
                         ac_dic['data'][index].income_sum = income['sum']
                     else:
                         ac_dic['data'].append(
-                            ReportData(date=income['date'], sum=None, income_sum=income['sum'])
+                            ReportData(date=dt_to_date(income['date']), sum=None, income_sum=income['sum'])
                         )
                 if real_income[0]['data']:
                     ac_dic['data'].append(
-                        ReportData(date=dt.now(), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
-            return result
+                        ReportData(date=dt_to_date(dt.today()), sum=None, income_sum=real_income[0]['data'][-1]['sum']))
+            summed_values = get_summed_values(result)
+            result.append({'account_name': 'Total', 'data': [ReportData(date=k, sum=s['sum'], income_sum=s['income_sum']) for k, s in summed_values.items()]})
+        return result
 
     def resolve_user_accounts(self, info, exclude=None):
         """Return accounts owned by active user"""

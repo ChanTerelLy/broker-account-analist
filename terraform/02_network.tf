@@ -55,13 +55,6 @@ resource "aws_route_table_association" "private-route-2-association" {
   subnet_id      = aws_subnet.private-subnet-2.id
 }
 
-# Elastic IP
-resource "aws_eip" "elastic-ip-for-nat-gw" {
-  vpc                       = true
-  associate_with_private_ip = "10.0.0.5"
-  depends_on                = [aws_internet_gateway.production-igw]
-}
-
 resource "aws_elasticache_subnet_group" "redis" {
   name       = "tf-test-cache-subnet"
   subnet_ids = [aws_subnet.private-subnet-2.id]

@@ -1,6 +1,7 @@
 import asyncio
 import codecs
 import csv
+import datetime
 import os
 from decimal import Decimal
 from io import StringIO
@@ -214,3 +215,46 @@ def xstr(s):
 
 def list_to_dict(list):
     return {k: v for element in list for k, v in element.items()}
+
+def dt_to_date(d):
+    if isinstance(d, dt):
+        return d.date()
+    else:
+        return d
+
+def get_summed_values(result):
+    g_dates = {}
+    for r in result:
+        date_arr = {}
+        for a in r['data']:
+            date_arr[a.date] = {'sum': a.sum, 'income_sum': a.income_sum}
+        c_year = dt.now().year
+        c_month = dt.now().month
+        for _type in ['income_sum', 'sum']:
+            previos_value = {'sum': 0, _type: 0}
+            for y in range(c_year - 2, c_year + 1):
+                for m in range(1, 12):
+                    if c_year == y and m > c_month:
+                        break
+                    fd_date = datetime.date(y,m,1)
+                    arr = [d for d in date_arr.keys() if d.month == m and d.year == y and date_arr[d].get(_type)]
+                    v = max(arr) if arr else None
+                    pv = previos_value.copy()
+                    da = date_arr[v].copy() if date_arr.get(v) else None
+                    if v and not g_dates.get(fd_date):
+                        g_dates[fd_date] = date_arr[v]
+                        previos_value = da
+                    elif v and g_dates.get(fd_date):
+                        if g_dates[fd_date][_type]:
+                            g_dates[fd_date][_type] += conver_to_number(date_arr[v][_type])
+                        else:
+                            g_dates[fd_date][_type] = conver_to_number(date_arr[v][_type])
+                        previos_value = da
+                    elif not v and not g_dates.get(fd_date):
+                        g_dates[fd_date] = pv
+                    else:
+                        if g_dates[fd_date][_type]:
+                            g_dates[fd_date][_type] += conver_to_number(pv[_type])
+                        else:
+                            g_dates[fd_date][_type] = conver_to_number(pv[_type])
+    return g_dates

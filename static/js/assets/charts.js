@@ -120,6 +120,7 @@ function setReportSelectors() {
     $.each(queryData.data.userAccounts, function(index, value){
         $("#report-menu").append(new Option(value.name, index));
     })
+    $("#report-menu").append(new Option('Total', queryData.data.userAccounts.length));
 }
 
 function showPortfolioReportTable(queryData, reportType='sberbank'){
