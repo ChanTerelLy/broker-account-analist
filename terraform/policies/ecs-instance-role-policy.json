@@ -12,7 +12,8 @@
         "s3:*",
         "rds:*",
         "logs:*",
-        "ssm:*"
+        "ssm:*",
+        "xray:*"
       ],
       "Resource": "*"
     }

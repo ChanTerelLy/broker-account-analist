@@ -21,4 +21,5 @@ resource "aws_db_instance" "production" {
   publicly_accessible     = false
   backup_retention_period = 7
   skip_final_snapshot     = true
+  iam_database_authentication_enabled = true
 }

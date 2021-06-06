@@ -13,6 +13,9 @@
         "protocol": "tcp"
       }
     ],
+    "environment": [
+      { "name" : "AWS_XRAY_DAEMON_ADDRESS", "value" : "xray-daemon:2000" }
+    ],
     "command": ["gunicorn", "-w", "3", "-b", ":80", "${app_name}.wsgi_aws:application"],
     "mountPoints": [
       {
@@ -27,6 +30,22 @@
         "awslogs-region": "${region}",
         "awslogs-stream-prefix": "django-app-log-stream"
       }
+    },
+    "links": [
+        "xray-daemon"
+      ]
+  },
+  {
+      "name": "xray-daemon",
+      "image": "amazon/aws-xray-daemon",
+      "cpu": 32,
+      "memoryReservation": 256,
+      "portMappings" : [
+          {
+              "hostPort": 0,
+              "containerPort": 2000,
+              "protocol": "udp"
+          }
+       ]
     }
-  }
 ]

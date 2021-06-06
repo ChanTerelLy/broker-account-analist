@@ -35,3 +35,12 @@ from .base import *
 
 SOCIAL_AUTH_REDIRECT_IS_HTTPS=True
 ALLOWED_HOSTS = ['*']
+MIDDLEWARE.append('aws_xray_sdk.ext.django.middleware.XRayMiddleware')
+INSTALLED_APPS.append('aws_xray_sdk.ext.django')
+XRAY_RECORDER = {
+    'AUTO_INSTRUMENT': True,
+    'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
+    'AWS_XRAY_TRACING_NAME': 'BAA',
+    'PLUGINS': ('ECSPlugin','EC2Plugin'),
+    'SAMPLING': False,
+}
