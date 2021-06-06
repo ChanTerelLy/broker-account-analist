@@ -68,7 +68,7 @@ variable "docker_image_url_nginx" {
 }
 variable "app_count" {
   description = "Number of Docker containers to run"
-  default     = 2
+  default     = 1
 }
 
 variable "certificate_arn" {}

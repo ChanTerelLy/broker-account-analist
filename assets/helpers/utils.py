@@ -227,7 +227,11 @@ def get_summed_values(result):
     for r in result:
         date_arr = {}
         for a in r['data']:
-            date_arr[a.date] = {'sum': a.sum, 'income_sum': a.income_sum}
+            if date_arr.get(a.date):
+                date_arr[a.date]['sum'] = date_arr[a.date]['sum'] if date_arr[a.date].get('sum') else conver_to_number(a.sum)
+                date_arr[a.date]['income_sum'] = date_arr[a.date]['income_sum'] if date_arr[a.date].get('income_sum') else conver_to_number(a.income_sum)
+            else:
+                date_arr[a.date] = {'sum': a.sum, 'income_sum': a.income_sum}
         c_year = dt.now().year
         c_month = dt.now().month
         for _type in ['income_sum', 'sum']:

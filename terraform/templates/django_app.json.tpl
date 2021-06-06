@@ -4,7 +4,7 @@
     "image": "${docker_image_url_django}",
     "essential": true,
     "cpu": 10,
-    "memory": 350,
+    "memoryReservation": 300,
     "links": [],
     "portMappings": [
       {
