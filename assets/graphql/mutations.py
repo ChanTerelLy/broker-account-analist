@@ -167,8 +167,8 @@ class UpdateTinkoffOperations(graphene.Mutation):
 
     @staticmethod
     def mutate(cls, info, _from=None, till=None):
-        _from = dt_now() if not _from else _from
-        till = dt_year_before() if not till else till
+        _from = dt_year_before() if not _from else _from
+        till = dt_now() if not till else till
         if not info.context.user.is_authenticated:
             return {'success': False}
         else:
