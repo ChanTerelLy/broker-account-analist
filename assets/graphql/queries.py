@@ -29,6 +29,7 @@ class Query(ObjectType):
     tinkoff_portfolio = graphene.Field(TinkoffPortfolioMapType)
     test = graphene.Boolean()
     coupon_chart = graphene.List(CouponAggregated)
+    iis_income = graphene.List(IISIncomeAggregated)
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -274,12 +275,11 @@ class Query(ObjectType):
             else:
                 GraphQLError('No token provided')
 
-
     def resolve_coupon_chart(self, info):
         if not info.context.user.is_authenticated:
             return []
         else:
-            aggr_by_month = Transfer.objects.filter(type='Зачисление купона')\
+            aggr_by_month = Transfer.objects.filter(type='Зачисление купона', account_income__user=info.context.user)\
                 .values('execution_date__month', 'execution_date__year')\
                 .annotate(sum=Sum('sum')).order_by('execution_date__year', 'execution_date__month')
             for index, month in enumerate(aggr_by_month):
@@ -288,3 +288,11 @@ class Query(ObjectType):
                 del aggr_by_month[index]['execution_date__month']
                 del aggr_by_month[index]['execution_date__year']
             return [CouponAggregated(**aggr) for aggr in aggr_by_month]
+
+    def resolve_iis_income(self, info):
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            aggr_by_year = IISIncome.objects.filter(account__user=info.context.user)\
+                .values('operation_date__year').annotate(sum=Sum('sum')).order_by('operation_date__year')
+            return [IISIncomeAggregated(sum=aggr['sum'], year=aggr['operation_date__year']) for aggr in aggr_by_year]

@@ -165,24 +165,25 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         var table = new google.visualization.Table(document.getElementById('table_div'));
         table.draw(data, {allowHtml: true, showRowNumber: true, width: '100%', height: '100%'});
         }
-        function drawPieChart() {
-            let pieData = [];
-            $.each(queryData.data, function(key, value){
-                pieData.push([value.name,value.startMarketTotalSumWithoutNkd])
-            })
-            var data = google.visualization.arrayToDataTable([
-                ['Наименование', 'Сумма'],
-                ...pieData
-            ]);
-            var options = {
-                title: 'Сборная диаграмма'
-            };
+    function drawPieChart() {
+        let pieData = [];
+        $.each(queryData.data, function(key, value){
+            pieData.push([value.name,value.startMarketTotalSumWithoutNkd])
+        })
+        var data = google.visualization.arrayToDataTable([
+            ['Наименование', 'Сумма'],
+            ...pieData
+        ]);
+        var options = {
+            title: 'Сборная диаграмма',
+            backgroundColor: { fill:'transparent' }
+        };
 
-            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
 
             chart.draw(data, options);
         }
-        function piePositionChart() {
+    function piePositionChart() {
             let pieData = [];
             let groupedPieData = {};
             $.each(queryData.data, function(key, value){
@@ -201,9 +202,33 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
                 title: 'Анализ по типу'
             };
 
-            var chart = new google.visualization.PieChart(document.getElementById('pie-position-chart'));
+        var chart = new google.visualization.PieChart(document.getElementById('pie-position-chart'));
 
-            chart.draw(data, options);
+        chart.draw(data, options);
+    }
+}
+
+function showIISIncome(queryData) {
+    google.charts.load('current', {'packages': ['table', 'corechart']});
+    google.charts.setOnLoadCallback(drawTable);
+    let darrays = [];
+    $.each(queryData, function (index, value) {
+                darrays.push([value.year + ' year', value.sum])
+            })
+
+    function drawTable() {
+        var data = google.visualization.arrayToDataTable(
+            [['Год', 'Сумма'],
+            ...darrays]
+        );
+        var table = new google.visualization.Table(document.getElementById('iis_div'));
+        let options = {
+            allowHtml: true,
+            showRowNumber: true,
+            width: '50%',
+            height: '50%',
+        }
+        table.draw(data, options);
         }
 }
 

@@ -225,3 +225,7 @@ class PortfolioInput(graphene.InputObjectType):
 class CouponAggregated(ObjectType):
     date = graphene.Date()
     sum = graphene.Float()
+
+class IISIncomeAggregated(ObjectType):
+    year = graphene.Int()
+    sum = graphene.Float()
