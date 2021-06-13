@@ -93,7 +93,7 @@ async function updateReports() {
             - Отчеты Сбербанк - ${parseReportsFromGmail}
             - Отчеты Тинькофф - ${updateTinkoffOperations}
             `)
-            $('#report-loader').hide();
+            location.reload();
         } else {
             alert('Произошла ошибка')
             $('#report-loader').hide();

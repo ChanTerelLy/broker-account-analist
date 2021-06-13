@@ -103,7 +103,8 @@ function showReportChart(index=0) {
         );
         var options = {
             curveType: 'function',
-            legend: {position: 'bottom'}
+            legend: {position: 'bottom'},
+            backgroundColor: { fill:'transparent' }
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
@@ -155,7 +156,6 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
 
         }
     }
-
     function drawTable() {
         var data = google.visualization.arrayToDataTable(
             [map.filter(Boolean),
@@ -199,7 +199,8 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
                 ...pieData
             ]);
             var options = {
-                title: 'Анализ по типу'
+                title: 'Анализ по типу',
+                backgroundColor: { fill:'transparent' }
             };
 
         var chart = new google.visualization.PieChart(document.getElementById('pie-position-chart'));
