@@ -18,7 +18,7 @@ from .models import *
 from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
-    dmY_hyphen_to_date, list_to_dict, DT_YEAR_BEFORE, DT_NOW, dt_to_date, get_summed_values
+    dmY_hyphen_to_date, list_to_dict, dt_to_date, get_summed_values
 
 USD_PRICE = 0
 

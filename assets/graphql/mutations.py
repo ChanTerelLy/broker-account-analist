@@ -7,7 +7,8 @@ from accounts.models import Profile
 from .models import *
 from ..helpers.google_services import get_gmail_reports, provides_credentials, get_money_manager_database
 from ..helpers.service import Moex, SberbankReport, MoneyManager, TinkoffApi
-from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper, list_to_dict, DT_YEAR_BEFORE, DT_NOW
+from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper, list_to_dict, \
+    dt_now, dt_year_before
 from ..models import Portfolio, Transfer, Deal, AccountReport, Account, MoneyManagerTransaction
 from graphene_file_upload.scalars import Upload
 
@@ -165,7 +166,9 @@ class UpdateTinkoffOperations(graphene.Mutation):
         till = graphene.Date(required=False)
 
     @staticmethod
-    def mutate(cls, info, _from=DT_YEAR_BEFORE, till=DT_NOW):
+    def mutate(cls, info, _from=None, till=None):
+        _from = dt_now() if not _from else _from
+        till = dt_year_before() if not till else till
         if not info.context.user.is_authenticated:
             return {'success': False}
         else:

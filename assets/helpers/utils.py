@@ -10,8 +10,11 @@ import pandas as pd
 import pytz
 from pandas import Timestamp
 
-DT_NOW = dt.now()
-DT_YEAR_BEFORE = dt.now() - timedelta(days=365)
+def dt_now():
+    return dt.now()
+
+def dt_year_before():
+    return dt.now() - timedelta(days=365)
 
 def parse_file(uploaded_file):
     if uploaded_file.name.endswith('.csv'):
