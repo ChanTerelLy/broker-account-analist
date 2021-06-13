@@ -4,10 +4,13 @@ function accountsChart(value) {
     let accountData = value;
     accountData = JSON.parse(accountData.data.accountChart);
     let colors = [];
-    var labels = accountData.data.map(function (e) {
+    var total = accountData.data.map(function (e) {
+        return {name: e.name, total: e.total};
+    }).sort((a,b) => a.total-b.total)
+    var labels = total.map(function (e) {
         return e.name;
     });
-    var data = accountData.data.map(function (e) {
+    var data = total.map(function (e) {
         return e.total;
     });
     $.each(labels, function (index, value) {
