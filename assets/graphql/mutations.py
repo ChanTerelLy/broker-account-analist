@@ -6,7 +6,8 @@ import graphene
 from accounts.models import Profile
 from .models import *
 from ..helpers.google_services import get_gmail_reports, provides_credentials, get_money_manager_database
-from ..helpers.service import Moex, SberbankReport, MoneyManager, TinkoffApi
+from ..helpers.service import SberbankReport, MoneyManager, TinkoffApi
+from moex.helpers.service import Moex
 from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper, list_to_dict, \
     dt_now, dt_year_before
 from ..models import Portfolio, Transfer, Deal, AccountReport, Account, MoneyManagerTransaction

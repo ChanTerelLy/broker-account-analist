@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.views.generic import TemplateView, ListView
 from .helpers.google_services import provides_credentials
 from .models import *
-from .helpers.service import Moex
+from moex.helpers.service import Moex
 import pandas as pd
 from django.http import HttpResponse
 

@@ -9,7 +9,8 @@ import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
-from assets.helpers.service import TinkoffApi as tapi, Moex
+from assets.helpers.service import TinkoffApi as tapi
+from moex.helpers.service import Moex
 from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value, dmY_to_date
 
 

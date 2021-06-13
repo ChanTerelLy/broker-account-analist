@@ -1,24 +1,14 @@
-import collections
-import operator
-from functools import reduce
-
-import graphene
-import numpy
 import pytz
 from codetiming import Timer
-from django.db.models import Count
-from graphene import relay
-from graphene_django.types import ObjectType
 import pandas as pd
 from graphql import GraphQLError
-from tinvest import CandleResolution
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
 from accounts.models import Profile
 from .models import *
-from ..helpers.service import Moex, TinkoffApi, SberbankReport
+from ..helpers.service import TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
-    dmY_hyphen_to_date, list_to_dict, dt_to_date, get_summed_values, dt_now
+    dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now
 
 USD_PRICE = 0
 
