@@ -39,15 +39,31 @@ class Moex:
         data = pd.DataFrame(data)
         return data
 
-    def get_usd(self):
+    def get_currency(self):
         """Return current value of USD in RUB"""
         if cache.get('usd'):
             return cache.get('usd')
         else:
-            request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json')
-            response = request.json()['cbrf']['data'][0]
-            cache.set('usd', response, 86400)
-        return response
+            request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json?iss.meta=off&iss.only=securities&cbrf.columns=USDTOM_UTS_CLOSEPRICE,CBRF_EUR_LAST')
+            data = request.json()['cbrf']['data'][0]
+            usd = data[0]
+            euro = data[1]
+            cache.set('usd', usd, 86400)
+            cache.set('euro', euro, 86400)
+
+    def get_usd(self):
+        if cache.get('usd'):
+            return cache.get('usd')
+        else:
+            self.get_currency()
+            return cache.get('usd')
+
+    def get_euro(self):
+        if cache.get('euro'):
+            return cache.get('euro')
+        else:
+            self.get_currency()
+            return cache.get('euro')
 
     async def aiohttp_generator(self, urls):
         async with aiohttp.ClientSession(headers=self.headers) as client:

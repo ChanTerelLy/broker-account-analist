@@ -18,7 +18,7 @@ from .models import *
 from ..helpers.service import Moex, TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
-    dmY_hyphen_to_date, list_to_dict, dt_to_date, get_summed_values
+    dmY_hyphen_to_date, list_to_dict, dt_to_date, get_summed_values, dt_now
 
 USD_PRICE = 0
 
@@ -247,8 +247,9 @@ class Query(ObjectType):
                 j_positions = json.loads(portfolio)['positions']
                 portfolio_currencies = asyncio_helper(tapi.get_portfolio_currencies)
                 portfolio_currencies = [cur for cur in portfolio_currencies if cur['currency'] == 'RUB']
-                usd_price = Moex().get_usd()[0]
-                data = [TinkoffPortfolioType(**p, usd_price=usd_price, currency=p['average_position_price']['currency'])
+                usd_price = Moex().get_usd()
+                euro = Moex().get_euro()
+                data = [TinkoffPortfolioType(**p, usd_price=usd_price,euro_price=euro, currency=p['average_position_price']['currency'])
                         for p in j_positions]
                 data.append(
                     TinkoffPortfolioType(
@@ -269,8 +270,8 @@ class Query(ObjectType):
                 total_sum = [asset.resolve_start_market_total_sum_without_nkd(None) for asset in data]
                 AccountReport.save_from_tinkoff(**{
                         'account': account,
-                        'start_date': DT_NOW,
-                        'end_date': DT_NOW,
+                        'start_date': dt_now(),
+                        'end_date': dt_now(),
                         'asset_estimate': sum(total_sum),
                         'iis_income': {},
                         'portfolio': json.dumps(j_positions),

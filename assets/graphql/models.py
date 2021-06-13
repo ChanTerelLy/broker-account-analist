@@ -157,6 +157,7 @@ class TinkoffPortfolioType(ObjectType):
     currency = graphene.String()
     start_market_total_sum_without_nkd = graphene.Int()
     usd_price = graphene.Float()
+    euro_price = graphene.Float()
 
     def resolve_average_position_price(self, info, *args):
         return self.average_position_price.get('value')
@@ -168,12 +169,16 @@ class TinkoffPortfolioType(ObjectType):
         price = self.expected_yield.get('value') if self.expected_yield else 0
         if self.currency == 'USD' and self.instrument_type != 'Currency':
             price *= self.usd_price
+        if self.currency == 'EUR' and self.instrument_type != 'Currency':
+            price *= self.euro_price
         return price
 
     def resolve_start_market_total_sum_without_nkd(self, info):
         expected_yield = self.expected_yield.get('value') if self.expected_yield else 0
         price = self.average_position_price.get('value') * self.balance + expected_yield
         if self.currency == 'USD' and self.instrument_type != 'Currency':
+            price *= self.usd_price
+        if self.currency == 'EUR' and self.instrument_type != 'Currency':
             price *= self.usd_price
         return price
 

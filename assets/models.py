@@ -422,7 +422,9 @@ class Transfer(Modify):
     def xirr_sum(self):
         sum = self.sum
         if self.currency == 'USD':
-            sum = sum * Moex().get_usd()[0]
+            sum = sum * Moex().get_usd()
+        if self.currency == 'EUR':
+            sum = sum * Moex().get_euro()
         if self.type == self.TYPE_CHOICES[0][0]:
             sum = sum * -1
         return sum
@@ -430,7 +432,8 @@ class Transfer(Modify):
     @classmethod
     def get_previous_sum_for_days(cls, user: User, **kwargs):
         result = []
-        usd = Moex().get_usd()[0]
+        usd = Moex().get_usd()
+        euro = Moex().get_euro()
         if kwargs.get('account_name'):
             accounts = Account.objects.filter(user=user, name=kwargs.get('account_name'))
         else:
@@ -441,8 +444,10 @@ class Transfer(Modify):
             transfers = cls.objects.filter(q, account_income=account).annotate(
                 type_sum=Case(
                     When(type='Вывод ДС', currency='USD', then=F('sum') * -1 * usd),
+                    When(type='Вывод ДС', currency='EUR', then=F('sum') * -1 * euro),
                     When(type='Вывод ДС', currency='RUB', then=F('sum') * -1),
                     When(type='Ввод ДС', currency='USD', then=F('sum') * usd),
+                    When(type='Ввод ДС', currency='EUR', then=F('sum') * euro),
                     default=F('sum')
                 ),
                 SumAmount=Window(
@@ -459,12 +464,15 @@ class Transfer(Modify):
     def get_sum_with_converted_currency(transfers, type):
         income_sum = transfers.filter(type=type).values('currency').annotate(sum=Sum('sum'))
         total_sum = 0
-        usd = Moex().get_usd()[0]
+        usd = Moex().get_usd()
+        euro = Moex().get_usd()
         for sum in income_sum:
             if sum['currency'] == 'RUB':
                 total_sum += sum['sum']
             elif sum['currency'] == 'USD':
                 total_sum += usd * sum['sum']
+            elif sum['currency'] == 'EUR':
+                total_sum += euro * sum['sum']
         return total_sum
 
 
