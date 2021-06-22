@@ -208,6 +208,14 @@ class Query(ObjectType):
                     assets = SberbankReport.extract_assets(assets, value)
             # get coupon data from moex
             isins = list(assets.keys())
+            client = None
+            start_sync_execution = []
+            if os.getenv('STEP_FUNCTION_ARN', None):
+                client = boto3.client('stepfunctions', region_name=os.getenv('AWS_REGION'))
+                start_sync_execution = client.start_execution(
+                    stateMachineArn=os.getenv('STEP_FUNCTION_ARN'),
+                    input=json.dumps({'isins': isins})
+                )
             data = asyncio_helper(Moex().get_coupon_by_isins, isins)
             for index, d in enumerate(data):
                 if len(d):
@@ -225,12 +233,7 @@ class Query(ObjectType):
                 avg_price = isin
                 if avg_price:
                     assets[isin]['Средний % купона покупки'] = percent
-            client = boto3.client('stepfunctions', region_name=os.getenv('AWS_REGION'))
             if os.getenv('STEP_FUNCTION_ARN', None):
-                start_sync_execution = client.start_execution(
-                    stateMachineArn=os.getenv('STEP_FUNCTION_ARN'),
-                    input=json.dumps({'isins': isins})
-                )
                 data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
                 while data['status'] == 'RUNNING':
                     data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
