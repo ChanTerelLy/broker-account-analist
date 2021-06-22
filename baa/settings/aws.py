@@ -6,7 +6,7 @@ import boto3
 
 my_session = boto3.session.Session()
 my_region = my_session.region_name
-ssm_client = boto3.client('ssm', region_name='us-west-1')
+ssm_client = boto3.client('ssm', region_name=os.getenv('AWS_REGION'))
 store = SSMParameterStore(ssm_client=ssm_client, prefix='/projects/baa/env/')
 
 def get_env(val, **kwargs):

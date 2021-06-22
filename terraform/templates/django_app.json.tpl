@@ -14,7 +14,8 @@
       }
     ],
     "environment": [
-      { "name" : "AWS_XRAY_DAEMON_ADDRESS", "value" : "xray-daemon:2000" }
+      { "name" : "AWS_XRAY_DAEMON_ADDRESS", "value" : "xray-daemon:2000" },
+      { "name" : "AWS_REGION", "value" : "${region}" }
     ],
     "command": ["gunicorn", "-w", "3", "-b", ":80", "${app_name}.wsgi_aws:application"],
     "mountPoints": [

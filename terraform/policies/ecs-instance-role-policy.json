@@ -13,7 +13,8 @@
         "rds:*",
         "logs:*",
         "ssm:*",
-        "xray:*"
+        "xray:*",
+        "states:*"
       ],
       "Resource": "*"
     }

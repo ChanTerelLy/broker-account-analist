@@ -225,7 +225,7 @@ class Query(ObjectType):
                 avg_price = isin
                 if avg_price:
                     assets[isin]['Средний % купона покупки'] = percent
-            client = boto3.client('stepfunctions')
+            client = boto3.client('stepfunctions', region_name=os.getenv('AWS_REGION'))
             if os.getenv('STEP_FUNCTION_ARN', None):
                 start_sync_execution = client.start_execution(
                     stateMachineArn=os.getenv('STEP_FUNCTION_ARN'),
