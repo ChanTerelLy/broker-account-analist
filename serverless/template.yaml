@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  moex-baa state machine
+
+Globals:
+  Function:
+    Timeout: 30
+
+Parameters:
+  ParameterStorePrefix:
+    Type: String
+    Default: "projects"
+
+Resources:
+  MoexLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: layers/moex
+      CompatibleRuntimes:
+        - python3.8
+    Metadata:
+      BuildMethod: python3.8
+
+  SharesPriceStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/stock_trader.asl.json
+      Tracing: {Enabled: true}
+      DefinitionSubstitutions:
+        EtfArn: !GetAtt EtfInfoFunction.Arn
+        BondsArn: !GetAtt  BondsInfoFunction.Arn
+        SharesArn: !GetAtt  SharesInfoFunction.Arn
+        ForeignSharesArn: !GetAtt  ForeignSharesInfoFunction.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EtfInfoFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BondsInfoFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ForeignSharesInfoFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SharesInfoFunction
+
+  EtfInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/etf/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tracing: Active
+      Layers:
+        - !Ref MoexLayer
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /etf
+            Method: POST
+
+  BondsInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/bonds/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tracing: Active
+      Layers:
+        - !Ref MoexLayer
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /bonds
+            Method: POST
+
+  ForeignSharesInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/foreignshares/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tracing: Active
+      Layers:
+        - !Ref MoexLayer
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /foreignshares
+            Method: POST
+
+  SharesInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/shares/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tracing: Active
+      Layers:
+        - !Ref MoexLayer
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /shares
+            Method: POST
+
+  SimpleParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${ParameterStorePrefix}STEP_FUNCTION_ARN"
+      Description: 'Step function arn'
+      Type: String
+      Value: !GetAtt SharesPriceStateMachine.Arn
+
+
+Outputs:
+  StepFunctionArn:
+    Description: "Step function arn"
+    Value: !GetAtt SharesPriceStateMachine.Arn
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

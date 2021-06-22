@@ -1,0 +1,8 @@
+node_modules
+.npmignore
+samconfig.toml
+.env
+.vscode
+functions/.DS_Store
+.DS_Store
+.aws-sam

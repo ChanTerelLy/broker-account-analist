@@ -97,6 +97,7 @@ class PortfolioReportType(ObjectType):
     coupon_percent = graphene.Float()
     coupon_date = graphene.Date()
     purchase_coupon_percent = graphene.Float()
+    real_price = graphene.Float()
 
     @classmethod
     def convert_name_for_dict(cls, data):
@@ -120,7 +121,8 @@ class PortfolioReportType(ObjectType):
                 'Плановый исходящий остаток, шт': 'scheduled_outbound_amount',
                 'Процент купона': 'coupon_percent',
                 'Дата выплаты ближайшего купона': 'coupon_date',
-                'Средний % купона покупки': 'purchase_coupon_percent'
+                'Средний % купона покупки': 'purchase_coupon_percent',
+                'Текущая стоимость': 'real_price'
                 }
 
     @classmethod

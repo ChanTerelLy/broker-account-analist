@@ -73,13 +73,17 @@ resource "aws_ecs_service" "production" {
   deployment_minimum_healthy_percent = 0
   depends_on      = [aws_alb_listener.ecs-alb-http-listener, aws_iam_role_policy.ecs-service-role-policy]
 
-  provisioner "local-exec" {
-    command = "gh secret set ${self.task_definition}"
-  }
+//  provisioner "local-exec" {
+//    command = "gh secret set ${self.task_definition}"
+//  }
 
   load_balancer {
     target_group_arn = aws_alb_target_group.default-target-group.arn
     container_name   = "django-app"
     container_port   = 80
+  }
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
   }
 }

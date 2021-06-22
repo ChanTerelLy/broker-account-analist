@@ -1,3 +1,6 @@
+import os
+
+import boto3
 import pytz
 from codetiming import Timer
 import pandas as pd
@@ -8,7 +11,7 @@ from .models import *
 from ..helpers.service import TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
-    dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now
+    dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now, flatten_list
 
 USD_PRICE = 0
 
@@ -222,7 +225,20 @@ class Query(ObjectType):
                 avg_price = isin
                 if avg_price:
                     assets[isin]['Средний % купона покупки'] = percent
-            # convert naming
+            client = boto3.client('stepfunctions')
+            if os.getenv('STEP_FUNCTION_ARN', None):
+                start_sync_execution = client.start_execution(
+                    stateMachineArn=os.getenv('STEP_FUNCTION_ARN'),
+                    input=json.dumps({'isins': isins})
+                )
+                data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
+                while data['status'] == 'RUNNING':
+                    data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
+                # convert naming
+                if data:
+                    pricing = flatten_list(json.loads(data['output']))
+                    for price in pricing:
+                        assets[price[0]]['Текущая стоимость'] = price[2]
             conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
             return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}
 
