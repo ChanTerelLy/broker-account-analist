@@ -407,17 +407,20 @@ class Transfer(Modify):
                 if not type:
                     print(row.get('Описание операции'))
                 date = dmY_to_date(row.get('Дата'))
-                cls.objects.create(
-                    execution_date=date,
-                    date_of_application=date,
-                    type=type,
-                    currency=row.get('Валюта'),
-                    sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
-                    status='Исполнено',
-                    description=row.get('Описание операции'),
-                    account_income=params['account'],
-                    report=params['report']
-                )
+                try:
+                    cls.objects.create(
+                        execution_date=date,
+                        date_of_application=date,
+                        type=type,
+                        currency=row.get('Валюта'),
+                        sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
+                        status='Исполнено',
+                        description=row.get('Описание операции'),
+                        account_income=params['account'],
+                        report=params['report']
+                    )
+                except Exception as e:
+                    print(e)
 
     @property
     def xirr_sum(self):
@@ -547,14 +550,17 @@ class IISIncome(Modify):
     @classmethod
     def save_from_sberbank_report(cls, data, params):
         for income in data:
-            cls(
-                account=params['account'],
-                report=params['report'],
-                operation_date=dmY_to_date(income['Дата операции']),
-                sum=conver_to_number(income['Сумма, руб.']),
-                description=income['Основание операции'],
-                remainder_limit=conver_to_number(income['Остаток лимита (сумма к внесению), руб.']),
-            ).save()
+            try:
+                cls(
+                    account=params['account'],
+                    report=params['report'],
+                    operation_date=dmY_to_date(income['Дата операции']),
+                    sum=conver_to_number(income['Сумма, руб.']),
+                    description=income['Основание операции'],
+                    remainder_limit=conver_to_number(income['Остаток лимита (сумма к внесению), руб.']),
+                ).save()
+            except Exception as e:
+                print(e)
 
 
 # Signals

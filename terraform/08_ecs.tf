@@ -83,7 +83,7 @@ resource "aws_ecs_service" "production" {
     container_port   = 80
   }
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
+//  deployment_controller {
+//    type = "CODE_DEPLOY"
+//  }
 }
