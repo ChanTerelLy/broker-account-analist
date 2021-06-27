@@ -4,6 +4,7 @@ import boto3
 import pytz
 from codetiming import Timer
 import pandas as pd
+from django.core import serializers
 from graphql import GraphQLError
 from datetime import datetime as dt
 from accounts.models import Profile
@@ -12,6 +13,7 @@ from ..helpers.service import TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
     dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now, flatten_list
+import graphene_django_optimizer as gql_optimizer
 
 USD_PRICE = 0
 
@@ -44,13 +46,14 @@ class Query(ObjectType):
         if not info.context.user.is_authenticated:
             return Transfer.objects.none()
         else:
-            return Transfer.objects.filter(account_income__user=info.context.user).all()
+            return gql_optimizer.query(Transfer.objects.filter(account_income__user=info.context.user).all(), info)
 
+    @Timer(name="decorator")
     def resolve_my_deals(self, info) -> Transfer:
         if not info.context.user.is_authenticated:
             return Deal.objects.none()
         else:
-            return Deal.objects.filter(account__user=info.context.user).all()
+            return gql_optimizer.query(Deal.objects.filter(account__user=info.context.user).all(), info)
 
     def resolve_account_chart(self, info) -> dict:
         """Return data from bar chart on dashboard"""

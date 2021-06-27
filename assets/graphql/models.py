@@ -5,7 +5,7 @@ from graphene_django import DjangoObjectType
 
 from assets.helpers.utils import convert_devided_number
 from assets.models import Account, Portfolio, Transfer, Deal, Template
-
+from graphene_django.types import DjangoObjectType
 
 class AccountNode(DjangoObjectType):
     class Meta:
@@ -45,8 +45,7 @@ class DealsType(DjangoObjectType):
 
     class Meta:
         model = Deal
-        fields = ('__all__')
-        interfaces = (relay.Node,)
+        fields = "__all__"
 
 
 class TemplateType(DjangoObjectType):
