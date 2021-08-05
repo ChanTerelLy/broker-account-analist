@@ -35,6 +35,7 @@ class Query(ObjectType):
     test = graphene.Boolean()
     coupon_chart = graphene.List(CouponAggregated)
     iis_income = graphene.List(IISIncomeAggregated)
+    assets_remains = graphene.JSONString()
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         if not info.context.user.is_authenticated:
@@ -82,8 +83,8 @@ class Query(ObjectType):
                                                     type__in=['Вывод ДС', 'Ввод ДС']).all()
                 if not transfers:
                     continue
-                income_sum =  Transfer.get_sum_with_converted_currency(transfers, 'Ввод ДС')
-                outcome_sum =  Transfer.get_sum_with_converted_currency(transfers, 'Вывод ДС')
+                income_sum = Transfer.get_sum_with_converted_currency(transfers, 'Ввод ДС')
+                outcome_sum = Transfer.get_sum_with_converted_currency(transfers, 'Вывод ДС')
                 outcome_sum = 0 if outcome_sum is None else outcome_sum
                 total_income_outcome = income_sum - outcome_sum
                 earn_sum = account.amount - total_income_outcome
@@ -114,6 +115,27 @@ class Query(ObjectType):
                 )
             return result
 
+    def resolve_assets_remains(self, info, **kwargs) -> list:
+        if not info.context.user.is_authenticated:
+            return []
+        else:
+            if kwargs.get('account_name'):
+                accounts = Account.get_with_reports(user=info.context.user, name=kwargs.get('account_name'))
+            else:
+                accounts = Account.get_with_reports(user=info.context.user)
+            result = {}
+            for account in accounts:
+                report = AccountReport.objects.filter(account=account).order_by('start_date').last()
+                ac_dic = {'account_name': account.name, 'value': 0}
+                if report:
+                    if report.source == 'sberbank':
+                        data = json.loads(report.asset_estimate)
+                        sum = data[-1]['Денежные средства, руб.']
+                        result[account.name] = int(convert_devided_number(sum))
+                    elif report.source == 'tinkoff':
+                        pass
+        return result
+
     def resolve_get_template_by_key(self, info, key):
         """Return filtered templates"""
         return Template.objects.filter(key=key)
@@ -129,10 +151,9 @@ class Query(ObjectType):
         else:
             result = []
             if kwargs.get('account_name'):
-                account = Account.get_with_reports(user=info.context.user, name=kwargs.get('account_name'))
+                accounts = Account.get_with_reports(user=info.context.user, name=kwargs.get('account_name'))
             else:
                 accounts = Account.get_with_reports(user=info.context.user)
-            total_account = []
             for account in accounts:
                 reports = AccountReport.objects.filter(account=account).order_by('start_date')
                 ac_dic = {'account_name': account.name, 'data': []}

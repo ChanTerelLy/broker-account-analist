@@ -237,7 +237,9 @@ function showAvgIncome(queryData){
     google.charts.load('current', {'packages': ['table']});
     google.charts.setOnLoadCallback(drawTable);
     let reportValues = [];
-    $.each(queryData.data.myTransferXirr, function(key, value){
+    let myTransferXirr = queryData.data.myTransferXirr
+    let assetsRemains = JSON.parse(queryData.data.assetsRemains)
+    $.each(myTransferXirr, function(key, value){
         for (const key in value){
             if(key == 'avgPercent' || key == 'totalPercent'){
                 let v = value[key]
@@ -245,14 +247,20 @@ function showAvgIncome(queryData){
                 value[key] = {v:n, f: n + '%'}
             }
         }
+        value.remain = 0
+        if(assetsRemains[value.accountName]){
+            value.remain = assetsRemains[value.accountName]
+        }
+        console.log(2)
         let ar = Object.values(value);
         reportValues.push(ar)
     })
     var totalSum = calculateSum(reportValues, 3)
-    reportValues.push(['Итог', '-', '-', totalSum])
+    var remainSum = calculateSum(reportValues, 4)
+    reportValues.push(['Итог', '-', '-', totalSum, remainSum])
     function drawTable() {
             var data = google.visualization.arrayToDataTable(
-                [['Счет', 'Средний за год', 'Средний за все время', 'Доход'],
+                [['Счет', 'Средний за год', 'Средний за все время', 'Доход', 'Остатки'],
                 ...reportValues]
             );
 
