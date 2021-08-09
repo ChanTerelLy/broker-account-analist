@@ -32,6 +32,7 @@ Resources:
         BondsArn: !GetAtt  BondsInfoFunction.Arn
         SharesArn: !GetAtt  SharesInfoFunction.Arn
         ForeignSharesArn: !GetAtt  ForeignSharesInfoFunction.Arn
+        CouponsArn: !GetAtt  CouponsFunction.Arn
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref EtfInfoFunction
@@ -41,6 +42,8 @@ Resources:
             FunctionName: !Ref ForeignSharesInfoFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref SharesInfoFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CouponsFunction
 
   EtfInfoFunction:
     Type: AWS::Serverless::Function
@@ -104,6 +107,22 @@ Resources:
           Type: Api
           Properties:
             Path: /shares
+            Method: POST
+
+  CouponsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/coupons/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tracing: Active
+      Layers:
+        - !Ref MoexLayer
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /coupons
             Method: POST
 
   SimpleParameter:

@@ -65,6 +65,21 @@
               "End": true
             }
           }
+        },
+        {
+          "StartAt": "Coupons",
+          "States": {
+            "Coupons": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${CouponsArn}"
+              },
+              "OutputPath": "$.Payload",
+              "End": true
+            }
+          }
         }
       ]
     }

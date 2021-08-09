@@ -214,12 +214,6 @@ class Query(ObjectType):
                 stateMachineArn=os.getenv('STEP_FUNCTION_ARN'),
                 input=json.dumps({'isins': isins})
             )
-        data = asyncio_helper(Moex().get_coupon_by_isins, isins)
-        for index, d in enumerate(data):
-            if len(d):
-                assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
-                assets[d[0]['isin']]['Дата выплаты ближайшего купона'] = dmY_hyphen_to_date(
-                    d[0].get('coupondate', [None]))
         # get data from deals
         isins_with_balance_price = Deal.get_balance_price(isins, accounts)
         avg_percents = asyncio_helper(Moex().coupon_calculator, isins_with_balance_price)
@@ -238,9 +232,16 @@ class Query(ObjectType):
                 data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
             # convert naming
             if data:
-                pricing = flatten_list(json.loads(data['output']))
+                output = json.loads(data['output'])
+                pricing = flatten_list(output[:4])
                 for price in pricing:
                     assets[price[0]]['Текущая стоимость'] = price[2]
+                # coupons
+                for index, d in enumerate(output[4]):
+                    if len(d):
+                        assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
+                        assets[d[0]['isin']]['Дата выплаты ближайшего купона'] = dmY_hyphen_to_date(
+                            d[0].get('coupondate', [None]))
         conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
         return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}
 

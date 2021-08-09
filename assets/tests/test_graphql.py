@@ -18,7 +18,7 @@ class AssetQueryTest(GraphQLTestCase):
         self.template = Template.objects.create(name='testTemplate', description='', url='test.com', key='template')
 
     def test_get_template_by_key_query(self):
-        response = self.query(
+        response = graphql_query(
             '''
             query($key: String!) {
                 getTemplateByKey(key:$key) {
@@ -26,6 +26,7 @@ class AssetQueryTest(GraphQLTestCase):
                 }
             }
             ''',
+            client=self.client,
             variables={'key': "template"}
         )
 
