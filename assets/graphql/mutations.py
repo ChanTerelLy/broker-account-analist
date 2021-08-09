@@ -152,12 +152,9 @@ class ClearReportsInfo(graphene.Mutation):
 
     @staticmethod
     def mutate(cls, info, report_count, type):
-        if info.context.user.is_authenticated:
-            last_rows = AccountReport.objects.filter(source=type)[:report_count]
-            [row.delete() for row in last_rows]
-            return {'success': True}
-        else:
-            return {'success': False}
+        last_rows = AccountReport.objects.filter(source=type)[:report_count]
+        [row.delete() for row in last_rows]
+        return {'success': True}
 
 class UpdateTinkoffOperations(graphene.Mutation):
     success = graphene.Boolean()
@@ -170,25 +167,22 @@ class UpdateTinkoffOperations(graphene.Mutation):
     def mutate(cls, info, _from=None, till=None):
         _from = dt_year_before() if not _from else _from
         till = dt_now() if not till else till
-        if not info.context.user.is_authenticated:
-            return {'success': False}
-        else:
-            TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
-            if TOKEN:
-                account = Account.get_or_create_tinkoff_account(user=info.context.user)
-                tapi = TinkoffApi(TOKEN)
-                payload = asyncio_helper(tapi.get_operations, _from, till)
-                operations = payload.operations
-                figis = [item['figi'] for item in payload.dict()['operations']]
-                figis = list(set(filter(None, figis)))
-                figis = asyncio_helper(tapi.resolve_list_figis, figis)
-                figis = list_to_dict(figis)
-                for operation in operations:
-                    if operation.operation_type.value in ['Buy', 'Sell']:
-                        Deal.convert_tinkoff_deal(operation, account, figis)
-                    else:
-                        Transfer.convert_tinkoff_transfer(operation, account, figis)
-                return {'success': True}
+        TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
+        if TOKEN:
+            account = Account.get_or_create_tinkoff_account(user=info.context.user)
+            tapi = TinkoffApi(TOKEN)
+            payload = asyncio_helper(tapi.get_operations, _from, till)
+            operations = payload.operations
+            figis = [item['figi'] for item in payload.dict()['operations']]
+            figis = list(set(filter(None, figis)))
+            figis = asyncio_helper(tapi.resolve_list_figis, figis)
+            figis = list_to_dict(figis)
+            for operation in operations:
+                if operation.operation_type.value in ['Buy', 'Sell']:
+                    Deal.convert_tinkoff_deal(operation, account, figis)
+                else:
+                    Transfer.convert_tinkoff_transfer(operation, account, figis)
+            return {'success': True}
 
 
 class Mutation(graphene.ObjectType):
