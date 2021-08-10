@@ -1,6 +1,7 @@
 import os
 
 import boto3
+import numpy as np
 import pytz
 from codetiming import Timer
 import pandas as pd
@@ -14,8 +15,6 @@ from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
     dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now, flatten_list
 import graphene_django_optimizer as gql_optimizer
-
-USD_PRICE = 0
 
 
 class Query(ObjectType):
@@ -36,6 +35,7 @@ class Query(ObjectType):
     coupon_chart = graphene.List(CouponAggregated)
     iis_income = graphene.List(IISIncomeAggregated)
     assets_remains = graphene.JSONString()
+    coupon_aggregated = graphene.List(CouponAverage)
 
     def resolve_my_portfolio(self, info) -> Portfolio:
         return Portfolio.objects.filter(account__user=info.context.user)
@@ -43,7 +43,6 @@ class Query(ObjectType):
     def resolve_my_transfers(self, info) -> Transfer:
         return gql_optimizer.query(Transfer.objects.filter(account_income__user=info.context.user).all(), info)
 
-    @Timer(name="decorator")
     def resolve_my_deals(self, info) -> Deal:
         return gql_optimizer.query(Deal.objects.filter(account__user=info.context.user).all(), info)
 
@@ -307,3 +306,19 @@ class Query(ObjectType):
         aggr_by_year = IISIncome.objects.filter(account__user=info.context.user) \
             .values('operation_date__year').annotate(sum=Sum('sum')).order_by('operation_date__year')
         return [IISIncomeAggregated(sum=aggr['sum'], year=aggr['operation_date__year']) for aggr in aggr_by_year]
+
+    def resolve_coupon_aggregated(self, info):
+        aggr_values = Transfer.objects\
+            .filter(type='Зачисление купона', account_income__user=info.context.user) \
+            .values('execution_date__month', 'execution_date__year', 'sum')
+        df = pd.DataFrame(aggr_values)
+        grouped_by_year = df.groupby(['execution_date__year', 'execution_date__month'], as_index=False).agg(
+            {'sum': 'sum'})
+        d = grouped_by_year.groupby(['execution_date__year'], as_index=False).agg(
+            {'execution_date__month': 'count', 'sum': 'sum'})
+        d.columns = ['year', 'month_count', 'sum']
+        d['avg_month'] = d['sum'] / d['month_count']
+        d['sum'] = d['sum'].astype(np.int64)
+        d['avg_month'] = d['avg_month'].astype(np.int64)
+        values = d.to_dict(orient='row')
+        return [CouponAverage(**i) for i in values]

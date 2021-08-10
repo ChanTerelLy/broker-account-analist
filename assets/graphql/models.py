@@ -230,3 +230,9 @@ class CouponAggregated(ObjectType):
 class IISIncomeAggregated(ObjectType):
     year = graphene.Int()
     sum = graphene.Float()
+
+class CouponAverage(ObjectType):
+    year = graphene.Int()
+    month_count = graphene.Int()
+    sum = graphene.Int()
+    avg_month = graphene.Int()

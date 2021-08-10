@@ -34,7 +34,7 @@ os.environ['STEP_FUNCTION_ARN'] = get_env('STEP_FUNCTION_ARN')
 
 from .base import *
 
-SOCIAL_AUTH_REDIRECT_IS_HTTPS=True
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 ALLOWED_HOSTS = ['*']
 MIDDLEWARE.append('aws_xray_sdk.ext.django.middleware.XRayMiddleware')
 INSTALLED_APPS.append('aws_xray_sdk.ext.django')

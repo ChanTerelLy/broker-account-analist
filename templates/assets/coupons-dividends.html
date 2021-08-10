@@ -9,6 +9,14 @@
             <div id="column_chart"></div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-6">
+            <div id="year_total_chart"></div>
+        </div>
+        <div class="col-6">
+            <div id="month_avg_chart"></div>
+        </div>
+    </div>
     </body>
 {% endblock content %}
 {% block extra_scripts %}
@@ -21,6 +29,11 @@ query {
   couponChart{
     date,
     sum
+  },
+  couponAggregated{
+    year,
+    sum,
+    avgMonth
   }
 }
         `

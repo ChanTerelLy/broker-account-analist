@@ -273,8 +273,10 @@ function showAvgIncome(queryData){
 }
 
 function showDividentChart(queryData) {
-        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.load('current', {'packages': ['corechart', 'bar']});
         google.charts.setOnLoadCallback(drawChart);
+        google.charts.setOnLoadCallback(drawAvgYearChart);
+        google.charts.setOnLoadCallback(drawAvgMonthChart);
 
         function drawChart() {
             let darrays = [];
@@ -288,9 +290,41 @@ function showDividentChart(queryData) {
                 ]
             );
             var options = {
-                legend: {position: 'bottom'}
+                legend: { position: "none" },
+                backgroundColor: { fill:'transparent' }
             };
             var chart = new google.visualization.ColumnChart(document.getElementById('column_chart'));
             chart.draw(data, options);
+        }
+        function drawAvgYearChart(){
+            drawAvgChart("Общая сумма за год", 'sum', 'year_total_chart', [100000,200000,300000])
+        }
+        function drawAvgMonthChart(){
+            drawAvgChart("Средняя сумма в месяц", 'avgMonth', 'month_avg_chart', [5000,10000,20000, 30000])
+        }
+        function drawAvgChart(title, valueParam, elementId, ticks) {
+            let darrays = [];
+            $.each(queryData.data.couponAggregated, function (index, value) {
+                darrays.push([value.year + '', value[valueParam]])
+            })
+            var data = google.visualization.arrayToDataTable(
+                [
+                    ['Год', 'Сумма'],
+                    ...darrays
+                ]
+            );
+            var options = {
+                chart: {
+                    title: title,
+                    hAxis: {
+                        ticks: ticks
+                    }
+                },
+                bars: 'horizontal',
+                backgroundColor: {fill: 'transparent'},
+                legend: {position: "none"},
+            };
+            var chart = new google.charts.Bar(document.getElementById(elementId));
+            chart.draw(data, google.charts.Bar.convertOptions(options))
         }
 }
