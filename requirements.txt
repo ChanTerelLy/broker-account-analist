@@ -130,3 +130,4 @@ xlrd==1.2.0
 yarl==1.5.1
 aws-xray-sdk==2.8.0
 graphene_django_optimizer==0.8.0
+django-elasticsearch-dsl==7.1.1
