@@ -81,13 +81,15 @@ function transterChart() {
     });
 }
 
-function getReportDataByIndex(index=0){
-    return queryData.data.reportAssetEstimateDataset[index].data
+function getReportDataByIndex(accountName = 'Total') {
+    return queryData.data.reportAssetEstimateDataset.filter(obj => {
+        return obj.accountName === accountName
+    })[0].data
 }
 
-function showReportChart(index=0) {
+function showReportChart(accountName="Total") {
     google.charts.load('current', {'packages': ['corechart']});
-    var reportInstanceData = getReportDataByIndex(index)
+    var reportInstanceData = getReportDataByIndex(accountName)
     google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
@@ -114,17 +116,18 @@ function showReportChart(index=0) {
 }
 
 function updateChart() {
-    showReportChart($("#report-menu option:selected").val())
+    showReportChart($("#report-menu option:selected").text())
 }
 
 function setReportSelectors() {
     if(queryData.data.userAccounts){
         $("#report-menu").attr({'visibility': 'visible'})
     }
+    $("#report-menu").append(new Option('Total', queryData.data.userAccounts.length));
     $.each(queryData.data.userAccounts, function(index, value){
         $("#report-menu").append(new Option(value.name, index));
     })
-    $("#report-menu").append(new Option('Total', queryData.data.userAccounts.length));
+
 }
 
 function showPortfolioReportTable(queryData, reportType='sberbank'){

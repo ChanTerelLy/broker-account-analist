@@ -136,6 +136,7 @@ Rx = "==1.6.1"
 Send2Trash = "==1.5.0"
 SQLAlchemy = "==1.4.15"
 Unidecode = "==1.1.1"
+more-itertools = "*"
 
 [dev-packages]
 

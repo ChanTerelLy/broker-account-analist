@@ -174,13 +174,6 @@ def convert_devided_number(value):
             pass
     return value
 
-
-def safe_list_get(l, idx, default):
-    try:
-        return l[idx]
-    except IndexError:
-        return default
-
 def exclude_keys(list, *args):
     new_list = []
     for dict in list:
@@ -265,15 +258,3 @@ def get_summed_values(result):
                         else:
                             g_dates[fd_date][_type] = conver_to_number(pv[_type])
     return g_dates
-
-def flatten_list(_2d_list):
-    flat_list = []
-    # Iterate through the outer list
-    for element in _2d_list:
-        if type(element) is list:
-            # If the element is of type list, iterate through the sublist
-            for item in element:
-                flat_list.append(item)
-        else:
-            flat_list.append(element)
-    return flat_list

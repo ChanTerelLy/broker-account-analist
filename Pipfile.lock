@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c0ebe127ec2ec6e36710ea9ec9300e88ea128da75b353e99c65d013d9ee3c33a"
+            "sha256": "4f9cf2035165339f60853deea8a17d1dd47b0a18cec5b3a64fa52f02bf75555e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -368,11 +368,11 @@
         },
         "elasticsearch": {
             "hashes": [
-                "sha256:084979d21cc2955903ecc215bb40b8180207b2bcb5e52ec0ec7dd6f60affd01e",
-                "sha256:f3ab1454e646170bbc6796b8707e4bff125234391d2acc022221e1c0313becb4"
+                "sha256:0498be231c1551b813f7f9c4c02f7e80e1bbb0f743898d2b143e3e2caf92f6d2",
+                "sha256:8ece6152b4e4598c527a4ced6451e8ebddb1dcc16d2afc40b089207ad285ccea"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3' and python_version < '4'",
-            "version": "==7.14.0"
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3' and python_version < '4.0'",
+            "version": "==7.15.0a1"
         },
         "elasticsearch-dsl": {
             "hashes": [
@@ -401,7 +401,7 @@
             "hashes": [
                 "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.18.2"
         },
         "google-api-core": {
@@ -713,6 +713,14 @@
             ],
             "index": "pypi",
             "version": "==0.8.4"
+        },
+        "more-itertools": {
+            "hashes": [
+                "sha256:70401259e46e216056367a0a6034ee3d3f95e0bf59d3aa6a4eb77837171ed996",
+                "sha256:8c746e0d09871661520da4f1241ba6b908dc903839733c8203b552cffaf173bd"
+            ],
+            "index": "pypi",
+            "version": "==8.9.0"
         },
         "multidict": {
             "hashes": [
@@ -1519,7 +1527,7 @@
                 "sha256:fa0eb9c5a58340c6e3aaaed23c7c95a06754593a1000174771f960eb8e2ceb13",
                 "sha256:fd5e0f964e0f00f5870cac49de0b645678652d06b54bf4877f4968e58dc622f5"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.13.0rc3"
         },
         "xlrd": {

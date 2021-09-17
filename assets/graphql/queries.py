@@ -8,12 +8,15 @@ import pandas as pd
 from django.core import serializers
 from graphql import GraphQLError
 from datetime import datetime as dt
+
+from more_itertools import flatten
+
 from accounts.models import Profile
 from .models import *
 from ..helpers.service import TinkoffApi, SberbankReport
 from ..models import *
 from assets.helpers.utils import xirr, get_total_xirr_percent, convert_devided_number, asyncio_helper, \
-    dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now, flatten_list
+    dmY_hyphen_to_date, dt_to_date, get_summed_values, dt_now
 import graphene_django_optimizer as gql_optimizer
 
 
@@ -232,7 +235,7 @@ class Query(ObjectType):
             # convert naming
             if data:
                 output = json.loads(data['output'])
-                pricing = flatten_list(output[:4])
+                pricing = flatten(output[:4])
                 for price in pricing:
                     assets[price[0]]['Текущая стоимость'] = price[2]
                 # coupons
