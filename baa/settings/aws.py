@@ -31,6 +31,7 @@ os.environ['SOCIAL_AUTH_GOOGLE_OAUTH_2_KEY'] = get_env('SOCIAL_AUTH_GOOGLE_OAUTH
 os.environ['SOCIAL_AUTH_GOOGLE_OAUTH_2_SECRET'] = get_env('SOCIAL_AUTH_GOOGLE_OAUTH_2_SECRET')
 os.environ['GOOGLE_CONFIG'] = get_env('GOOGLE_CONFIG')
 os.environ['STEP_FUNCTION_ARN'] = get_env('STEP_FUNCTION_ARN')
+os.environ['SENTRY_DSN'] = get_env('SENTRY_DSN')
 
 from .base import *
 

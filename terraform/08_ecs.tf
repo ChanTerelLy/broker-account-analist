@@ -43,6 +43,7 @@ data "template_file" "app" {
     db_engine = var.db_engine
     email_host = var.email_host
     email_port = var.email_port
+    sentry_dsn = var.sentry_dsn
     email_host_user = var.email_host_user
     email_host_password = var.email_host_password
     admin_email = var.admin_email

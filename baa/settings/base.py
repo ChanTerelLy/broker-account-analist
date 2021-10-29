@@ -7,7 +7,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT_URLCONF = 'baa.urls'
 DEBUG = int(os.getenv('DEBUG'))
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 GRAPHENE = {
     "SCHEMA": "baa.schema.schema"
 }
@@ -157,3 +157,13 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn=os.getenv('SENTRY_DSN'),
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)

@@ -1,4 +1,5 @@
 import json
+import logging
 
 import dateutil
 import graphene
@@ -122,7 +123,7 @@ class ParseReportsFromGmail(graphene.Mutation):
                 source = 'sberbank'
                 AccountReport.save_from_dict(data, source)
             except Exception as e:
-                print(e)
+                logging.error(e)
         return ParseReportsFromGmail(success=True)
 
 class LoadDataFromMoneyManager(graphene.Mutation):

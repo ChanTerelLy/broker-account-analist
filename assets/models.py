@@ -1,4 +1,5 @@
 import json
+import logging
 import traceback
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When, Count
 from django.db.models.signals import post_save
@@ -277,7 +278,7 @@ class AccountReport(models.Model):
             cls.objects.create(**data)
         except Exception as e:
             if isinstance(e, IntegrityError):
-                print(e)
+                logging.error(e)
             else:
                 print(traceback.format_exc())
 
@@ -286,7 +287,7 @@ class AccountReport(models.Model):
         try:
             cls.objects.create(**kwargs)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
 
 class Transfer(Modify):
@@ -420,7 +421,7 @@ class Transfer(Modify):
                         report=params['report']
                     )
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
 
     @property
     def xirr_sum(self):
@@ -522,7 +523,7 @@ class MoneyManagerTransaction(Modify):
                     mm_uid=mm_uid
                 )
             except Exception as e:
-                print(e)
+                logging.error(e)
 
 
 class AdditionalInvestmentIncome(Modify):
@@ -560,7 +561,7 @@ class IISIncome(Modify):
                     remainder_limit=conver_to_number(income['Остаток лимита (сумма к внесению), руб.']),
                 ).save()
             except Exception as e:
-                print(e)
+                logging.error(e)
 
 
 # Signals

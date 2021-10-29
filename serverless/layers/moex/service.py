@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import urllib
 from datetime import date, timedelta, datetime
 from datetime import datetime as dt
@@ -44,7 +45,7 @@ class Moex:
                 json = await resp.json()
                 self.request_jsons.append(json)
             except Exception as e:
-                print(e)
+                logging.error(e)
 
     async def get_coupon_by_isins(self, isins):
         query = {

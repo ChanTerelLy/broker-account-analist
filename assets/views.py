@@ -85,3 +85,6 @@ class VueTest(TemplateView):
 @provides_credentials
 def google_callback(request, *args, **kwargs):
     return HttpResponse('Auth complete!')
+
+def trigger_error(request):
+    division_by_zero = 1 / 0

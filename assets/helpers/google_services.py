@@ -25,6 +25,7 @@ from graphql.execution.tests.utils import resolved
 
 from accounts.models import Profile
 from assets.helpers.utils import xstr
+import logging
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/drive.readonly']
 
@@ -60,7 +61,7 @@ def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = No
                     html = base64.urlsafe_b64decode(data).decode(encoding='UTF-8', errors='ignore')
                     htmls.append(html)
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
                     continue
 
     return htmls
@@ -107,7 +108,7 @@ def download_file(service, file_id, user_id):
         try:
             download_progress, done = media_request.next_chunk()
         except Exception as e:
-            print(e)
+            logging.error(e)
             return False
         if download_progress:
             print('Download Progress: %d%%' % int(download_progress.progress() * 100))
