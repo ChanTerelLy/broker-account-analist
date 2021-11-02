@@ -119,20 +119,26 @@ class Deal(Modify):
     def convert_tinkoff_deal(cls, operation, account, figis):
         if Deal.objects.filter(account=account, number=operation.id).exists():
             return
-        Deal.objects.create(
-            account=account,
-            number=operation.id,
-            conclusion_date=operation.date,
-            settlement_date=operation.date,
-            isin=tapi.extract_figi(operation.figi, figis),
-            type=tapi.resolve_operation_type(get_value(operation.operation_type)),
-            amount=operation.quantity,
-            price=conver_to_number(operation.price),
-            nkd=0,
-            volume=conver_to_number(operation.payment),
-            currency=get_value(operation.currency),
-            service_fee=conver_to_number(operation.commission.value)
-        )
+        try:
+            Deal.objects.create(
+                account=account,
+                number=operation.id,
+                conclusion_date=operation.date,
+                settlement_date=operation.date,
+                isin=tapi.extract_figi(operation.figi, figis),
+                type=tapi.resolve_operation_type(get_value(operation.operation_type)),
+                amount=operation.quantity,
+                price=conver_to_number(operation.price),
+                nkd=0,
+                volume=conver_to_number(operation.payment),
+                currency=get_value(operation.currency),
+                service_fee=conver_to_number(operation.commission.value)
+            )
+        except Exception as e:
+            if isinstance(e, IntegrityError):
+                logging.warning(e)
+            else:
+                logging.info(traceback.format_exc())
 
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
@@ -282,7 +288,7 @@ class AccountReport(models.Model):
             if isinstance(e, IntegrityError):
                 logging.error(e)
             else:
-                print(traceback.format_exc())
+                logging.error(traceback.format_exc())
 
     @classmethod
     def save_from_tinkoff(cls, **kwargs):
@@ -318,7 +324,7 @@ class Transfer(Modify):
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=['account_income', 'execution_date', 'type', 'sum', 'currency'],
+                fields=['account_income', 'execution_date', 'type', 'sum', 'currency', 'transfer_id'],
                 name='unique_transfer')
         ]
 
@@ -329,18 +335,23 @@ class Transfer(Modify):
         figi = tapi.extract_figi(operation.figi, figis) if operation.figi else None
         descriptions = [figi, get_value(operation.instrument_type),
                         get_value(operation.operation_type)]
-        Transfer.objects.create(
-            account_income=account,
-            date_of_application=operation.date,
-            execution_date=operation.date,
-            type=tapi.resolve_operation_type(get_value(operation.operation_type)),
-            sum=conver_to_number(operation.payment) + conver_to_number(operation.commission),
-            currency=get_value(operation.currency),
-            description=' '.join(filter(None, descriptions)),
-            status='Исполнено',
-            transfer_id=operation.id
-        )
-
+        try:
+            Transfer.objects.create(
+                account_income=account,
+                date_of_application=operation.date,
+                execution_date=operation.date,
+                type=tapi.resolve_operation_type(get_value(operation.operation_type)),
+                sum=conver_to_number(operation.payment) + conver_to_number(operation.commission),
+                currency=get_value(operation.currency),
+                description=' '.join(filter(None, descriptions)),
+                status='Исполнено',
+                transfer_id=operation.id
+            )
+        except Exception as e:
+            if isinstance(e, IntegrityError):
+                logging.warning(e)
+            else:
+                logging.info(traceback.format_exc())
     @property
     def type_sum(self):
         if self.type == self.TYPE_CHOICES[2][0]:
@@ -407,8 +418,6 @@ class Transfer(Modify):
             for row in rows[:-1]:
                 type = [v for k, v in map.items() if row.get('Описание операции').startswith(k)]
                 type = type[0] if type else 'Другое'
-                if not type:
-                    print(row.get('Описание операции'))
                 date = dmY_to_date(row.get('Дата'))
                 try:
                     cls.objects.create(

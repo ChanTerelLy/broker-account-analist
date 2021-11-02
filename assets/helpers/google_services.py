@@ -111,9 +111,9 @@ def download_file(service, file_id, user_id):
             logging.error(e)
             return False
         if download_progress:
-            print('Download Progress: %d%%' % int(download_progress.progress() * 100))
+            logging.info('Download Progress: %d%%' % int(download_progress.progress() * 100))
         if done:
-            print('Download Complete')
+            logging.info('Download Complete')
             return file_name
 
 
