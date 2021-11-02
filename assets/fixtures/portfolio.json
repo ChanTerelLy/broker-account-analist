@@ -1,6 +1,6 @@
 [
   {
-    "model": "assets.portfolio",
+    "model": "assets.moexportfolio",
     "pk": "0181e09d-39a1-4187-a151-c4a8f983783f",
     "fields": {
       "created_at": "2021-01-21T11:32:44.759Z",
@@ -21,7 +21,7 @@
     }
   },
   {
-    "model": "assets.portfolio",
+    "model": "assets.moexportfolio",
     "pk": "01b86f42-ad9b-4aac-91ad-fdfcdb8e2104",
     "fields": {
       "created_at": "2021-01-21T11:32:44.724Z",
@@ -42,7 +42,7 @@
     }
   },
   {
-    "model": "assets.portfolio",
+    "model": "assets.moexportfolio",
     "pk": "035a7a05-b99a-4bc2-853e-37c9b289cd01",
     "fields": {
       "created_at": "2021-01-21T11:32:42.049Z",
@@ -63,7 +63,7 @@
     }
   },
   {
-    "model": "assets.portfolio",
+    "model": "assets.moexportfolio",
     "pk": "0500a553-7d0d-4270-bf0c-5dfe3a2666d5",
     "fields": {
       "created_at": "2021-01-21T11:37:56.606Z",
@@ -84,7 +84,7 @@
     }
   },
   {
-    "model": "assets.portfolio",
+    "model": "assets.moexportfolio",
     "pk": "066c0b5a-505d-4ac3-abb7-3472c8584ea4",
     "fields": {
       "created_at": "2021-01-21T11:37:56.560Z",
