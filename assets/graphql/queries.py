@@ -40,8 +40,8 @@ class Query(ObjectType):
     assets_remains = graphene.JSONString()
     coupon_aggregated = graphene.List(CouponAverage)
 
-    def resolve_my_portfolio(self, info) -> Portfolio:
-        return Portfolio.objects.filter(account__user=info.context.user)
+    def resolve_my_portfolio(self, info) -> MoexPortfolio:
+        return MoexPortfolio.objects.filter(account__user=info.context.user)
 
     def resolve_my_transfers(self, info) -> Transfer:
         return gql_optimizer.query(Transfer.objects.filter(account_income__user=info.context.user).all(), info)

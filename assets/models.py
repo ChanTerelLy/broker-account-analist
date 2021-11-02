@@ -201,7 +201,7 @@ class CorpBound(Modify):
         return f'{self.short_name} - {self.assessed_return}'
 
 
-class Portfolio(Modify):
+class MoexPortfolio(Modify):
     buycloseprice = models.FloatField(help_text='Цена закрытия в дату покупки, в рублях', null=True, blank=True)
     buysum = models.FloatField(help_text='Сумма покупки', null=True, blank=True)
     cashflow = models.FloatField(help_text='Купоны/ дивиденды', null=True, blank=True)
@@ -223,7 +223,7 @@ class Portfolio(Modify):
     @method_decorator(transaction.atomic, name='dispatch')
     def save_from_list(cls, deals):
         for deal in deals:
-            Portfolio.objects.create(
+            MoexPortfolio.objects.create(
                 buycloseprice=deal['BUYCLOSEPRICE'],
                 buysum=deal['BUYSUM'],
                 cashflow=deal['CASHFLOW'],
@@ -243,6 +243,8 @@ class Portfolio(Modify):
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
+    class Meta:
+        db_table = 'assets_moex_portfolio'
 
 class AccountReport(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)

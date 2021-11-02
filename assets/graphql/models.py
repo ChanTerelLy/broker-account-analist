@@ -4,7 +4,7 @@ from graphene.utils.str_converters import to_camel_case
 from graphene_django import DjangoObjectType
 
 from assets.helpers.utils import convert_devided_number
-from assets.models import Account, Portfolio, Transfer, Deal, Template
+from assets.models import Account, MoexPortfolio, Transfer, Deal, Template
 from graphene_django.types import DjangoObjectType
 
 class AccountNode(DjangoObjectType):
@@ -19,7 +19,7 @@ class PortfolioType(DjangoObjectType):
     help_text_map = graphene.String()
 
     class Meta:
-        model = Portfolio
+        model = MoexPortfolio
         fields = ('__all__')
         interfaces = (relay.Node,)
 

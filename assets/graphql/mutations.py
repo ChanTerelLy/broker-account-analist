@@ -11,7 +11,7 @@ from ..helpers.service import SberbankReport, MoneyManager, TinkoffApi
 from moex.helpers.service import Moex
 from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper, list_to_dict, \
     dt_now, dt_year_before
-from ..models import Portfolio, Transfer, Deal, AccountReport, Account, MoneyManagerTransaction
+from ..models import MoexPortfolio, Transfer, Deal, AccountReport, Account, MoneyManagerTransaction
 from graphene_file_upload.scalars import Upload
 
 from google.oauth2.credentials import Credentials
@@ -52,7 +52,7 @@ class UploadPortfolio(graphene.Mutation):
             })
         func = Moex().get_portfolio
         portfolio = asyncio_helper(func, request_payload)
-        Portfolio.save_from_list(portfolio)
+        MoexPortfolio.save_from_list(portfolio)
         return UploadTransfers(success=True)
 
 class UploadDeals(graphene.Mutation):
@@ -79,7 +79,7 @@ class CreatePortfolio(graphene.Mutation):
 
     @staticmethod
     def mutate(root, info, input=None):
-        portfolio_instance = Portfolio(name=input.name)
+        portfolio_instance = MoexPortfolio(name=input.name)
         portfolio_instance.save()
         return CreatePortfolio(name=portfolio_instance)
 

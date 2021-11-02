@@ -77,5 +77,5 @@ class AssetModelTest(TestCase):
         self.assertEqual(deal3, 129.2)
 
     def test_portfolio(self):
-        self.assertEqual(len(Portfolio.objects.all()), 5)
+        self.assertEqual(len(MoexPortfolio.objects.all()), 5)
 
