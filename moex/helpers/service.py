@@ -1,12 +1,15 @@
 import asyncio
+import json
 import logging
 import urllib
 from datetime import date, timedelta, datetime
 from datetime import datetime as dt
 import aiohttp
 import aiomoex
+import jmespath
 import pandas as pd
 import requests
+import xmltodict
 from django.core.cache import cache
 
 from assets.helpers.utils import chunks, exclude_keys
@@ -173,3 +176,26 @@ class Moex:
                 deals += deals_portfolio
                 yield_count += 1
         return deals
+
+class Cbr:
+
+    def __init__(self, date=None):
+        self._url = 'http://www.cbr.ru/scripts/XML_daily.asp'
+        self._date = f'?date_req={date}' if date else ''
+        s = requests.session()
+        self.xml = s.get(f'{self._url}{self._date}').text
+
+    def __getattr__(self, item):
+        r = jmespath.search(f"ValCurs.Valute[?CharCode=='{item}'].Value", self.__dict__())
+        value = r[0] if len(r) else None
+        if isinstance(value, str):
+            value = float(value.replace(',','.'))
+        return value
+
+    def __dict__(self):
+        r = xmltodict.parse(self.xml)
+        return json.loads(json.dumps(r))
+
+if __name__ == '__main__':
+    cbr = Cbr('01.01.2021')
+    print(cbr.USD)

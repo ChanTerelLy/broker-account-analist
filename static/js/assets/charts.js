@@ -99,7 +99,7 @@ function showReportChart(accountName="Total") {
         })
         var data = google.visualization.arrayToDataTable(
             [
-                ['Дата', 'Ликвидационная сумма', 'Входящий поток'],
+                ['Дата', 'Стоимость', 'Вложено'],
                 ...darrays
             ]
         );

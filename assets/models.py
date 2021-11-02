@@ -2,7 +2,7 @@ import json
 import logging
 import traceback
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When, Count
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from accounts.models import User
 from django.db import models, transaction, IntegrityError
@@ -11,8 +11,9 @@ from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
 from assets.helpers.service import TinkoffApi as tapi
-from moex.helpers.service import Moex
-from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value, dmY_to_date
+from moex.helpers.service import Moex, Cbr
+from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value, dmY_to_date, \
+    date_to_dmY
 
 
 class Modify(models.Model):
@@ -68,6 +69,7 @@ class Deal(Modify):
                             choices=[('Покупка', 'Покупка'), ('Продажа', 'Продажа')])
     amount = models.IntegerField(help_text='Количество')
     price = models.FloatField(help_text='Цена')
+    price_rub = models.FloatField(help_text='Цена в рублях', default=0)
     nkd = models.FloatField(help_text='НКД')
     volume = models.FloatField(help_text='Объём сделки')
     currency = models.CharField(max_length=10, help_text='Валюта')
@@ -146,7 +148,7 @@ class Deal(Modify):
 
     @property
     def transaction_volume(self):
-        return self.price * self.amount * (1 if self.type == 'Покупка' else -1)
+        return self.price_rub * self.amount * (1 if self.type == 'Покупка' else -1)
 
     @classmethod
     def get_balance_price(self, isins, accounts):
@@ -177,13 +179,24 @@ class Deal(Modify):
             ).values('sum_volume', 'sum_amount', 'sum_nkd').distinct()
             aggr_deals = [i for i in aggr_deals]
             if aggr_deals:
-                aggr_deals[0]['avg_price'] = (aggr_deals[0]['sum_volume']/aggr_deals[0]['sum_amount'])/10
+                aggr_deals[0]['avg_price'] = (aggr_deals[0]['sum_volume'] / aggr_deals[0]['sum_amount']) / 10
                 aggr_deals[0]['isin'] = isin
             values.append(aggr_deals)
         return values
 
+    @property
+    def volume_rub(self):
+        return self.price_rub * self.amount * (-1 if self.type == 'Покупка' else 1)
+
+    def update_price_rub(self):
+        if self.currency != 'RUB':
+            currency_value = Cbr(date_to_dmY(self.conclusion_date)).__getattr__(self.currency)
+            self.price_rub = currency_value * self.price
+        else:
+            self.price_rub = self.price
+
     def __str__(self):
-        return f'{self.type} - {self.price}'
+        return f'{self.number} - {self.isin}'
 
 
 class CorpBound(Modify):
@@ -252,6 +265,7 @@ class MoexPortfolio(Modify):
     class Meta:
         db_table = 'assets_moex_portfolio'
 
+
 class AccountReport(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
     start_date = models.DateField(help_text='Дата начала отчета')
@@ -314,7 +328,8 @@ class Transfer(Modify):
     type = models.CharField(max_length=50,
                             # choices=TYPE_CHOICES, TODO:automatic transliterate russian value
                             help_text='Операция')
-    sum = models.FloatField(help_text='Сумма', )
+    sum = models.FloatField(help_text='Сумма')
+    sum_rub = models.FloatField(help_text='Сумма в рублях', default=0)
     currency = models.CharField(max_length=5, help_text='Валюта')
     description = models.CharField(max_length=255, help_text='Содержание операции', blank=True, null=True)
     status = models.CharField(max_length=50, help_text='Статус')
@@ -352,16 +367,17 @@ class Transfer(Modify):
                 logging.warning(e)
             else:
                 logging.info(traceback.format_exc())
+
     @property
     def type_sum(self):
         if self.type == self.TYPE_CHOICES[2][0]:
-            return self.sum * -1
+            return self.sum_rub * -1
         elif self.type == self.TYPE_CHOICES[5][0]:
-            return self.sum * -1
+            return self.sum_rub * -1
         elif self.type == self.TYPE_CHOICES[1][0]:
-            return self.sum * -1
+            return self.sum_rub * -1
         else:
-            return self.sum
+            return self.sum_rub
 
     @classmethod
     @method_decorator(transaction.atomic, name='dispatch')
@@ -425,7 +441,8 @@ class Transfer(Modify):
                         date_of_application=date,
                         type=type,
                         currency=row.get('Валюта'),
-                        sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(row.get('Сумма списания'))),
+                        sum=abs(conver_to_number(row.get('Сумма зачисления')) - conver_to_number(
+                            row.get('Сумма списания'))),
                         status='Исполнено',
                         description=row.get('Описание операции'),
                         account_income=params['account'],
@@ -436,11 +453,7 @@ class Transfer(Modify):
 
     @property
     def xirr_sum(self):
-        sum = self.sum
-        if self.currency == 'USD':
-            sum = sum * Moex().get_usd()
-        if self.currency == 'EUR':
-            sum = sum * Moex().get_euro()
+        sum = self.sum_rub
         if self.type == self.TYPE_CHOICES[0][0]:
             sum = sum * -1
         return sum
@@ -448,8 +461,6 @@ class Transfer(Modify):
     @classmethod
     def get_previous_sum_for_days(cls, user: User, **kwargs):
         result = []
-        usd = Moex().get_usd()
-        euro = Moex().get_euro()
         if kwargs.get('account_name'):
             accounts = Account.objects.filter(user=user, name=kwargs.get('account_name'))
         else:
@@ -459,11 +470,7 @@ class Transfer(Modify):
             q = Q(type='Ввод ДС') | Q(type='Вывод ДС')
             transfers = cls.objects.filter(q, account_income=account).annotate(
                 type_sum=Case(
-                    When(type='Вывод ДС', currency='USD', then=F('sum') * -1 * usd),
-                    When(type='Вывод ДС', currency='EUR', then=F('sum') * -1 * euro),
-                    When(type='Вывод ДС', currency='RUB', then=F('sum') * -1),
-                    When(type='Ввод ДС', currency='USD', then=F('sum') * usd),
-                    When(type='Ввод ДС', currency='EUR', then=F('sum') * euro),
+                    When(type='Вывод ДС', then=F('sum_rub') * -1),
                     default=F('sum')
                 ),
                 SumAmount=Window(
@@ -478,19 +485,18 @@ class Transfer(Modify):
 
     @staticmethod
     def get_sum_with_converted_currency(transfers, type):
-        income_sum = transfers.filter(type=type).values('currency').annotate(sum=Sum('sum'))
+        income_sum = transfers.filter(type=type).values('currency').annotate(sum=Sum('sum_rub'))
         total_sum = 0
-        usd = Moex().get_usd()
-        euro = Moex().get_usd()
         for sum in income_sum:
-            if sum['currency'] == 'RUB':
-                total_sum += sum['sum']
-            elif sum['currency'] == 'USD':
-                total_sum += usd * sum['sum']
-            elif sum['currency'] == 'EUR':
-                total_sum += euro * sum['sum']
+            total_sum += sum['sum']
         return total_sum
 
+    def update_sum_rub(self):
+        if self.currency != 'RUB':
+            currency_value = Cbr(date_to_dmY(self.execution_date)).__getattr__(self.currency)
+            self.sum_rub = currency_value * self.sum
+        else:
+            self.sum_rub = self.sum
 
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
@@ -558,7 +564,6 @@ class IISIncome(Modify):
             UniqueConstraint(fields=['operation_date', 'sum', 'account'], name='unique_iis_income')
         ]
 
-
     @classmethod
     def save_from_sberbank_report(cls, data, params):
         for income in data:
@@ -596,3 +601,17 @@ def update_transfers_from_sbr_report(sender, **kwargs):
     if json_iis_income:
         json_iis_income = json.loads(json_iis_income)
         IISIncome.save_from_sberbank_report(json_iis_income, params)
+
+
+@receiver(pre_save, sender=Deal)
+def update_deal_price_rub(sender, **kwargs):
+    deal = kwargs['instance']
+    deal.update_price_rub()
+    logging.info(f'{deal.number} was updated')
+
+
+@receiver(pre_save, sender=Transfer)
+def update_transfer_sum_rub(sender, **kwargs):
+    transfer = kwargs['instance']
+    transfer.update_sum_rub()
+    logging.info(f'{transfer.description} was updated')

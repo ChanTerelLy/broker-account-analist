@@ -9,12 +9,11 @@ from datetime import datetime as dt, timedelta
 import pandas as pd
 import pytz
 from pandas import Timestamp
+import re
+import numpy as np
 
-def dt_now():
-    return dt.now()
+MATCH_ALL = r'.*'
 
-def dt_year_before():
-    return dt.now() - timedelta(days=365)
 
 def parse_file(uploaded_file):
     if uploaded_file.name.endswith('.csv'):
@@ -37,33 +36,6 @@ async def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def dmYHM_to_date(date):
-    if isinstance(date, str):
-        return dt.strptime(date, "%d.%m.%Y %H:%M").replace(tzinfo=pytz.UTC) if date else None
-    elif isinstance(date, Timestamp):
-        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
-    elif isinstance(date, dt):
-        return date
-    else:
-        return None
-
-
-def dmY_to_date(date):
-    if isinstance(date, str):
-        return dt.strptime(date, "%d.%m.%Y").replace(tzinfo=pytz.UTC) if date else None
-    elif isinstance(date, Timestamp):
-        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
-    else:
-        return None
-
-def dmY_hyphen_to_date(date):
-    if isinstance(date, str):
-        return dt.strptime(date, "%Y-%m-%d").replace(tzinfo=pytz.UTC) if date else None
-    elif isinstance(date, Timestamp):
-        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
-    else:
-        return None
-
 def timestamp_to_string(date):
     if isinstance(date, Timestamp):
         return date.strftime('%Y-%m-%d')
@@ -74,9 +46,6 @@ def timestamp_to_string(date):
 def to_camel_case(snake_str):
     components = snake_str.split('_')
     return components[0] + ''.join(x.title() for x in components[1:])
-
-
-import numpy as np
 
 
 def xirr(df, guess=0.05, date_column='execution_date', amount_column='sum'):
@@ -121,11 +90,6 @@ def get_total_xirr_percent(percent: float, days: int) -> float:
 def full_strip(text: str) -> str:
     text = ' '.join(text.split()).strip()
     return text
-
-
-import re
-
-MATCH_ALL = r'.*'
 
 
 def like(string):
@@ -174,10 +138,11 @@ def convert_devided_number(value):
             pass
     return value
 
+
 def exclude_keys(list, *args):
     new_list = []
     for dict in list:
-        new_list.append({key:value for key, value in dict.items() if key not in args})
+        new_list.append({key: value for key, value in dict.items() if key not in args})
     return new_list
 
 
@@ -189,8 +154,10 @@ def asyncio_helper(func, *args, **kwargs):
     loop.close()
     return result
 
+
 def weird_division(n, d):
     return n / d if d else 0
+
 
 def conver_to_number(value):
     if not value:
@@ -201,22 +168,20 @@ def conver_to_number(value):
         value = ''.join(value.split())
         return abs(float(value))
 
+
 def get_value(obj):
     return None if not obj else obj.value
+
 
 def xstr(s):
     if s is None:
         return ''
     return str(s)
 
+
 def list_to_dict(list):
     return {k: v for element in list for k, v in element.items()}
 
-def dt_to_date(d):
-    if isinstance(d, dt):
-        return d.date()
-    else:
-        return d
 
 def get_summed_values(result):
     g_dates = {}
@@ -224,8 +189,10 @@ def get_summed_values(result):
         date_arr = {}
         for a in r['data']:
             if date_arr.get(a.date):
-                date_arr[a.date]['sum'] = date_arr[a.date]['sum'] if date_arr[a.date].get('sum') else conver_to_number(a.sum)
-                date_arr[a.date]['income_sum'] = date_arr[a.date]['income_sum'] if date_arr[a.date].get('income_sum') else conver_to_number(a.income_sum)
+                date_arr[a.date]['sum'] = date_arr[a.date]['sum'] if date_arr[a.date].get('sum') else conver_to_number(
+                    a.sum)
+                date_arr[a.date]['income_sum'] = date_arr[a.date]['income_sum'] if date_arr[a.date].get(
+                    'income_sum') else conver_to_number(a.income_sum)
             else:
                 date_arr[a.date] = {'sum': a.sum, 'income_sum': a.income_sum}
         c_year = dt.now().year
@@ -236,7 +203,7 @@ def get_summed_values(result):
                 for m in range(1, 12):
                     if c_year == y and m > c_month:
                         break
-                    fd_date = datetime.date(y,m,1)
+                    fd_date = datetime.date(y, m, 1)
                     arr = [d for d in date_arr.keys() if d.month == m and d.year == y and date_arr[d].get(_type)]
                     v = max(arr) if arr else None
                     pv = previos_value.copy()
@@ -258,3 +225,52 @@ def get_summed_values(result):
                         else:
                             g_dates[fd_date][_type] = conver_to_number(pv[_type])
     return g_dates
+
+
+### DATE FUNCTIONS ###
+def dt_to_date(d):
+    if isinstance(d, dt):
+        return d.date()
+    else:
+        return d
+
+
+def dt_now():
+    return dt.now()
+
+
+def dt_year_before():
+    return dt.now() - timedelta(days=365)
+
+
+def dmYHM_to_date(date):
+    if isinstance(date, str):
+        return dt.strptime(date, "%d.%m.%Y %H:%M").replace(tzinfo=pytz.UTC) if date else None
+    elif isinstance(date, Timestamp):
+        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
+    elif isinstance(date, dt):
+        return date
+    else:
+        return None
+
+
+def dmY_to_date(date):
+    if isinstance(date, str):
+        return dt.strptime(date, "%d.%m.%Y").replace(tzinfo=pytz.UTC) if date else None
+    elif isinstance(date, Timestamp):
+        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
+    else:
+        return None
+
+
+def dmY_hyphen_to_date(date):
+    if isinstance(date, str):
+        return dt.strptime(date, "%Y-%m-%d").replace(tzinfo=pytz.UTC) if date else None
+    elif isinstance(date, Timestamp):
+        return date.to_pydatetime().replace(tzinfo=pytz.UTC)
+    else:
+        return None
+
+
+def date_to_dmY(dt):
+    return dt.strftime("%d.%m.%Y")

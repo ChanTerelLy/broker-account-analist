@@ -47,6 +47,7 @@ function generatePivotTable() {
         price
         nkd
         volume
+        volumeRub
         currency
         serviceFee
         transactionVolume

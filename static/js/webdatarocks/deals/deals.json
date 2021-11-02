@@ -26,7 +26,7 @@
         ],
         "measures": [
             {
-                "uniqueName": "Объём сделки",
+                "uniqueName": "volumeRub",
                 "aggregation": "sum",
                 "format": "49uokoi4"
             }
