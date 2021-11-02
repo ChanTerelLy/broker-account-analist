@@ -17,7 +17,7 @@
       { "name" : "AWS_XRAY_DAEMON_ADDRESS", "value" : "xray-daemon:2000" },
       { "name" : "AWS_REGION", "value" : "${region}" }
     ],
-    "command": ["gunicorn", "-w", "3", "-b", ":80", "${app_name}.wsgi_aws:application"],
+    "command": ["bin/sh", "-c", "python manage.py migrate --settings=baa.settings.aws && gunicorn -w 3 -b :80 baa.wsgi_aws:application"],
     "mountPoints": [
       {
         "containerPath": "/usr/src/app/staticfiles",

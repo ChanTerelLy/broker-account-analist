@@ -4,3 +4,6 @@ Dockerfile
 terraform
 .github
 .gitlab-ci.yml
+jupiter-notebooks
+serverless
+tmp
