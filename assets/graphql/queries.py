@@ -25,12 +25,21 @@ class Query(ObjectType):
     my_portfolio = graphene.List(PortfolioType)
     my_transfers = graphene.List(TransferType)
     my_deals = graphene.List(DealsType)
-    account_chart = graphene.JSONString()
-    my_transfer_xirr = graphene.List(XirrType)
-    get_template_by_key = graphene.List(TemplateType, key=graphene.String())
-    report_asset_estimate_dataset = graphene.List(ReportType, account_name=graphene.String())
+    account_chart = graphene.JSONString(description="""Return data from bar chart on dashboard""")
+    my_transfer_xirr = graphene.List(XirrType, description="""
+    Return avg xirr(the same as xirr in excel), and total xirr for transfer income, charge values""")
+    get_template_by_key = graphene.List(TemplateType, key=graphene.String(),
+                                        description="""Return filtered templates""")
+    report_asset_estimate_dataset = graphene.List(ReportType, account_name=graphene.String(), description=
+    """
+      Calculate value from AccountReport:
+      date - get date from start_date or Transfer execution date
+      sum - return total price estimate from report
+      income_sum - calculate sum previous by date range amount of money
+    """)
     income_transfers_sum = graphene.List(ReportType, account_name=graphene.String())
-    user_accounts = graphene.List(AccountNode, exclude=graphene.String())
+    user_accounts = graphene.List(AccountNode, exclude=graphene.String(),
+                                  description="""Return accounts owned by active user""")
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
     tinkoff_portfolio = graphene.Field(TinkoffPortfolioMapType)
@@ -50,7 +59,6 @@ class Query(ObjectType):
         return gql_optimizer.query(Deal.objects.filter(account__user=info.context.user).all(), info)
 
     def resolve_account_chart(self, info) -> dict:
-        """Return data from bar chart on dashboard"""
         data = {'data': []}
         for account in Account.objects.filter(user=info.context.user).all():
             type_sum = account.amount
@@ -63,7 +71,6 @@ class Query(ObjectType):
         return data
 
     def resolve_my_transfer_xirr(self, info) -> list:
-        """Return avg xirr(the same as xirr in excel), and total xirr for transfer income, charge values"""
         result = []
         for account in Account.objects.filter(user=info.context.user):
             transfers = Transfer.objects.filter(account_income=account,
@@ -122,15 +129,9 @@ class Query(ObjectType):
         return result
 
     def resolve_get_template_by_key(self, info, key):
-        """Return filtered templates"""
         return Template.objects.filter(key=key)
 
     def resolve_report_asset_estimate_dataset(self, info, **kwargs) -> list:
-        """Calculate value from AccountReport:
-        date - get date from start_date or Transfer execution date
-        sum - return total price estimate from report
-        income_sum - calculate sum previous by date range amount of money
-        """
         result = []
         if kwargs.get('account_name'):
             accounts = Account.get_with_reports(user=info.context.user, name=kwargs.get('account_name'))
@@ -174,7 +175,6 @@ class Query(ObjectType):
         return result
 
     def resolve_user_accounts(self, info, exclude=None):
-        """Return accounts owned by active user"""
         if exclude == 'without-report':
             return Account.get_with_reports(user=info.context.user)
         else:
@@ -311,7 +311,7 @@ class Query(ObjectType):
         return [IISIncomeAggregated(sum=aggr['sum'], year=aggr['operation_date__year']) for aggr in aggr_by_year]
 
     def resolve_coupon_aggregated(self, info):
-        aggr_values = Transfer.objects\
+        aggr_values = Transfer.objects \
             .filter(type='Зачисление купона', account_income__user=info.context.user) \
             .values('execution_date__month', 'execution_date__year', 'sum')
         df = pd.DataFrame(aggr_values)
