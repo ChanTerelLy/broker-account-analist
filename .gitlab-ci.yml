@@ -50,6 +50,7 @@ stages:
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
   before_script:
+    - ls -la
     - cd ${TF_ROOT}
     - rm -rf .terraform
     - terraform --version
@@ -68,20 +69,23 @@ plan:
   stage: plan
   script:
     - terraform plan -out "planfile"
+    - ls -la
   dependencies:
     - validate
   artifacts:
     paths:
-      - planfile
+      - terraform/planfile
 
 apply:
   extends: .terraform
   stage: apply
   script:
+    - ls -la
     - terraform apply -input=false "planfile"
   dependencies:
     - plan
   when: manual
+
 
 .pre:
    only:
