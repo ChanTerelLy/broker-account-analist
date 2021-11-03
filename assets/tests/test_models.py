@@ -66,16 +66,6 @@ class AssetModelTest(TestCase):
         Deal.save_from_list(deals)
         self.assertEquals(len(Deal.objects.all()),6)
 
-    def test_deal_get_avg_price(self):
-        # TODO: add more realistic cases
-        deals = Deal.objects.all()
-        deal1 = Deal.get_avg_price(deals[0].isin, [self.account])
-        deal2 = Deal.get_avg_price(deals[1].isin, [self.account])
-        deal3 = Deal.get_avg_price(deals[2].isin, [self.account])
-        self.assertEqual(deal1, 2321.0)
-        self.assertEqual(deal2, -2329.0)
-        self.assertEqual(deal3, 129.2)
-
     def test_portfolio(self):
         self.assertEqual(len(MoexPortfolio.objects.all()), 5)
 

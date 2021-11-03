@@ -108,16 +108,6 @@ class Deal(Modify):
             )
 
     @classmethod
-    def get_avg_price(cls, isin, accounts):
-        deals = cls.objects.filter(isin=isin, account__in=accounts)
-        purchase_sum = 0
-        amount = 0
-        for deal in deals:
-            purchase_sum += deal.transaction_volume
-            amount += deal.amount
-        return weird_division(purchase_sum, amount)
-
-    @classmethod
     def convert_tinkoff_deal(cls, operation, account, figis):
         if Deal.objects.filter(account=account, number=operation.id).exists():
             return
@@ -149,6 +139,11 @@ class Deal(Modify):
     @property
     def transaction_volume(self):
         return self.price_rub * self.amount * (1 if self.type == 'Покупка' else -1)
+
+    @property
+    def transaction_amount(self):
+        return self.amount * (1 if self.type == 'Покупка' else -1)
+
 
     @classmethod
     def get_balance_price(self, isins, accounts):

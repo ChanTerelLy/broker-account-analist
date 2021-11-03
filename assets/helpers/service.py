@@ -159,6 +159,7 @@ class TinkoffApi:
 
     _operation_type_map = {
         'Dividend': 'Зачисление дивидендов',
+        'Tax': 'Списание налогов',
         'Buy': 'Покупка',
         'Sell': 'Продажа',
         'BrokerCommission': 'Списание Комиссии',
