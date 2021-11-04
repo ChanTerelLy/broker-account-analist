@@ -220,16 +220,19 @@ class Query(ObjectType):
             )
         # get data from deals
         isins_with_balance_price = Deal.get_balance_price(isins, accounts)
+        for balance_price in isins_with_balance_price:
+            assets[balance_price[0].get('isin')]['Средняя цена покупки'] = balance_price[0]['avg_price']
         avg_percents = asyncio_helper(Moex().coupon_calculator, isins_with_balance_price)
         isins_with_avg_percents = {}
         for v in avg_percents:
-            isin = v['calculated']['SECID']
-            percent = v['calculated']['CURRENTYIELD']
-            isins_with_avg_percents[isin] = percent
+            if not v['calculated'].get('error'):
+                isin = v['calculated']['SECID']
+                percent = v['calculated']['CURRENTYIELD']
+                isins_with_avg_percents[isin] = percent
         for isin, percent in isins_with_avg_percents.items():
             avg_price = isin
             if avg_price:
-                assets[isin]['Средний % купона покупки'] = percent
+                assets[isin]['Средний % купона покупки'] = percent * 10
         if os.getenv('STEP_FUNCTION_ARN', None):
             data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
             while data['status'] == 'RUNNING':
@@ -237,6 +240,8 @@ class Query(ObjectType):
             # convert naming
             if data:
                 output = json.loads(data['output'])
+                for i, o in enumerate(output[1]):
+                    output[1][i][2] *= 10  # multiplie price to 10 for bounds
                 pricing = flatten(output[:4])
                 for price in pricing:
                     assets[price[0]]['Текущая стоимость'] = price[2]
@@ -244,8 +249,14 @@ class Query(ObjectType):
                 for index, d in enumerate(output[4]):
                     if len(d):
                         assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
-                        assets[d[0]['isin']]['Дата выплаты ближайшего купона'] = dmY_hyphen_to_date(
+                        assets[d[0]['isin']]['Выплата купона'] = dmY_hyphen_to_date(
                             d[0].get('coupondate', [None]))
+        for index, asset in assets.items():
+            assets[index]['Стоимость на момент покупки'] = assets[index]['Средняя цена покупки']\
+                                                           * assets[index]['Количество, шт (Начало Периода)']
+            assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая стоимость',0) \
+                                                        * assets[index]['Количество, шт (Начало Периода)']
+            assets[index]['Доход'] = assets[index]['Ликвидационная стоимость'] - assets[index]['Стоимость на момент покупки']
         conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
         return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}
 

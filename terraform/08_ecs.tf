@@ -54,6 +54,7 @@ data "template_file" "app" {
     social_auth_google_oauth_2_key = var.social_auth_google_oauth_2_key
     social_auth_google_oauth_2_secret = tostring(var.social_auth_google_oauth_2_secret)
     google_config = jsonencode(var.google_config)
+    django_settings_module = var.django_settings_module
   }
 }
 

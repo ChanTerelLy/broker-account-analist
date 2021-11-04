@@ -46,9 +46,9 @@ class AssetModelTest(TestCase):
         self.assertEqual(deal2.type, 'Продажа')
         self.assertEqual(deal3.type, 'Покупка')
 
-        self.assertEqual(deal1.isin, 'FXJP ETF')
-        self.assertEqual(deal2.isin, 'FXJP')
-        self.assertEqual(deal3.isin, 'LSNGP')
+        self.assertEqual(deal1.isin, 'IE00BD3QJ757')
+        self.assertEqual(deal2.isin, 'IE00BD3QJ310')
+        self.assertEqual(deal3.isin, 'RU0009092134')
 
         self.assertEquals(len(Deal.objects.all()),3)
 

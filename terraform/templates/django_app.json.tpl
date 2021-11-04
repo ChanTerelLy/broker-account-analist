@@ -15,9 +15,10 @@
     ],
     "environment": [
       { "name" : "AWS_XRAY_DAEMON_ADDRESS", "value" : "xray-daemon:2000" },
-      { "name" : "AWS_REGION", "value" : "${region}" }
+      { "name" : "AWS_REGION", "value" : "${region}" },
+      { "name" : "DJANGO_SETTINGS_MODULE", "value" : "${django_settings_module}" }
     ],
-    "command": ["/bin/sh", "-c", "python manage.py migrate --settings=baa.settings.aws && python manage.py collectstatic --settings=baa.settings.aws && gunicorn -w 3 -b :80 baa.wsgi_aws:application --access-logfile -"],
+    "command": ["/bin/sh", "-c", "python manage.py migrate && python manage.py collectstatic && gunicorn -w 3 -b :80 baa.wsgi_aws:application --access-logfile -"],
     "mountPoints": [
       {
         "containerPath": "/usr/src/app/staticfiles",

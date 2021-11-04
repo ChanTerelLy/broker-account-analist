@@ -16,6 +16,9 @@ from assets.helpers.utils import chunks, exclude_keys
 
 
 class Moex:
+
+    moex_api_path = 'https://iss.moex.com/iss'
+
     def __init__(self):
         self.session = requests.Session()
         self.data = {}
@@ -47,7 +50,7 @@ class Moex:
         if cache.get('usd'):
             return cache.get('usd')
         else:
-            request = self.session.get('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json?iss.meta=off&iss.only=securities&cbrf.columns=USDTOM_UTS_CLOSEPRICE,CBRF_EUR_LAST')
+            request = self.session.get(f'{self.moex_api_path}/statistics/engines/currency/markets/selt/rates.json?iss.meta=off&iss.only=securities&cbrf.columns=USDTOM_UTS_CLOSEPRICE,CBRF_EUR_LAST')
             data = request.json()['cbrf']['data'][0]
             usd = data[0]
             euro = data[1]
@@ -93,14 +96,14 @@ class Moex:
                 'sec_type': "stock_exchange_bond,stock_corporate_bond"
             }
             data = await aiomoex.request_helpers.get_short_data(session,
-                                                               'https://iss.moex.com/iss/apps/infogrid/stock/rates.json',
+                                                               f'{self.moex_api_path}/apps/infogrid/stock/rates.json',
                                                                'rates',
                                                                dict)
             df = pd.DataFrame(data)
         return df
 
     def get_moex_columns_description(self):
-        self.request = self.session.get('https://iss.moex.com/iss/apps/infogrid/stock/columns.json?_'
+        self.request = self.session.get(f'{self.moex_api_path}/apps/infogrid/stock/columns.json?_'
                                         '=1600420993828&lang=ru&iss.meta=off').json()
         return self.request
 
@@ -125,7 +128,7 @@ class Moex:
         urls = []
         data = []
         for isin in isins:
-            url = f'https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization/{isin}.json'
+            url = f'{self.moex_api_path}/statistics/engines/stock/markets/bonds/bondization/{isin}.json'
             url = await self._build_url(query, url)
             urls.append(url)
         await self.aiohttp_generator(urls)
@@ -145,7 +148,7 @@ class Moex:
                     'accint_source': 't0'
                 }
                 query = urllib.parse.urlencode(query, doseq=False)
-                url = f'https://iss.moex.com/iss/apps/bondization/yieldscalculator'
+                url = f'{self.moex_api_path}/apps/bondization/yieldscalculator'
                 url = await self._build_url(query, url)
                 urls.append(url)
         await self.aiohttp_generator(urls)
@@ -165,7 +168,7 @@ class Moex:
         async with aiohttp.ClientSession() as session:
             async for chunk in chunks(data, 15):
                 self.headers['content-type'] = 'application/json;charset=UTF-8'
-                response = await session.post('https://iss.moex.com/iss/apps/bondization/securities_portfolio.json?'
+                response = await session.post(f'{self.moex_api_path}/apps/bondization/securities_portfolio.json?'
                                               'iss.meta=off&iss.json=extended&lang=ru',
                                               json=exclude_keys(chunk, 'account'), headers=self.headers)
                 response = await response.json()
@@ -176,6 +179,11 @@ class Moex:
                 deals += deals_portfolio
                 yield_count += 1
         return deals
+
+    def get_isin_by_name(self, isin: str):
+        url = f'{self.moex_api_path}/securities.json?iss.meta=off'
+        r = requests.session().get(url + f'&q={isin}')
+        return r.json()
 
 class Cbr:
 

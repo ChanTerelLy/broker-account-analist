@@ -177,3 +177,8 @@ variable "internal_api_token" {
 variable "site_url" {
   type = string
 }
+
+variable "django_settings_module" {
+  type = string
+  default = "baa.settings.aws"
+}

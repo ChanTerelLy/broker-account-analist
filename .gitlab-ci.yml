@@ -45,7 +45,7 @@ deploy_sam:
     - cd $SAM_ROOT
   script:
     - sam build
-    - sam deploy --config-file $SAMCONFIG
+    - sam deploy --no-fail-on-empty-changeset --config-file $SAMCONFIG
 
 
 build:

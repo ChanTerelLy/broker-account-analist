@@ -98,6 +98,10 @@ class PortfolioReportType(ObjectType):
     coupon_date = graphene.Date()
     purchase_coupon_percent = graphene.Float()
     real_price = graphene.Float()
+    avg_price_of_buying = graphene.Float()
+    sum_of_buying = graphene.Float()
+    sum_of_liquidation = graphene.Float()
+    income = graphene.Float()
 
     @classmethod
     def convert_name_for_dict(cls, data):
@@ -120,9 +124,13 @@ class PortfolioReportType(ObjectType):
                 'Плановые списания по сделкам, шт': 'scheduled_charges_amount',
                 'Плановый исходящий остаток, шт': 'scheduled_outbound_amount',
                 'Процент купона': 'coupon_percent',
-                'Дата выплаты ближайшего купона': 'coupon_date',
+                'Выплата купона': 'coupon_date',
                 'Средний % купона покупки': 'purchase_coupon_percent',
-                'Текущая стоимость': 'real_price'
+                'Текущая стоимость': 'real_price',
+                'Средняя цена покупки': 'avg_price_of_buying',
+                'Стоимость на момент покупки': 'sum_of_buying',
+                'Ликвидационная стоимость': 'sum_of_liquidation',
+                'Доход': 'income',
                 }
 
     @classmethod

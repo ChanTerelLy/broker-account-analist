@@ -1,6 +1,8 @@
 import json
 import logging
 import traceback
+
+import jmespath
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -174,7 +176,7 @@ class Deal(Modify):
             ).values('sum_volume', 'sum_amount', 'sum_nkd').distinct()
             aggr_deals = [i for i in aggr_deals]
             if aggr_deals:
-                aggr_deals[0]['avg_price'] = (aggr_deals[0]['sum_volume'] / aggr_deals[0]['sum_amount']) / 10
+                aggr_deals[0]['avg_price'] = int((aggr_deals[0]['sum_volume'] / aggr_deals[0]['sum_amount']))
                 aggr_deals[0]['isin'] = isin
             values.append(aggr_deals)
         return values
@@ -189,6 +191,13 @@ class Deal(Modify):
             self.price_rub = currency_value * self.price
         else:
             self.price_rub = self.price
+
+    def validate_isin(self):
+        if self.isin and len(str(self.isin)) < 12:
+            isins = Moex().get_isin_by_name(self.isin)
+            isins = jmespath.search(f"securities.data[?[1] == '{self.isin}'][05]", isins)
+            if len(isins):
+                self.isin = isins[0]
 
     def __str__(self):
         return f'{self.number} - {self.isin}'
@@ -610,3 +619,8 @@ def update_transfer_sum_rub(sender, **kwargs):
     transfer = kwargs['instance']
     transfer.update_sum_rub()
     logging.info(f'{transfer.description} was updated')
+
+@receiver(pre_save, sender=Deal)
+def check_isin(sender, **kwargs):
+    deal = kwargs['instance']
+    deal.validate_isin()

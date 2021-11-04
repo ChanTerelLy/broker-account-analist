@@ -3,7 +3,7 @@ from assets.models import Deal, Transfer
 
 
 class Command(BaseCommand):
-    help = 'update_value_in_rub'
+    help = 'refresh_deals_transfers'
 
     def handle(self, *args, **options):
         for deal in Deal.objects.all():

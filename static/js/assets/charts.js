@@ -155,9 +155,10 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
             data.setProperty(index, 2, 'style', totalStyle);
             data.setProperty(index, 4, 'style', totalStyle);
             formatter.format(data, 4);
-        } else {
-
+        } else if(reportType==='sberbank') {
+            formatter.format(data, 10);
         }
+        else {}
     }
     function drawTable() {
         var data = google.visualization.arrayToDataTable(
@@ -166,7 +167,11 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         );
         styling(data);
         var table = new google.visualization.Table(document.getElementById('table_div'));
-        table.draw(data, {allowHtml: true, showRowNumber: true, width: '100%', height: '100%'});
+        table.draw(data, {allowHtml: true,
+            showRowNumber: true, width: '100%',
+            height: '100%',
+            sortColumn: 10
+        });
         }
     function drawPieChart() {
         let pieData = [];
