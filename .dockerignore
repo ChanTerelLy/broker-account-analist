@@ -6,5 +6,4 @@ terraform
 .gitlab-ci.yml
 jupiter-notebooks
 serverless
-tmp
 staticfiles

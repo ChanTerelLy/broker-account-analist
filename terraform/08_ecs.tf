@@ -3,13 +3,14 @@ resource "aws_ecs_cluster" "production" {
 }
 
 resource "aws_launch_configuration" "ecs" {
-  image_id                    = lookup(var.amis, var.region)
-  instance_type               = var.instance_type
-  security_groups             = [aws_security_group.ecs.id]
-  iam_instance_profile        = aws_iam_instance_profile.ecs.name
-  key_name                    = aws_key_pair.production.key_name
-  associate_public_ip_address = true
-  user_data                   = data.template_file.bootstrap.rendered
+  vpc_classic_link_security_groups = []
+  image_id                         = lookup(var.amis, var.region)
+  instance_type                    = var.instance_type
+  security_groups                  = [aws_security_group.ecs.id]
+  iam_instance_profile             = aws_iam_instance_profile.ecs.name
+  key_name                         = aws_key_pair.production.key_name
+  associate_public_ip_address      = true
+  user_data                        = data.template_file.bootstrap.rendered
 
   lifecycle {
     create_before_destroy = true
@@ -57,9 +58,9 @@ data "template_file" "app" {
 }
 
 resource "aws_ecs_task_definition" "app" {
-  family                = "django-app"
-  container_definitions = data.template_file.app.rendered
-  depends_on            = [aws_db_instance.production, aws_elasticache_cluster.redis]
+  family                   = "django-app"
+  container_definitions    = data.template_file.app.rendered
+  depends_on               = [aws_db_instance.production, aws_elasticache_cluster.redis]
 
   volume {
     name      = "static_volume"
@@ -68,17 +69,15 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 resource "aws_ecs_service" "production" {
-  name            = "${var.ecs_cluster_name}-service"
-  cluster         = aws_ecs_cluster.production.id
-  task_definition = aws_ecs_task_definition.app.arn
-  iam_role        = aws_iam_role.ecs-service-role.arn
-  desired_count   = var.app_count
+  name                               = "${var.ecs_cluster_name}-service"
+  cluster                            = aws_ecs_cluster.production.id
+  task_definition                    = aws_ecs_task_definition.app.arn
+  iam_role                           = aws_iam_role.ecs-service-role.arn
+  desired_count                      = var.app_count
   deployment_minimum_healthy_percent = 0
-  depends_on      = [aws_alb_listener.ecs-alb-http-listener, aws_iam_role_policy.ecs-service-role-policy]
-
-//  provisioner "local-exec" {
-//    command = "gh secret set ${self.task_definition}"
-//  }
+  depends_on                         = [
+    aws_alb_listener.ecs-alb-http-listener, aws_iam_role_policy.ecs-service-role-policy
+  ]
 
   load_balancer {
     target_group_arn = aws_alb_target_group.default-target-group.arn
@@ -86,7 +85,8 @@ resource "aws_ecs_service" "production" {
     container_port   = 80
   }
 
-//  deployment_controller {
-//    type = "CODE_DEPLOY"
-//  }
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes        = [task_definition]
+  }
 }

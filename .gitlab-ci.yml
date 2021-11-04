@@ -1,5 +1,74 @@
 variables:
   TF_ROOT: terraform
+  SAM_ROOT: serverless
+  AUTO_BUILD_IMAGE_VERSION: v1.0.0
+  AUTO_DEVOPS_PLATFORM_TARGET: ECS
+.pre:
+   only:
+    refs:
+      - master
+
+stages:
+- ".pre"
+- build
+- test
+- deploy
+- ".post"
+
+".terraform":
+  image:
+    name: hashicorp/terraform:light
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+  before_script:
+    - cd ${TF_ROOT}
+    - rm -rf .terraform
+    - terraform --version
+    - terraform init
+
+apply_terraform:
+  extends: .terraform
+  stage: build
+  script:
+    - terraform validate
+    - terraform plan -out "planfile"
+    - terraform apply -input=false "planfile"
+
+deploy_sam:
+  image: python:3.8
+  stage: build
+  before_script:
+    - pip3 install awscli --upgrade
+    - pip3 install aws-sam-cli --upgrade
+    - cd $SAM_ROOT
+  script:
+    - sam build
+    - sam deploy --config-file $SAMCONFIG
+
+
+build:
+  stage: build
+  image: registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image:${AUTO_BUILD_IMAGE_VERSION}
+  variables:
+    DOCKER_TLS_CERTDIR: ''
+  services:
+  - name: docker:20.10.6-dind
+    command:
+    - "--tls=false"
+    - "--host=tcp://0.0.0.0:2375"
+  script:
+  - |
+    if [[ -z "$CI_COMMIT_TAG" ]]; then
+      export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
+      export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
+    else
+      export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
+      export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
+    fi
+  - "/build/build.sh"
+
 test:
   only:
     - master
@@ -26,66 +95,11 @@ test:
     - python manage.py migrate --settings=baa.settings.development
     - python manage.py test --settings=baa.settings.development
 
-include:
-  - template: AWS/Deploy-ECS.gitlab-ci.yml
-
-stages:
-- ".pre"
-- validate
-- plan
-- apply
-- build
-- test
-- review
-- deploy
-- production
-- cleanup
-- ".post"
-
-".terraform":
-  image:
-    name: hashicorp/terraform:light
-    entrypoint:
-      - '/usr/bin/env'
-      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-
-  before_script:
-    - ls -la
-    - cd ${TF_ROOT}
-    - rm -rf .terraform
-    - terraform --version
-    - export AWS_ACCESS_KEY_ID
-    - export AWS_SECRET_ACCESS_KEY
-    - terraform init
-
-validate:
-  extends: .terraform
-  stage: validate
+deploy:
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-ecs:latest
+  dependencies: []
   script:
-    - terraform validate
-
-plan:
-  extends: .terraform
-  stage: plan
-  script:
-    - terraform plan -out "planfile"
-  dependencies:
-    - validate
-  artifacts:
-    paths:
-      - terraform/planfile
-
-apply:
-  extends: .terraform
-  stage: apply
-  script:
-    - terraform apply -input=false "planfile"
-  dependencies:
-    - plan
-  when: manual
-
-
-.pre:
-   only:
-    refs:
-      - master
+  - ecs update-task-definition
+  stage: deploy
+  environment:
+    name: production
