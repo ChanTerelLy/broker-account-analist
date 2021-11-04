@@ -32,18 +32,18 @@ os.environ['SOCIAL_AUTH_GOOGLE_OAUTH_2_SECRET'] = get_env('SOCIAL_AUTH_GOOGLE_OA
 os.environ['GOOGLE_CONFIG'] = get_env('GOOGLE_CONFIG')
 os.environ['STEP_FUNCTION_ARN'] = get_env('STEP_FUNCTION_ARN')
 os.environ['SENTRY_DSN'] = get_env('SENTRY_DSN')
+os.environ['INTERNAL_API_TOKEN'] = get_env('INTERNAL_API_TOKEN')
 
 from .base import *
 
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 ALLOWED_HOSTS = ['*']
-if False:
-    MIDDLEWARE.append('aws_xray_sdk.ext.django.middleware.XRayMiddleware')
-    INSTALLED_APPS.append('aws_xray_sdk.ext.django')
-    XRAY_RECORDER = {
-        'AUTO_INSTRUMENT': True,
-        'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
-        'AWS_XRAY_TRACING_NAME': 'BAA',
-        'PLUGINS': ('ECSPlugin','EC2Plugin'),
-        'SAMPLING': False,
-    }
+# MIDDLEWARE.append('aws_xray_sdk.ext.django.middleware.XRayMiddleware')
+# INSTALLED_APPS.append('aws_xray_sdk.ext.django')
+# XRAY_RECORDER = {
+#     'AUTO_INSTRUMENT': True,
+#     'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
+#     'AWS_XRAY_TRACING_NAME': 'BAA',
+#     'PLUGINS': ('ECSPlugin','EC2Plugin'),
+#     'SAMPLING': False,
+# }

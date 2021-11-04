@@ -148,6 +148,8 @@ def provides_credentials(func, *args, **kwargs):
         # If OAuth redirect response, get credentials
         if not request:
             request = args[0].context
+        if len(args) and getattr(args[0], 'root_value'):
+            request.user = args[0].root_value.user
         if not request.user.is_authenticated:
             return {'success': False, 'redirect_uri': resolved('login')}
         flow = InstalledAppFlow.from_client_config(

@@ -30,15 +30,15 @@ class SberbankReport(Report):
             if match:
                 account = full_strip(match.group(1))
                 account = assets.models.Account.objects.filter(name=account).first()
-        #asset estimate table
+        # asset estimate table
         asset_estimate_table = find_by_text(soup, 'Оценка активов', 'p').find_next_sibling('table')
         table_data = [[cell.text.strip() for cell in row("td")] for row in asset_estimate_table.find_all('tr')]
         json_asset_estimate = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
-        #portfolio table
+        # portfolio table
         portfolio_table = find_by_text(soup, 'Портфель Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in portfolio_table.find_all('tr')]
         json_portfolio = pd.DataFrame(table_data[2:], columns=self._generate_header_for_portfel(table_data[1])).to_dict(orient='records')
-        #hand book table
+        # hand book table
         handbook_table = find_by_text(soup, 'Справочник Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in handbook_table.find_all('tr')]
         json_handbook = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
@@ -46,21 +46,21 @@ class SberbankReport(Report):
         money_flow_table = find_by_text(soup, 'Денежные средства', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in money_flow_table.find_all('tr')]
         json_money_flow = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
-        #transfers
+        # transfers
         transfer_text = find_by_text(soup, 'Движение денежных средств за период', 'p')
         json_transfers = {}
         if transfer_text:
             transfers_table = transfer_text.find_next_sibling('table')
             table_data = [self._cell_generator(row) for row in transfers_table.find_all('tr')]
             json_transfers = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
-        #iis_income
+        # iis_income
         iis_income_text = find_by_text(soup, 'Информация о зачислениях денежных средств на ИИС', 'p')
         json_iis_income = {}
         if iis_income_text:
             iis_table = iis_income_text.find_next_sibling('table')
             table_data = [self._cell_generator(row) for row in iis_table.find_all('tr')]
             json_iis_income = pd.DataFrame(table_data[1:], columns=table_data[0]).to_dict(orient='records')
-        #iis_income
+        # deals
         deals_text = find_by_text(soup, 'Сделки купли/продажи ценных бумаг', 'p')
         json_deals = {}
         if deals_text:

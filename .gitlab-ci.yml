@@ -69,7 +69,6 @@ plan:
   stage: plan
   script:
     - terraform plan -out "planfile"
-    - ls -la
   dependencies:
     - validate
   artifacts:
@@ -80,7 +79,6 @@ apply:
   extends: .terraform
   stage: apply
   script:
-    - ls -la
     - terraform apply -input=false "planfile"
   dependencies:
     - plan

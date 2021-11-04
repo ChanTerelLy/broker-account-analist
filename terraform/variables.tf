@@ -170,3 +170,10 @@ variable "google_config" {
 variable "sentry_dsn" {
   type = string
 }
+variable "internal_api_token" {
+  type = string
+}
+
+variable "site_url" {
+  type = string
+}

@@ -3,10 +3,14 @@ import logging
 
 import dateutil
 import graphene
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+from graphene_django.utils.testing import graphql_query
 
 from accounts.models import Profile
 from .models import *
 from ..helpers.google_services import get_gmail_reports, provides_credentials, get_money_manager_database
+from ..helpers.permissions import internal_login_required
 from ..helpers.service import SberbankReport, MoneyManager, TinkoffApi
 from moex.helpers.service import Moex
 from ..helpers.utils import parse_file, timestamp_to_string, asyncio_helper, list_to_dict, \
@@ -132,15 +136,17 @@ class LoadDataFromMoneyManager(graphene.Mutation):
 
     @provides_credentials
     def mutate(self, info, *args, **kwargs):
+        context = info.context or info.root_value
+        user = context.user
         cr = json.loads(kwargs['credentials'])
         cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
         credentials = Credentials(**cr)
-        response = get_money_manager_database(credentials, info.context.user.id)
+        response = get_money_manager_database(credentials, user.id)
         if response.get('error'):
             return response
         else:
             rows = MoneyManager(response['file']).get_invest_values()
-            MoneyManagerTransaction.save_from_rows(rows, info.context.user)
+            MoneyManagerTransaction.save_from_rows(rows, user)
             return {'success': True}
         return {}
 
@@ -166,11 +172,14 @@ class UpdateTinkoffOperations(graphene.Mutation):
 
     @staticmethod
     def mutate(cls, info, _from=None, till=None):
+        context = info.context or info.root_value
+        user = context.user
         _from = dt_year_before() if not _from else _from
         till = dt_now() if not till else till
-        TOKEN = Profile.objects.get(user=info.context.user).tinkoff_token
+        profile = Profile.objects.filter(user=user).first()
+        TOKEN = getattr(profile, 'tinkoff_token')
         if TOKEN:
-            account = Account.get_or_create_tinkoff_account(user=info.context.user)
+            account = Account.get_or_create_tinkoff_account(user=user)
             tapi = TinkoffApi(TOKEN)
             payload = asyncio_helper(tapi.get_operations, _from, till)
             operations = payload.operations
@@ -185,6 +194,35 @@ class UpdateTinkoffOperations(graphene.Mutation):
                     Transfer.convert_tinkoff_transfer(operation, account, figis)
             return {'success': True}
 
+class UpdateReports(graphene.Mutation):
+    success = graphene.Boolean()
+
+    @internal_login_required
+    def mutate(self, info, *args, **kwargs):
+        for user in User.objects.all():
+            login(info.context, user, backend='django.contrib.auth.backends.ModelBackend')
+            from assets.graphql.schema import schema
+            response = schema.execute(
+                '''
+                mutation {
+                    loadDataFromMoneyManager {
+                        success,
+                        redirectUri
+                      }
+                    parseReportsFromGmail(limit:15) {
+                        success,
+                        redirectUri
+                      }
+                    updateTinkoffOperations {
+                        success
+                      }
+                    }
+                ''',
+                root=info.context
+            )
+            content = response.data
+            logging.info(content)
+        return {'success': True}
 
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()
@@ -196,3 +234,4 @@ class Mutation(graphene.ObjectType):
     load_data_from_money_manager = LoadDataFromMoneyManager.Field()
     clear_reports_info = ClearReportsInfo.Field()
     update_tinkoff_operations = UpdateTinkoffOperations.Field()
+    update_reports = UpdateReports.Field()

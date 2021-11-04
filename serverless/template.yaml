@@ -125,6 +125,33 @@ Resources:
             Path: /coupons
             Method: POST
 
+  UpdateReports:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/updateReports/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tracing: Active
+      Policies:
+      - Statement:
+        - Sid: SSMDescribeParametersPolicy
+          Effect: Allow
+          Action:
+          - ssm:DescribeParameters
+          Resource: '*'
+        - Sid: SSMGetParameterPolicy
+          Effect: Allow
+          Action:
+          - ssm:GetParameters
+          - ssm:GetParameter
+          Resource: '*'
+      Events:
+        CheckWebsiteScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+
+
   SimpleParameter:
     Type: AWS::SSM::Parameter
     Properties:

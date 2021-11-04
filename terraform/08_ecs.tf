@@ -44,6 +44,8 @@ data "template_file" "app" {
     email_host = var.email_host
     email_port = var.email_port
     sentry_dsn = var.sentry_dsn
+    internal_api_token = var.internal_api_token
+    site_url = var.site_url
     email_host_user = var.email_host_user
     email_host_password = var.email_host_password
     admin_email = var.admin_email

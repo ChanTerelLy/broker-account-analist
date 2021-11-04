@@ -175,10 +175,12 @@ class Query(ObjectType):
         return result
 
     def resolve_user_accounts(self, info, exclude=None):
+        context = info.context or info.root_value
+        user = context.user
         if exclude == 'without-report':
-            return Account.get_with_reports(user=info.context.user)
+            return Account.get_with_reports(user=user)
         else:
-            return Account.objects.filter(user=info.context.user)
+            return Account.objects.filter(user=user)
 
     def resolve_portfolio_by_date(self, info, account_name, date):
         account = Account.get_with_reports(name=account_name, user=info.context.user)
