@@ -84,7 +84,7 @@ variable "log_retention_in_days" {
 
 variable "ssh_pubkey_file" {
   description = "Path to an SSH public key"
-  default     = "~/.ssh/id_rsa"
+  default     = "~/.ssh/id_rsa2.pub"
 }
 
 

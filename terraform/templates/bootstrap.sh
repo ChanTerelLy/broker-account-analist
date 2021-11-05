@@ -1,6 +1,19 @@
 #!/bin/bash
 
+# set swap
+sudo dd if=/dev/zero of=/swapfile bs=128M count=64
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+# shellcheck disable=SC2024
+sudo echo /swapfile swap swap defaults 0 0 >> /etc/fstab
+
+# install cloudwatch agent
+sudo yum install -y amazon-cloudwatch-agent
+
+# ecs configuration
 echo ECS_CLUSTER='${ecs_cluster_name}-cluster' > /etc/ecs/ecs.config
+
 cd /home/ec2-user
 # install reids=cli
 sudo yum update -y
