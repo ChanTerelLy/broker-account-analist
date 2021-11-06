@@ -1,0 +1,8 @@
+numpy==1.20.2
+aiohttp
+pandas
+requests
+more_itertools==8.10.0
+jmespath
+xmltodict
+aiomoex

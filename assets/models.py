@@ -3,7 +3,7 @@ import logging
 import traceback
 
 import jmespath
-from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When, Count
+from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from accounts.models import User
@@ -13,8 +13,8 @@ from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
 from assets.helpers.service import TinkoffApi as tapi
-from moex.helpers.service import Moex, Cbr
-from assets.helpers.utils import dmYHM_to_date, xirr, weird_division, conver_to_number, get_value, dmY_to_date, \
+from moex.service import Moex, Cbr
+from assets.helpers.utils import dmYHM_to_date, conver_to_number, get_value, dmY_to_date, \
     date_to_dmY
 
 

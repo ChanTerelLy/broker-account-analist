@@ -16,7 +16,7 @@ Resources:
   MoexLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      ContentUri: layers/moex
+      ContentUri: ../moex
       CompatibleRuntimes:
         - python3.8
     Metadata:

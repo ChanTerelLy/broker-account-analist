@@ -139,13 +139,6 @@ def convert_devided_number(value):
     return value
 
 
-def exclude_keys(list, *args):
-    new_list = []
-    for dict in list:
-        new_list.append({key: value for key, value in dict.items() if key not in args})
-    return new_list
-
-
 def asyncio_helper(func, *args, **kwargs):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

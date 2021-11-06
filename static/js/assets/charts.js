@@ -167,12 +167,12 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         );
         styling(data);
         var table = new google.visualization.Table(document.getElementById('table_div'));
-        table.draw(data, {allowHtml: true,
-            showRowNumber: true, width: '100%',
-            height: '100%',
-            sortColumn: 10
-        });
+        let options = {allowHtml: true, showRowNumber: true, width: '100%'}
+        if(reportType==='sberbank') {
+            options.sortColumn = 10
         }
+        table.draw(data, options);
+    }
     function drawPieChart() {
         let pieData = [];
         $.each(queryData.data, function(key, value){

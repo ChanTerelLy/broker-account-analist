@@ -42,8 +42,10 @@ deploy_sam:
   before_script:
     - pip3 install awscli --upgrade
     - pip3 install aws-sam-cli --upgrade
-    - cd $SAM_ROOT
   script:
+    - pip3 install -r moex/requirements.txt
+    - python3 -m unittest discover moex/tests
+    - cd $SAM_ROOT
     - sam build
     - sam deploy --no-fail-on-empty-changeset --config-file $SAMCONFIG
 
