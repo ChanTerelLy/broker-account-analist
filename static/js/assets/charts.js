@@ -156,6 +156,10 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
             data.setProperty(index, 4, 'style', totalStyle);
             formatter.format(data, 4);
         } else if(reportType==='sberbank') {
+            var totalSum = Math.round((calculateSum(reportValues, 9)) * 100) / 100
+            var totalEarn = Math.round((calculateSum(reportValues, 10)) * 100) / 100
+            $( "#liquidateTotalSum" ).text(numberWithCommas(totalSum))
+            $( "#Income" ).text(numberWithCommas(totalEarn))
             formatter.format(data, 10);
         }
         else {}

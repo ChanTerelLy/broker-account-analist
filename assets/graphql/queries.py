@@ -269,8 +269,8 @@ class Query(ObjectType):
             j_positions = json.loads(portfolio)['positions']
             portfolio_currencies = asyncio_helper(tapi.get_portfolio_currencies)
             portfolio_currencies = [cur for cur in portfolio_currencies if cur['currency'] == 'RUB']
-            usd_price = Moex().get_usd()
-            euro = Moex().get_euro()
+            usd_price = Cbr().USD
+            euro = Cbr().EURO
             data = [TinkoffPortfolioType(**p, usd_price=usd_price, euro_price=euro,
                                          currency=p['average_position_price']['currency'])
                     for p in j_positions]

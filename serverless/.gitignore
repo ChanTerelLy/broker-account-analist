@@ -1,6 +1,6 @@
 node_modules
 .npmignore
-test.toml
+samconfig.toml
 .env
 .vscode
 functions/.DS_Store
