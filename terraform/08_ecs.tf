@@ -1,5 +1,10 @@
 resource "aws_ecs_cluster" "production" {
   name = "${var.ecs_cluster_name}-cluster"
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 resource "aws_launch_configuration" "ecs" {

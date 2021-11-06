@@ -9,6 +9,11 @@ resource "aws_iam_role_policy" "ecs-instance-role-policy" {
   role   = aws_iam_role.ecs-host-role.id
 }
 
+resource "aws_iam_role_policy_attachment" "cloud-watch-policy" {
+  role       = aws_iam_role.ecs-host-role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 resource "aws_iam_role" "ecs-service-role" {
   name               = "ecs_service_role_prod"
   assume_role_policy = file("policies/ecs-role.json")
