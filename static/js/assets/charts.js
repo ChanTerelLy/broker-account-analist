@@ -131,6 +131,13 @@ function setReportSelectors() {
 }
 
 function showPortfolioReportTable(queryData, reportType='sberbank'){
+        // SBERBANK VARS
+        let SBR_SUM_COLUMN = 6
+        let SBR_INCOME_COLUMN = 7
+        // TINKOFF VARS
+        let TNKF_SUM_COLUMN = 2
+        let TNKF_INCOME_COLUMN =  4
+
         google.charts.load('current', {'packages': ['table', 'corechart']});
         google.charts.setOnLoadCallback(drawTable);
         google.charts.setOnLoadCallback(drawPieChart);
@@ -149,18 +156,18 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
     function styling(data) {
         let formatter = new google.visualization.ArrowFormat()
         if(reportType==='tinkoff') {
-            var totalSum = calculateSum(reportValues, 2)
-            var totalEarn = calculateSum(reportValues, 4)
+            var totalSum = calculateSum(reportValues, TNKF_SUM_COLUMN)
+            var totalEarn = calculateSum(reportValues, TNKF_INCOME_COLUMN)
             let index = data.addRow(['Итог', null, totalSum, null, totalEarn, null, null, null, null])
-            data.setProperty(index, 2, 'style', totalStyle);
-            data.setProperty(index, 4, 'style', totalStyle);
-            formatter.format(data, 4);
+            data.setProperty(index, TNKF_SUM_COLUMN, 'style', totalStyle);
+            data.setProperty(index, TNKF_INCOME_COLUMN, 'style', totalStyle);
+            formatter.format(data, TNKF_INCOME_COLUMN);
         } else if(reportType==='sberbank') {
-            var totalSum = Math.round((calculateSum(reportValues, 9)) * 100) / 100
-            var totalEarn = Math.round((calculateSum(reportValues, 10)) * 100) / 100
+            var totalSum = Math.round((calculateSum(reportValues, SBR_SUM_COLUMN)) * 100) / 100
+            var totalEarn = Math.round((calculateSum(reportValues, SBR_INCOME_COLUMN )) * 100) / 100
             $( "#liquidateTotalSum" ).text(numberWithCommas(totalSum))
             $( "#Income" ).text(numberWithCommas(totalEarn))
-            formatter.format(data, 10);
+            formatter.format(data, SBR_INCOME_COLUMN );
         }
         else {}
     }
@@ -173,7 +180,7 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         var table = new google.visualization.Table(document.getElementById('table_div'));
         let options = {allowHtml: true, showRowNumber: true, width: '100%'}
         if(reportType==='sberbank') {
-            options.sortColumn = 10
+            options.sortColumn = SBR_INCOME_COLUMN
         }
         table.draw(data, options);
     }

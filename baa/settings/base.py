@@ -167,5 +167,4 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
     send_default_pii=True,
 )
-
 INTERNAL_API_TOKEN = os.getenv('INTERNAL_API_TOKEN')

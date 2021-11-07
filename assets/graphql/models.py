@@ -126,7 +126,7 @@ class PortfolioReportType(ObjectType):
                 'Процент купона': 'coupon_percent',
                 'Выплата купона': 'coupon_date',
                 'Средний % купона покупки': 'purchase_coupon_percent',
-                'Текущая стоимость': 'real_price',
+                'Текущая цена': 'real_price',
                 'Средняя цена покупки': 'avg_price_of_buying',
                 'Стоимость на момент покупки': 'sum_of_buying',
                 'Ликвидационная стоимость': 'sum_of_liquidation',

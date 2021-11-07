@@ -244,7 +244,7 @@ class Query(ObjectType):
                     output[1][i][2] *= 10  # multiplie price to 10 for bounds
                 pricing = flatten(output[:4])
                 for price in pricing:
-                    assets[price[0]]['Текущая стоимость'] = price[2]
+                    assets[price[0]]['Текущая цена'] = price[2]
                 # coupons
                 for index, d in enumerate(output[4]):
                     if len(d):
@@ -254,7 +254,7 @@ class Query(ObjectType):
         for index, asset in assets.items():
             assets[index]['Стоимость на момент покупки'] = assets[index]['Средняя цена покупки']\
                                                            * assets[index]['Количество, шт (Начало Периода)']
-            assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая стоимость',0) \
+            assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая цена',0) \
                                                         * assets[index]['Количество, шт (Начало Периода)']
             assets[index]['Доход'] = assets[index]['Ликвидационная стоимость'] - assets[index]['Стоимость на момент покупки']
         conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
