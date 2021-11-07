@@ -1,11 +1,7 @@
 provider "aws" {
   region = var.region
   default_tags {
-    tags = {
-      "Service": "BAA",
-      "Stage": "Prod",
-      "ManagedBy": "Terraform"
-    }
+    tags = var.default_tags
   }
 }
 

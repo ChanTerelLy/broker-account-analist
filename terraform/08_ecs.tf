@@ -7,7 +7,7 @@ resource "aws_ecs_cluster" "production" {
   }
 }
 
-resource "aws_launch_configuration" "ecs" {
+resource "aws_launch_configuration" "ec2-ecs-instance" {
   vpc_classic_link_security_groups = []
   image_id                         = lookup(var.amis, var.region)
   instance_type                    = var.instance_type

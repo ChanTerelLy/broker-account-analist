@@ -171,3 +171,13 @@ variable "django_settings_module" {
   type    = string
   default = "baa.settings.aws"
 }
+
+
+# Other
+variable "default_tags" {
+  default = {
+    "Service" : "BAA",
+    "Stage" : "Prod",
+    "ManagedBy" : "Terraform"
+  }
+}
