@@ -15,27 +15,6 @@ stages:
 - deploy
 - ".post"
 
-".terraform":
-  image:
-    name: hashicorp/terraform:light
-    entrypoint:
-      - '/usr/bin/env'
-      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-
-  before_script:
-    - cd ${TF_ROOT}
-    - rm -rf .terraform
-    - terraform --version
-    - terraform init
-
-apply_terraform:
-  extends: .terraform
-  stage: build
-  script:
-    - terraform validate
-    - terraform plan -out "planfile"
-    - terraform apply -input=false "planfile"
-
 deploy_sam:
   image: python:3.8
   stage: build

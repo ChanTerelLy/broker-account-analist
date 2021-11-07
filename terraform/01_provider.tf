@@ -10,12 +10,14 @@ provider "aws" {
 }
 
 terraform {
-  backend "s3" {
-    bucket         = "terraform-baa-sync"
-    key            = "global/s3/terraform.tfstate"
-    region         = "us-west-1"
-    dynamodb_table = "terraform-up-and-running-locks"
-    encrypt        = true
+
+  backend "remote" {
+    hostname = "app.terraform.io"
+    organization = "baa"
+
+    workspaces {
+      name = "broker-account-analist"
+    }
   }
 }
 
