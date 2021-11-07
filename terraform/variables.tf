@@ -48,7 +48,7 @@ variable "ecs_cluster_name" {
 }
 variable "amis" {
   description = "Which AMI to spawn."
-  default = {
+  default     = {
     us-west-1 = "ami-0667a9cc6a93f50fe"
   }
 }
@@ -83,8 +83,7 @@ variable "log_retention_in_days" {
 # key pair
 
 variable "ssh_pubkey_file" {
-  description = "Path to an SSH public key"
-  default     = "~/.ssh/id_rsa.pub"
+  description = "Public key"
 }
 
 
@@ -169,6 +168,6 @@ variable "site_url" {
   type = string
 }
 variable "django_settings_module" {
-  type = string
+  type    = string
   default = "baa.settings.aws"
 }

@@ -34,39 +34,39 @@ data "template_file" "app" {
   template = file("templates/django_app.json.tpl")
 
   vars = {
-    docker_image_url_django = var.docker_image_url_django
-    docker_image_url_nginx = var.docker_image_url_nginx
-    region = var.region
-    app_name = var.project_name
-    db_name = var.rds_db_name
-    db_username = var.rds_username
-    db_password = var.rds_password
-    db_hostname = aws_db_instance.production.address
-    db_port     = "5432"
-    redis_url = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:${aws_elasticache_cluster.redis.cache_nodes[0].port}"
-    secret_key = var.secret_key
-    debug = var.debug
-    db_engine = var.db_engine
-    email_host = var.email_host
-    email_port = var.email_port
-    sentry_dsn = var.sentry_dsn
-    internal_api_token = var.internal_api_token
-    site_url = var.site_url
-    email_host_user = var.email_host_user
-    email_host_password = var.email_host_password
-    admin_email = var.admin_email
-    google_service_redirect_uri = var.google_service_redirect_uri
-    social_auth_google_oauth_2_key = var.social_auth_google_oauth_2_key
+    docker_image_url_django           = var.docker_image_url_django
+    docker_image_url_nginx            = var.docker_image_url_nginx
+    region                            = var.region
+    app_name                          = var.project_name
+    db_name                           = var.rds_db_name
+    db_username                       = var.rds_username
+    db_password                       = var.rds_password
+    db_hostname                       = aws_db_instance.production.address
+    db_port                           = "5432"
+    redis_url                         = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:${aws_elasticache_cluster.redis.cache_nodes[0].port}"
+    secret_key                        = var.secret_key
+    debug                             = var.debug
+    db_engine                         = var.db_engine
+    email_host                        = var.email_host
+    email_port                        = var.email_port
+    sentry_dsn                        = var.sentry_dsn
+    internal_api_token                = var.internal_api_token
+    site_url                          = var.site_url
+    email_host_user                   = var.email_host_user
+    email_host_password               = var.email_host_password
+    admin_email                       = var.admin_email
+    google_service_redirect_uri       = var.google_service_redirect_uri
+    social_auth_google_oauth_2_key    = var.social_auth_google_oauth_2_key
     social_auth_google_oauth_2_secret = tostring(var.social_auth_google_oauth_2_secret)
-    google_config = jsonencode(var.google_config)
-    django_settings_module = var.django_settings_module
+    google_config                     = jsonencode(var.google_config)
+    django_settings_module            = var.django_settings_module
   }
 }
 
 resource "aws_ecs_task_definition" "app" {
-  family                   = "django-app"
-  container_definitions    = data.template_file.app.rendered
-  depends_on               = [aws_db_instance.production, aws_elasticache_cluster.redis]
+  family                = "django-app"
+  container_definitions = data.template_file.app.rendered
+  depends_on            = [aws_db_instance.production, aws_elasticache_cluster.redis]
 
   volume {
     name      = "static_volume"
