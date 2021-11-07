@@ -12,7 +12,7 @@ resource "aws_launch_configuration" "ecs" {
   image_id                         = lookup(var.amis, var.region)
   instance_type                    = var.instance_type
   security_groups                  = [aws_security_group.ecs.id]
-  iam_instance_profile             = aws_iam_instance_profile.ecs.name
+  iam_instance_profile             = aws_iam_instance_profile.ec2-ecs-instance.name
   key_name                         = aws_key_pair.production.key_name
   associate_public_ip_address      = true
   user_data                        = data.template_file.bootstrap.rendered

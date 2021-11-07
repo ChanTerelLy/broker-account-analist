@@ -84,7 +84,7 @@ variable "log_retention_in_days" {
 
 variable "ssh_pubkey_file" {
   description = "Path to an SSH public key"
-  default     = "~/.ssh/id_rsa2.pub"
+  default     = "~/.ssh/id_rsa.pub"
 }
 
 
@@ -102,7 +102,6 @@ variable "autoscale_desired" {
   description = "Desired autoscale (number of EC2)"
   default     = "1"
 }
-
 
 # rds
 
@@ -127,31 +126,24 @@ variable "rds_instance_class" {
 variable "secret_key" {
   type = string
 }
-
 variable "debug" {
   type = number
 }
-
 variable "db_engine" {
   type = string
 }
-
 variable "email_host" {
   type = string
 }
-
 variable "email_port" {
   type = number
 }
-
 variable "email_host_user" {
   type = string
 }
-
 variable "email_host_password" {
   type = string
 }
-
 variable "admin_email" {
   type = string
 }
@@ -173,11 +165,9 @@ variable "sentry_dsn" {
 variable "internal_api_token" {
   type = string
 }
-
 variable "site_url" {
   type = string
 }
-
 variable "django_settings_module" {
   type = string
   default = "baa.settings.aws"
