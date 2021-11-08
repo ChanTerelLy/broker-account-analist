@@ -5,6 +5,10 @@ resource "aws_ecs_cluster" "production" {
     name  = "containerInsights"
     value = "enabled"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_launch_configuration" "ec2-ecs-instance" {

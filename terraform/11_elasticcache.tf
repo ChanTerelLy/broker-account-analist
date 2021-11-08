@@ -8,4 +8,8 @@ resource "aws_elasticache_cluster" "redis" {
   port                 = 6379
   security_group_ids   = [aws_security_group.redis.id]
   subnet_group_name    = aws_elasticache_subnet_group.redis.name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

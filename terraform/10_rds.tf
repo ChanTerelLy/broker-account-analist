@@ -22,4 +22,8 @@ resource "aws_db_instance" "production" {
   backup_retention_period = 0
   skip_final_snapshot     = true
   iam_database_authentication_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

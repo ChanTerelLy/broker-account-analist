@@ -1,29 +1,16 @@
 # ALB Security Group (Traffic Internet -> ALB)
-resource "aws_security_group" "load-balancer" {
+locals {
+  cidr_all = ["0.0.0.0/0"]
+}
+
+module "web_server_sg" {
+  source = "terraform-aws-modules/security-group/aws//modules/https-443"
+
   name        = "load_balancer_security_group"
   description = "Controls access to the ALB"
-  vpc_id      = aws_vpc.production-vpc.id
+  vpc_id      =  aws_vpc.production-vpc.id
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  ingress_cidr_blocks = local.cidr_all
 }
 
 # ECS Security group (traffic ALB -> ECS, ssh -> ECS)
@@ -36,7 +23,7 @@ resource "aws_security_group" "ecs" {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    security_groups = [aws_security_group.load-balancer.id]
+    security_groups = [module.web_server_sg.security_group_id]
   }
 
   ingress {
