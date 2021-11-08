@@ -4,7 +4,7 @@ resource "aws_lb" "production" {
   load_balancer_type = "application"
   internal           = false
   security_groups    = [module.web_server_sg.security_group_id]
-  subnets            = [aws_subnet.public-subnet-1.id, aws_subnet.public-subnet-2.id]
+  subnets            = module.vpc.public_subnets
 }
 
 # Target group
@@ -12,7 +12,7 @@ resource "aws_alb_target_group" "default-target-group" {
   name     = "${var.ecs_cluster_name}-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.production-vpc.id
+  vpc_id   = module.vpc.vpc_id
 
   health_check {
     path                = var.health_check_path

@@ -8,7 +8,7 @@ module "web_server_sg" {
 
   name        = "load_balancer_security_group"
   description = "Controls access to the ALB"
-  vpc_id      =  aws_vpc.production-vpc.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks = local.cidr_all
 }
@@ -17,7 +17,7 @@ module "web_server_sg" {
 resource "aws_security_group" "ecs" {
   name        = "ecs_security_group"
   description = "Allows inbound access from the ALB only"
-  vpc_id      = aws_vpc.production-vpc.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     from_port       = 0
@@ -45,7 +45,7 @@ resource "aws_security_group" "ecs" {
 resource "aws_security_group" "rds" {
   name        = "rds-security-group"
   description = "Allows inbound access from ECS only"
-  vpc_id      = aws_vpc.production-vpc.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     protocol        = "tcp"
@@ -66,7 +66,7 @@ resource "aws_security_group" "rds" {
 resource "aws_security_group" "redis" {
   name        = "redis-security-group"
   description = "Access for all vpc"
-  vpc_id      = aws_vpc.production-vpc.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     protocol        = "tcp"
