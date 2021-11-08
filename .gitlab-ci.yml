@@ -19,8 +19,17 @@ deploy_sam:
   image: python:3.8
   stage: build
   before_script:
+    - python -V               # Print out python version for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
     - pip3 install awscli --upgrade
     - pip3 install aws-sam-cli --upgrade
+
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
   script:
     - pip3 install -r moex/requirements.txt
     - python3 -m unittest discover moex/tests
