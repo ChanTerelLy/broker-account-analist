@@ -1,7 +1,9 @@
+output "aws_ecs_service" {
+  value = aws_ecs_service.production.name
+}
 output "aws_ecs_task_definition" {
   value = aws_ecs_task_definition.app.arn
 }
-
 data "aws_instances" "prod" {
   instance_tags        = {
     "Service" : "BAA",
@@ -10,5 +12,11 @@ data "aws_instances" "prod" {
   instance_state_names = ["running", "stopped"]
 }
 output ec2-ids {
-    value = data.aws_instances.prod[*].public_ips
+    value = join(", ",data.aws_instances.prod.public_ips)
+}
+output "rds-host" {
+  value = aws_db_instance.production.address
+}
+output "redis-host" {
+  value = join(", ", aws_elasticache_cluster.redis.cache_nodes[*].address)
 }
