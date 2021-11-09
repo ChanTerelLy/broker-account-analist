@@ -11,9 +11,9 @@ module "vpc" {
   private_subnets = [var.private_subnet_1_cidr, var.private_subnet_2_cidr]
   public_subnets  = [var.public_subnet_1_cidr, var.public_subnet_2_cidr]
 
-  enable_nat_gateway = false
-  enable_vpn_gateway = false
-  enable_dns_hostnames = true
+  enable_nat_gateway      = false
+  enable_vpn_gateway      = false
+  enable_dns_hostnames    = true
   map_public_ip_on_launch = false
 
 }

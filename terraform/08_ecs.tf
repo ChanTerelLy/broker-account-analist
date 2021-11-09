@@ -85,7 +85,7 @@ resource "aws_ecs_service" "production" {
   iam_role                           = aws_iam_role.ecs-service-role.arn
   desired_count                      = var.app_count
   deployment_minimum_healthy_percent = 0
-  depends_on                         = [
+  depends_on = [
     aws_alb_listener.ecs-alb-http-listener, aws_iam_role_policy.ecs-service-role-policy
   ]
 

@@ -69,9 +69,9 @@ resource "aws_security_group" "redis" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    protocol        = "tcp"
-    from_port       = "6379"
-    to_port         = "6379"
+    protocol    = "tcp"
+    from_port   = "6379"
+    to_port     = "6379"
     cidr_blocks = ["0.0.0.0/0"]
   }
 

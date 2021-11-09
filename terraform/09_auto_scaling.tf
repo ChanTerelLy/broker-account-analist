@@ -12,10 +12,10 @@ resource "aws_autoscaling_group" "ecs-cluster" {
   }
 
   tags = [
-  for k, v in var.default_tags : {
-    key                 = k,
-    value               = v,
-    propagate_at_launch = true
-  }
+    for k, v in var.default_tags : {
+      key                 = k,
+      value               = v,
+      propagate_at_launch = true
+    }
   ]
 }
