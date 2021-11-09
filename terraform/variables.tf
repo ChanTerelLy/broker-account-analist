@@ -62,10 +62,6 @@ variable "docker_image_url_django" {
   description = "Docker image to run in the ECS cluster"
   default     = "chanterelly/baa-service"
 }
-variable "docker_image_url_nginx" {
-  description = "Docker image to run in the ECS cluster"
-  default     = "nginx:latest"
-}
 variable "app_count" {
   description = "Number of Docker containers to run"
   default     = 1

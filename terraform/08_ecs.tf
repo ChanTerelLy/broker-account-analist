@@ -39,7 +39,6 @@ data "template_file" "app" {
 
   vars = {
     docker_image_url_django           = var.docker_image_url_django
-    docker_image_url_nginx            = var.docker_image_url_nginx
     region                            = var.region
     app_name                          = var.project_name
     db_name                           = var.rds_db_name
@@ -82,11 +81,11 @@ resource "aws_ecs_service" "production" {
   name                               = "${var.ecs_cluster_name}-service"
   cluster                            = aws_ecs_cluster.production.id
   task_definition                    = aws_ecs_task_definition.app.arn
-  iam_role                           = aws_iam_role.ecs-service-role.arn
+  iam_role                           = module.ecs_service_role.iam_role_arn
   desired_count                      = var.app_count
   deployment_minimum_healthy_percent = 0
   depends_on = [
-    aws_alb_listener.ecs-alb-http-listener, aws_iam_role_policy.ecs-service-role-policy
+    aws_alb_listener.ecs-alb-http-listener, module.ecs_service_role
   ]
 
   load_balancer {

@@ -1,39 +1,82 @@
 ### ECS ###
 
-resource "aws_iam_role" "ecs-service-role" {
-  name               = "ecs_service_role_prod"
-  assume_role_policy = file("policies/ecs-role.json")
+locals {
+  trusted_role_services = [
+    "ec2.amazonaws.com",
+    "ecs.amazonaws.com"
+  ]
 }
 
-resource "aws_iam_role_policy" "ecs-service-role-policy" {
-  name   = "ecs_service_role_policy"
+module "ecs_service_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
+  version = "~> 4.3"
+
+  create_role = true
+
+  trusted_role_services = local.trusted_role_services
+
+  role_name = "ecs_service_role"
+
+  role_requires_mfa = false
+
+
+  custom_role_policy_arns = [
+    module.ecs_service_policy.arn
+  ]
+
+  depends_on = [module.ecs_service_policy]
+}
+
+module "ecs_service_policy" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+  version = "~> 4.3"
+
+  name        = "ecs-service-role-policy"
+  path        = "/"
+  description = ""
+
   policy = file("policies/ecs-service-role-policy.json")
-  role   = aws_iam_role.ecs-service-role.id
 }
 
 
 ### EC2 ###
 
 resource "aws_iam_instance_profile" "ec2-ecs-instance" {
-  name = "ec2_ecs_instance_profile_prod"
+  name = "ecs_instance_profile"
   path = "/"
-  role = aws_iam_role.ecs-host-role.name
+  role = module.ecs_instance_role.iam_role_name
 }
 
-# Role
-resource "aws_iam_role" "ecs-host-role" {
-  name               = "ecs_host_role_prod"
-  assume_role_policy = file("policies/ecs-role.json")
+
+module "ecs_instance_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
+  version = "~> 4.3"
+
+  create_role = true
+
+  trusted_role_services = local.trusted_role_services
+
+  role_requires_mfa = false
+
+
+  role_name = "ecs_host_role"
+
+  custom_role_policy_arns = [
+    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+    module.ecs_instance_role_policy.arn
+  ]
+
+  depends_on = [module.ecs_instance_role_policy]
 }
 
-# Policies
-resource "aws_iam_role_policy" "ecs-instance-role-policy" {
-  name   = "ecs_instance_role_policy"
-  policy = file("policies/ec2-ecs-instance-role-policy.json")
-  role   = aws_iam_role.ecs-host-role.id
-}
+module "ecs_instance_role_policy" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+  version = "~> 4.3"
 
-resource "aws_iam_role_policy_attachment" "cloud-watch-policy" {
-  role       = aws_iam_role.ecs-host-role.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+  name        = "ecs_instance_role_policy"
+  path        = "/"
+  description = ""
+
+  policy = file("policies/ecs-instance-role-policy.json")
 }
