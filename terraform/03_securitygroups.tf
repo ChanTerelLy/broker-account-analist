@@ -13,6 +13,17 @@ module "web_server_sg" {
   ingress_cidr_blocks = local.cidr_all
 }
 
+
+module "efs_sg" {
+  source = "terraform-aws-modules/security-group/aws//modules/nfs"
+
+  name        = "efs_security_group"
+  description = "Controls access to the ALB"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_cidr_blocks = local.cidr_all
+}
+
 # ECS Security group (traffic ALB -> ECS, ssh -> ECS)
 resource "aws_security_group" "ecs" {
   name        = "ecs_security_group"
@@ -30,7 +41,7 @@ resource "aws_security_group" "ecs" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.cidr_all
   }
 
   egress {
@@ -58,7 +69,7 @@ resource "aws_security_group" "rds" {
     protocol    = "-1"
     from_port   = 0
     to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.cidr_all
   }
 }
 
@@ -72,13 +83,13 @@ resource "aws_security_group" "redis" {
     protocol    = "tcp"
     from_port   = "6379"
     to_port     = "6379"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.cidr_all
   }
 
   egress {
     protocol    = "-1"
     from_port   = 0
     to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.cidr_all
   }
 }

@@ -178,6 +178,8 @@ class Moex:
         return r.json()
 
     ###########################
+    def get_corp_bound_tax_free(self):
+        pass
 
 
 class Cbr:
