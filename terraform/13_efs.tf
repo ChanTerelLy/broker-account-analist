@@ -10,8 +10,10 @@ module "efs" {
   transition_to_ia          = ["AFTER_90_DAYS"]
 
   access_points = {
-    "baa_mount" = {}
+    "" = {
+      posix_user = null
+    }
   }
 
-  allowed_security_group_ids = [module.efs_sg.security_group_id]
+  allowed_security_group_ids = [aws_security_group.ecs.id]
 }
