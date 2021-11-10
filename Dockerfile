@@ -7,6 +7,7 @@ ENV PYTHONUNBUFFERED 1
 
 # Set work directory
 WORKDIR /code
+RUN mkdir -p /opt/data
 
 # Install dependencies
 RUN pip install pipenv

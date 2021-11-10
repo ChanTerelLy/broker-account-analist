@@ -21,8 +21,8 @@
     "command": ["/bin/sh", "-c", "python manage.py migrate && python manage.py collectstatic && gunicorn -w 3 -b :80 baa.wsgi_aws:application --access-logfile -"],
     "mountPoints": [
       {
-        "containerPath": "/usr/src/app/staticfiles",
-        "sourceVolume": "static_volume"
+            "sourceVolume": "efs",
+            "containerPath": "/opt/data"
       }
     ],
     "logConfiguration": {

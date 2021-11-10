@@ -63,6 +63,7 @@ data "template_file" "app" {
     social_auth_google_oauth_2_secret = tostring(var.social_auth_google_oauth_2_secret)
     google_config                     = jsonencode(var.google_config)
     django_settings_module            = var.django_settings_module
+    efs_id                            = module.efs.id
   }
 }
 
@@ -72,9 +73,12 @@ resource "aws_ecs_task_definition" "app" {
   depends_on            = [aws_db_instance.production, aws_elasticache_cluster.redis]
 
   volume {
-    name      = "static_volume"
-    host_path = "/usr/src/app/staticfiles/"
+    name = "efs"
+    efs_volume_configuration {
+      file_system_id          = module.efs.id
+    }
   }
+
 }
 
 resource "aws_ecs_service" "production" {

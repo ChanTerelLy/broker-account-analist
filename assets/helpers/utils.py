@@ -267,3 +267,6 @@ def dmY_hyphen_to_date(date):
 
 def date_to_dmY(dt):
     return dt.strftime("%d.%m.%Y")
+
+def dt_tag():
+    return dt.now().strftime('%Y_%m_%d_%H_%M')

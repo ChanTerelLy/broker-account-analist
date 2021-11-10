@@ -1,9 +1,11 @@
 from __future__ import print_function
 
 import io
+import pathlib
 import pickle
 import os.path
 import base64
+import time
 from typing import Optional
 
 import dateutil
@@ -24,7 +26,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from graphql.execution.tests.utils import resolved
 
 from accounts.models import Profile
-from assets.helpers.utils import xstr
+from assets.helpers.utils import xstr, dt_tag
 import logging
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/drive.readonly']
@@ -100,7 +102,9 @@ def download_file(service, file_id, user_id):
       service: Drive API Service instance.
       file_id: ID of the Drive file that will downloaded.
     """
-    file_name = f'tmp/db_user_{user_id}.mmbak'
+    directory = f"/opt/data/baa/{user_id}"
+    pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+    file_name = f'{directory}/mm_db_{dt_tag()}.mmbak'
     local_fd = io.FileIO(file_name, 'wb')
     request = service.files().get_media(fileId=file_id)
     media_request = MediaIoBaseDownload(local_fd, request)
