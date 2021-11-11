@@ -20,3 +20,6 @@ output "rds-host" {
 output "redis-host" {
   value = join(", ", aws_elasticache_cluster.redis.cache_nodes[*].address)
 }
+output "efs" {
+  value = module.efs.id
+}
