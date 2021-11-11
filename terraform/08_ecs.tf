@@ -75,7 +75,7 @@ resource "aws_ecs_task_definition" "app" {
   volume {
     name = "efs"
     efs_volume_configuration {
-      file_system_id          = module.efs.id
+      file_system_id = module.efs.id
     }
   }
 
@@ -88,6 +88,11 @@ resource "aws_ecs_service" "production" {
   iam_role                           = module.ecs_service_role.iam_role_arn
   desired_count                      = var.app_count
   deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent         = 100
+  deployment_circuit_breaker {
+    enable   = false
+    rollback = true
+  }
   depends_on = [
     aws_alb_listener.ecs-alb-http-listener, module.ecs_service_role
   ]
