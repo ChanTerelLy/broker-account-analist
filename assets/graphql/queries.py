@@ -252,11 +252,12 @@ class Query(ObjectType):
                         assets[d[0]['isin']]['Выплата купона'] = dmY_hyphen_to_date(
                             d[0].get('coupondate', [None]))
         for index, asset in assets.items():
-            assets[index]['Стоимость на момент покупки'] = assets[index]['Средняя цена покупки']\
+            assets[index]['Стоимость на момент покупки'] = assets[index]['Средняя цена покупки'] \
                                                            * assets[index]['Количество, шт (Начало Периода)']
-            assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая цена',0) \
+            assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая цена', 0) \
                                                         * assets[index]['Количество, шт (Начало Периода)']
-            assets[index]['Доход'] = assets[index]['Ликвидационная стоимость'] - assets[index]['Стоимость на момент покупки']
+            assets[index]['Доход'] = assets[index]['Ликвидационная стоимость'] - assets[index][
+                'Стоимость на момент покупки']
         conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
         return {'data': [PortfolioReportType(**asst) for asst in conv_assets], 'map': ''}
 

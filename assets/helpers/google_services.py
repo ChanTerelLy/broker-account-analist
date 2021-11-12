@@ -32,9 +32,9 @@ import logging
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/drive.readonly']
 
 
-def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = None, max_page=10, limit=2000) -> list:
+def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = None, max_page=10, limit=2000, user_id=None) -> list:
     """Return list of string what contain html pages with sberbank reports"""
-    service = build('gmail', 'v1', credentials=credentials)
+    service = build('gmail', 'v1', credentials=credentials, cache_discovery=False)
     # Call the Gmail API
     q = f'subject: SBERBANK. Brokerage report ' + xstr(account_name)
     results = service.users().messages().list(userId='me', q=q).execute()
@@ -50,9 +50,11 @@ def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = No
         message_body = service.users().messages().get(userId='me', id=message['id']).execute()
         attachments = message_body.get('payload', {}).get('parts', [])
         attach_id = None
+        filename = ''
         for attach in attachments:
             if '.html' in attach['filename']:
                 attach_id = attach['body'].get('attachmentId')
+                filename = attach['filename']
                 break
         if attach_id:
             data = service.users().messages().attachments().get(userId='me', messageId=message['id'],
@@ -61,6 +63,10 @@ def get_gmail_reports(credentials: Credentials, account_name: Optional[str] = No
             if data:
                 try:
                     html = base64.urlsafe_b64decode(data).decode(encoding='UTF-8', errors='ignore')
+                    directory = f"{settings.STORAGE_PATH}/{user_id}/gmail_reports"
+                    pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+                    with open(f"{directory}/{filename}", 'w') as f:
+                        f.write(html)
                     htmls.append(html)
                 except Exception as e:
                     logging.error(e)
@@ -102,9 +108,9 @@ def download_file(service, file_id, user_id):
       service: Drive API Service instance.
       file_id: ID of the Drive file that will downloaded.
     """
-    directory = f"/opt/data/baa/{user_id}"
+    directory = f"{settings.STORAGE_PATH}/{user_id}/mm"
     pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
-    file_name = f'{directory}/mm_db_{dt_tag()}.mmbak'
+    file_name = f'{directory}/db_{dt_tag()}.mmbak'
     local_fd = io.FileIO(file_name, 'wb')
     request = service.files().get_media(fileId=file_id)
     media_request = MediaIoBaseDownload(local_fd, request)

@@ -1,7 +1,9 @@
 import json
 import logging
+import pathlib
 
 import dateutil
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 
@@ -33,6 +35,7 @@ class UploadTransfers(graphene.Mutation):
         Transfer.save_from_list(transfers)
         return UploadTransfers(success=True)
 
+
 class UploadPortfolio(graphene.Mutation):
     class Arguments:
         file = Upload(required=True)
@@ -57,6 +60,7 @@ class UploadPortfolio(graphene.Mutation):
         MoexPortfolio.save_from_list(portfolio)
         return UploadTransfers(success=True)
 
+
 class UploadDeals(graphene.Mutation):
     """Get income file from client and save values to Deals table"""
 
@@ -70,6 +74,7 @@ class UploadDeals(graphene.Mutation):
         deals = parse_file(files['0'])
         Deal.save_from_list(deals)
         return UploadTransfers(success=True)
+
 
 class CreatePortfolio(graphene.Mutation):
     """Get income file from client and save values to Portfolio (MOEX) table"""
@@ -85,6 +90,7 @@ class CreatePortfolio(graphene.Mutation):
         portfolio_instance.save()
         return CreatePortfolio(name=portfolio_instance)
 
+
 class UploadSberbankReport(graphene.Mutation):
     """Get income file from client and save values to Report table"""
 
@@ -99,6 +105,7 @@ class UploadSberbankReport(graphene.Mutation):
         data = SberbankReport().parse_html(html)
         AccountReport.save_from_dict(data, source='sberbank')
         return UploadSberbankReport(success=True)
+
 
 class ParseReportsFromGmail(graphene.Mutation):
     """IF user already grant permissions, start uploading report from gmail
@@ -118,7 +125,7 @@ class ParseReportsFromGmail(graphene.Mutation):
         cr = json.loads(kwargs['credentials'])
         cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
         kwargs['credentials'] = Credentials(**cr)
-        htmls = get_gmail_reports(**kwargs)
+        htmls = get_gmail_reports(**kwargs, user_id=info.context.user.id)
         for html in htmls:
             try:
                 data = SberbankReport().parse_html(html)
@@ -127,6 +134,7 @@ class ParseReportsFromGmail(graphene.Mutation):
             except Exception as e:
                 logging.error(e)
         return ParseReportsFromGmail(success=True)
+
 
 class LoadDataFromMoneyManager(graphene.Mutation):
     success = graphene.Boolean()
@@ -148,6 +156,7 @@ class LoadDataFromMoneyManager(graphene.Mutation):
             return {'success': True}
         return {}
 
+
 class ClearReportsInfo(graphene.Mutation):
     success = graphene.Boolean()
 
@@ -160,6 +169,7 @@ class ClearReportsInfo(graphene.Mutation):
         last_rows = AccountReport.objects.filter(source=type)[:report_count]
         [row.delete() for row in last_rows]
         return {'success': True}
+
 
 class UpdateTinkoffOperations(graphene.Mutation):
     success = graphene.Boolean()
@@ -192,6 +202,7 @@ class UpdateTinkoffOperations(graphene.Mutation):
                     Transfer.convert_tinkoff_transfer(operation, account, figis)
             return {'success': True}
 
+
 class UpdateReports(graphene.Mutation):
     success = graphene.Boolean()
 
@@ -221,6 +232,7 @@ class UpdateReports(graphene.Mutation):
             content = response.data
             logging.info(content)
         return {'success': True}
+
 
 class Mutation(graphene.ObjectType):
     create_author = CreatePortfolio.Field()

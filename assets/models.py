@@ -304,7 +304,7 @@ class AccountReport(models.Model):
             cls.objects.create(**data)
         except Exception as e:
             if isinstance(e, IntegrityError):
-                logging.error(e)
+                logging.warning(e)
             else:
                 logging.error(traceback.format_exc())
 
@@ -313,7 +313,10 @@ class AccountReport(models.Model):
         try:
             cls.objects.create(**kwargs)
         except Exception as e:
-            logging.error(e)
+            if isinstance(e, IntegrityError):
+                logging.warning(e)
+            else:
+                logging.error(traceback.format_exc())
 
 
 class Transfer(Modify):
@@ -453,7 +456,10 @@ class Transfer(Modify):
                         report=params['report']
                     )
                 except Exception as e:
-                    logging.error(e)
+                    if isinstance(e, IntegrityError):
+                        logging.warning(e)
+                    else:
+                        logging.error(traceback.format_exc())
 
     @property
     def xirr_sum(self):
@@ -544,7 +550,10 @@ class MoneyManagerTransaction(Modify):
                     mm_uid=mm_uid
                 )
             except Exception as e:
-                logging.error(e)
+                if isinstance(e, IntegrityError):
+                    logging.warning(e)
+                else:
+                    logging.error(traceback.format_exc())
 
 
 class AdditionalInvestmentIncome(Modify):
@@ -581,7 +590,10 @@ class IISIncome(Modify):
                     remainder_limit=conver_to_number(income['Остаток лимита (сумма к внесению), руб.']),
                 ).save()
             except Exception as e:
-                logging.error(e)
+                if isinstance(e, IntegrityError):
+                    logging.warning(e)
+                else:
+                    logging.error(traceback.format_exc())
 
 
 # Signals

@@ -71,20 +71,19 @@ class CorpBounView(ListView):
 class ReportPortfolioView(TemplateView):
     template_name = 'assets/report-portfolio-sberbank.html'
 
+
 class TinkoffPortfolioView(TemplateView):
     template_name = 'assets/portfolio-tinkoff.html'
 
+
 class CouponsDividendsView(TemplateView):
     template_name = 'assets/coupons-dividends.html'
-
-class VueTest(TemplateView):
-    template_name = 'assets/test_vue.html'
-
 
 
 @provides_credentials
 def google_callback(request, *args, **kwargs):
     return HttpResponse('Auth complete!')
+
 
 def trigger_error(request):
     division_by_zero = 1 / 0

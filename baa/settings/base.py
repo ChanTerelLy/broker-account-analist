@@ -7,6 +7,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT_URLCONF = 'baa.urls'
 DEBUG = int(os.getenv('DEBUG'))
+STORAGE_PATH = os.getenv("STORAGE_PATH", '/opt/data/baa')
 ALLOWED_HOSTS = ['*']
 GRAPHENE = {
     "SCHEMA": "baa.schema.schema"
