@@ -1,10 +1,10 @@
 resource "aws_ecs_cluster" "production" {
   name = "${var.ecs_cluster_name}-cluster"
 
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
+#  setting {
+#    name  = "containerInsights"
+#    value = "enabled"
+#  }
 
   lifecycle {
     prevent_destroy = true

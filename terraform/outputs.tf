@@ -9,7 +9,8 @@ data "aws_instances" "prod" {
     "Service" : "BAA",
     "Stage" : "Prod"
   }
-  instance_state_names = ["running", "stopped"]
+  instance_state_names = ["running"]
+  depends_on = [aws_autoscaling_group.ecs-cluster]
 }
 output "ec2-ids" {
   value = join(", ", data.aws_instances.prod.public_ips)
