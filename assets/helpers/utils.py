@@ -195,7 +195,7 @@ def get_summed_values(accounts_with_sums):
             previos_value = {'sum': 0, 'income_sum': 0}
             zero_value = {'sum': 0, 'income_sum': 0}
             for y in range(c_year - 2, c_year + 1):
-                for m in range(1, 12):
+                for m in range(1, 13):
                     if c_year == y and m > c_month:
                         break
                     fake_date = datetime.date(y, m, 1)
@@ -216,6 +216,7 @@ def get_summed_values(accounts_with_sums):
                             resulted_sums[fake_date][_type] = conver_to_number(acc_with_sums[last_date][_type])
                         previos_value[_type] = last_values[_type]
                     elif not last_date and not resulted_sums.get(fake_date):
+                        # set previous values for month if no other operation happens
                         resulted_sums[fake_date] = pv
                     else:
                         if resulted_sums[fake_date][_type]:
