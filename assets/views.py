@@ -69,11 +69,7 @@ class CorpBounView(ListView):
 
 
 class ReportPortfolioView(TemplateView):
-    template_name = 'assets/report-portfolio-sberbank.html'
-
-
-class TinkoffPortfolioView(TemplateView):
-    template_name = 'assets/portfolio-tinkoff.html'
+    template_name = 'assets/portfolio.html'
 
 
 class CouponsDividendsView(TemplateView):

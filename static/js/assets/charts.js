@@ -106,7 +106,8 @@ function showReportChart(accountName="Total") {
         var options = {
             curveType: 'function',
             legend: {position: 'bottom'},
-            chartArea: {'width': '80%', 'height': '90%'},
+            chartArea: {'width': '80%', 'height': '85%'},
+            vAxis: {viewWindowMode: "explicit", viewWindow:{ min: 0 }},
             backgroundColor: { fill: 'transparent' }
         };
 
@@ -132,6 +133,9 @@ function setReportSelectors() {
 }
 
 function showPortfolioReportTable(queryData, reportType='sberbank'){
+        let data        = [...queryData.tinkoffPortfolio.data, ...queryData.portfolioCombined.data]
+        let mergedData  = queryData.portfolioCombined
+        mergedData.data = data
         // SBERBANK VARS
         let SBR_SUM_COLUMN = 6
         let SBR_INCOME_COLUMN = 7
@@ -144,11 +148,11 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         google.charts.setOnLoadCallback(drawPieChart);
         google.charts.setOnLoadCallback(piePositionChart);
         let reportValues = [];
-        $.each(queryData.data, function(key, value){
+        $.each(mergedData.data, function(key, value){
             reportValues.push(Object.values(value))
         })
         let totalStyle = 'font-size:1.5rem';
-        let mapJson = JSON.parse(queryData.map);
+        let mapJson = JSON.parse(mergedData.map);
         let reverseMapJson = swap(mapJson)
         let map = listOfQueryFields.map(function(value, index){
             return reverseMapJson[value]
@@ -187,7 +191,7 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
     }
     function drawPieChart() {
         let pieData = [];
-        $.each(queryData.data, function(key, value){
+        $.each(mergedData.data, function(key, value){
             pieData.push([value.name,value.startMarketTotalSumWithoutNkd])
         })
         var data = google.visualization.arrayToDataTable([
@@ -206,7 +210,7 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
     function piePositionChart() {
             let pieData = [];
             let groupedPieData = {};
-            $.each(queryData.data, function(key, value){
+            $.each(mergedData.data, function(key, value){
                 if(groupedPieData[value.instrumentType]){
                     groupedPieData[value.instrumentType] += value.startMarketTotalSumWithoutNkd;
                 } else {

@@ -42,7 +42,7 @@ class Query(ObjectType):
                                   description="""Return accounts owned by active user""")
     portfolio_by_date = graphene.Field(PortfolioReportMapType, date=graphene.Date(), account_name=graphene.String())
     portfolio_combined = graphene.Field(PortfolioReportMapType)
-    tinkoff_portfolio = graphene.Field(TinkoffPortfolioMapType)
+    tinkoff_portfolio = graphene.Field(PortfolioReportMapType)
     test = graphene.Boolean()
     coupon_chart = graphene.List(CouponAggregated)
     iis_income = graphene.List(IISIncomeAggregated)
@@ -304,7 +304,41 @@ class Query(ObjectType):
                 'handbook': {},
                 'source': 'tinkoff'
             })
-            return {'data': data, 'map': ''}
+            portfolio_data = []
+            for d in data:
+                if d.instrument_type != "Currency":
+                    portfolio_data.append(
+                        PortfolioReportType(
+                            name=d.name,
+                            isin=d.figi,
+                            currency=d.currency,
+                            start_amount=d.balance,
+                            start_denomination=None,
+                            start_market_total_sum=None,
+                            start_market_total_sum_without_nkd=d.start_market_total_sum_without_nkd,
+                            start_nkd=None,
+                            end_amount=None,
+                            end_denomination=None,
+                            end_market_total_sum=None,
+                            end_market_total_sum_without_nkd=None,
+                            end_nkd=None,
+                            changes_amount=None,
+                            changes_total_sum=None,
+                            scheduled_enrolment_amount=None,
+                            scheduled_charges_amount=None,
+                            scheduled_outbound_amount=None,
+                            account="Tinkoff",
+                            coupon_percent=None,
+                            coupon_date=None,
+                            purchase_coupon_percent=None,
+                            real_price=None,
+                            avg_price_of_buying=d.average_position_price['value'],
+                            sum_of_buying=None,
+                            sum_of_liquidation=None,
+                            income=round(d.resolve_expected_yield(None), 0),
+                        )
+                    )
+            return {'data': portfolio_data, 'map': ''}
         else:
             GraphQLError('No token provided')
 

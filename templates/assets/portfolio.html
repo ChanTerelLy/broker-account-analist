@@ -61,6 +61,12 @@ $( document ).ready(async function() {
         ${listOfQueryFields.join()}
     }
   }
+  tinkoffPortfolio{
+    map,
+    data {
+        ${listOfQueryFields.join()}
+    }
+  }
   iisIncome{
     year,
     sum
@@ -68,7 +74,7 @@ $( document ).ready(async function() {
 }
         `
     let queryData = await graphqlQuery(query)
-    showPortfolioReportTable(queryData.data.portfolioCombined)
+    showPortfolioReportTable(queryData.data)
     showIISIncome(queryData.data.iisIncome)
 })
     </script>
