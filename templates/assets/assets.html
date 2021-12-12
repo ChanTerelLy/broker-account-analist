@@ -8,19 +8,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <div class="row">
-        <div class="col-md">
+        <div class="col">
             <canvas id="accounts"></canvas>
         </div>
-        <div class="col-md" id="table_div"></div>
+        <div class="col" id="table_div"></div>
     </div>
-    <div class="row">
+    <div class="row" style="margin-top: 2rem">
         <div class="col-sm-1">
+        </div>
+        <div class="col-sm-2">
             <div>
-                <select id="report-menu"></select>
+                <select class="custom-select" id="report-menu"></select>
             </div>
         </div>
-        <div>
-            <button id='update-report-btn' class="btn btn-default">Обновить отчеты</button>
+        <div class="col-sm">
+            <button id='update-report-btn' class="btn btn-info">Обновить отчеты</button>
             <div id='report-loader' class="spinner-grow text-primary center" style="display: none;"
                  role="status">
                 <span class="sr-only">Loading...</span>

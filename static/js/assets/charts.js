@@ -106,7 +106,8 @@ function showReportChart(accountName="Total") {
         var options = {
             curveType: 'function',
             legend: {position: 'bottom'},
-            backgroundColor: { fill:'transparent' }
+            chartArea: {'width': '80%', 'height': '90%'},
+            backgroundColor: { fill: 'transparent' }
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
