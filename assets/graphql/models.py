@@ -170,7 +170,12 @@ class TinkoffPortfolioType(ObjectType):
     euro_price = graphene.Float()
 
     def resolve_average_position_price(self, info, *args):
-        return self.average_position_price.get('value')
+        price = self.average_position_price.get('value')
+        if self.currency == 'USD' and self.instrument_type != 'Currency':
+            price *= self.usd_price
+        if self.currency == 'EUR' and self.instrument_type != 'Currency':
+            price *= self.usd_price
+        return price
 
     def resolve_average_position_price_no_nkd(self, info):
         return self.average_position_price_no_nkd.get('value') if self.average_position_price_no_nkd else None

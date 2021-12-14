@@ -307,15 +307,20 @@ class Query(ObjectType):
             portfolio_data = []
             for d in data:
                 if d.instrument_type != "Currency":
+                    start_amount = d.balance
+                    avg_price_of_buying = round(d.resolve_average_position_price(None), 0)
+                    sum_of_buying = round(start_amount * avg_price_of_buying, 0)
+                    income = round(d.resolve_expected_yield(None), 0)
+                    sum_of_liquidation = sum_of_buying + income
                     portfolio_data.append(
                         PortfolioReportType(
                             name=d.name,
-                            isin=d.figi,
+                            isin=d.isin,
                             currency=d.currency,
-                            start_amount=d.balance,
+                            start_amount=start_amount,
                             start_denomination=None,
                             start_market_total_sum=None,
-                            start_market_total_sum_without_nkd=d.start_market_total_sum_without_nkd,
+                            start_market_total_sum_without_nkd=sum_of_liquidation,
                             start_nkd=None,
                             end_amount=None,
                             end_denomination=None,
@@ -332,15 +337,15 @@ class Query(ObjectType):
                             coupon_date=None,
                             purchase_coupon_percent=None,
                             real_price=None,
-                            avg_price_of_buying=d.average_position_price['value'],
-                            sum_of_buying=None,
-                            sum_of_liquidation=None,
-                            income=round(d.resolve_expected_yield(None), 0),
+                            avg_price_of_buying=avg_price_of_buying,
+                            sum_of_buying=sum_of_buying,
+                            sum_of_liquidation=sum_of_liquidation,
+                            income=income,
                         )
                     )
             return {'data': portfolio_data, 'map': ''}
         else:
-            GraphQLError('No token provided')
+            return {'data': [], 'map': ''}
 
     def resolve_coupon_chart(self, info):
         aggr_by_month = Transfer.objects.filter(type='Зачисление купона', account_income__user=info.context.user) \
