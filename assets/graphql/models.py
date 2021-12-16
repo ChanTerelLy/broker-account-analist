@@ -102,6 +102,10 @@ class PortfolioReportType(ObjectType):
     sum_of_buying = graphene.Float()
     sum_of_liquidation = graphene.Float()
     income = graphene.Float()
+    income_percent = graphene.Float()
+
+    def resolve_income_percent(self, info, *args):
+        return round((1 - (self.sum_of_liquidation / self.sum_of_buying)) * 100 * -1, 1)
 
     @classmethod
     def convert_name_for_dict(cls, data):
@@ -131,6 +135,7 @@ class PortfolioReportType(ObjectType):
                 'Стоимость на момент покупки': 'sum_of_buying',
                 'Ликвидационная стоимость': 'sum_of_liquidation',
                 'Доход': 'income',
+                'Доход в процентах': 'income_percent',
                 }
 
     @classmethod

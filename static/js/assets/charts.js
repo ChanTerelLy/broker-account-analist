@@ -137,8 +137,8 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         let mergedData  = queryData.portfolioCombined
         mergedData.data = data
         // SBERBANK VARS
-        let SBR_SUM_COLUMN = 6
-        let SBR_INCOME_COLUMN = 7
+        let SBR_SUM_COLUMN = 4
+        let SBR_INCOME_COLUMN = 6
         // TINKOFF VARS
         let TNKF_SUM_COLUMN = 2
         let TNKF_INCOME_COLUMN =  4
