@@ -144,7 +144,7 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         google.charts.load('current', {'packages': ['table', 'corechart']});
         google.charts.setOnLoadCallback(drawTable);
         google.charts.setOnLoadCallback(drawPieChart);
-        google.charts.setOnLoadCallback(piePositionChart);
+        // google.charts.setOnLoadCallback(piePositionChart);
         let reportValues = [];
         $.each(mergedData.data, function(key, value){
             reportValues.push(Object.values(value))
@@ -186,7 +186,9 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         ]);
         var options = {
             title: 'Сборная диаграмма',
-            backgroundColor: { fill:'transparent' }
+            backgroundColor: { fill:'transparent' },
+            chartArea: {'width': '100%', 'height': '85%'},
+            vAxis: {viewWindowMode: "explicit", viewWindow:{ min: 0 }},
         };
 
         var chart = new google.visualization.PieChart(document.getElementById('piechart'));

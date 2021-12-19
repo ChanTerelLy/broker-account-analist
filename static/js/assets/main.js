@@ -99,3 +99,13 @@ async function updateReports() {
             $('#report-loader').hide();
         }
 }
+
+function disableLoader(data) {
+    let errors = data?.errors
+    if (errors) {
+        alert('Произошла ошибка')
+        console.error(errors)
+    }
+    $('.loader').hide();
+    $('#total-info').show();
+}

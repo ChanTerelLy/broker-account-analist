@@ -1,10 +1,4 @@
 let graphqlData = []
-function processData(dataset) {
-    var result = [];
-    dataset.forEach(item => result.push(returnAccountName(item)));
-    $('.loader').hide();
-    return result;
-}
 
 function returnAccountName(node){
     let map = JSON.parse(node.helpTextMap)

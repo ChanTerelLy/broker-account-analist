@@ -22,39 +22,48 @@
     </script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <body>
+    <div class="loader"></div>
     <div class="row">
         <div class="col-md-12">
             <div id="table_div"></div>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12">
-            <div id="chart_sort_div"></div>
+        <div class="col-md-12 col-sm-4" id="chart_sort_div">
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-9">
-            <div id="piechart" style="height: 450px; width: 1100px"></div>
+    <div class="row" id="total-info" style="display: none">
+        <div class="col-md-9 col-sm-3" id="piechart" style="height: 450px; width: 1100px">
         </div>
         <div class="col-md-3">
             <div class="row">
-                    <p>Ликвидационная стоимость: <b><span id="liquidateTotalSum"></span></b></p>
-                    <p>Доход: <b><span id="Income"></span></b></p>
+                <div class="col-md-12">
+                    Ликвидационная стоимость: <b><span id="liquidateTotalSum"></span></b>
+                </div>
+                <div class="col-md-12">
+                    Доход: <b><span id="Income"></span></b>
+                </div>
+
             </div>
             <div class="row">
+                <div class="col-md-12">
                     <p>ИИС входящие</p>
+                </div>
             </div>
-            <div id="iis_div"></div>
+            <div class="row">
+                <div class="col-md-12 h-100" id="iis_div"></div>
+            </div>
+
         </div>
     </div>
     </body>
 {% endblock content %}
 {% block extra_scripts %}
-<script src="{% static 'js/assets/charts.js' %}"></script>
-<script src="{% static 'js/assets/main.js' %}"></script>
+    <script src="{% static 'js/assets/charts.js' %}"></script>
+    <script src="{% static 'js/assets/main.js' %}"></script>
     <script type="text/javascript">
-$( document ).ready(async function() {
-    let query = `
+        $(document).ready(async function () {
+            let query = `
         query {
   portfolioCombined{
     map,
@@ -74,9 +83,10 @@ $( document ).ready(async function() {
   }
 }
         `
-    let queryData = await graphqlQuery(query)
-    showPortfolioReportTable(queryData.data)
-    showIISIncome(queryData.data.iisIncome)
-})
+            let queryData = await graphqlQuery(query)
+            disableLoader(queryData)
+            showPortfolioReportTable(queryData.data)
+            showIISIncome(queryData.data.iisIncome)
+        })
     </script>
 {% endblock extra_scripts %}
