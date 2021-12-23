@@ -125,7 +125,8 @@ class ParseReportsFromGmail(graphene.Mutation):
         cr = json.loads(kwargs['credentials'])
         cr['expiry'] = dateutil.parser.isoparse(cr['expiry']).replace(tzinfo=None)
         kwargs['credentials'] = Credentials(**cr)
-        htmls = get_gmail_reports(**kwargs, user_id=info.context.user.id)
+        user_id = info.context.user.id if info.context else info.root_value.user.id
+        htmls = get_gmail_reports(**kwargs, user_id=user_id)
         for html in htmls:
             try:
                 data = SberbankReport().parse_html(html)
