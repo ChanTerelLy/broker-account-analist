@@ -60,7 +60,7 @@ class Query(ObjectType):
 
     def resolve_account_chart(self, info) -> dict:
         data = {'data': []}
-        for account in Account.objects.filter(user=info.context.user).all():
+        for account in Account.objects.filter(~Q(amount=0), user=info.context.user).all():
             type_sum = account.amount
             data['data'].append(
                 {
