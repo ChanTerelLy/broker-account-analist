@@ -7,6 +7,7 @@ from assets.helpers.utils import convert_devided_number
 from assets.models import Account, MoexPortfolio, Transfer, Deal, Template
 from graphene_django.types import DjangoObjectType
 
+
 class AccountNode(DjangoObjectType):
     class Meta:
         model = Account
@@ -202,7 +203,6 @@ class TinkoffPortfolioType(ObjectType):
             price *= self.usd_price
         return price
 
-
     @staticmethod
     def joined_value(value):
         if value:
@@ -242,16 +242,26 @@ class PortfolioInput(graphene.InputObjectType):
     id = graphene.ID()
     name = graphene.String()
 
+
 class CouponAggregated(ObjectType):
     date = graphene.Date()
     sum = graphene.Float()
 
-class IISIncomeAggregated(ObjectType):
-    year = graphene.Int()
-    sum = graphene.Float()
+
+class CouponTable(ObjectType):
+    account = graphene.String()
+    date = graphene.Date()
+    sum = graphene.Int()
+    description = graphene.String()
+
 
 class CouponAverage(ObjectType):
     year = graphene.Int()
     month_count = graphene.Int()
     sum = graphene.Int()
     avg_month = graphene.Int()
+
+
+class IISIncomeAggregated(ObjectType):
+    year = graphene.Int()
+    sum = graphene.Float()

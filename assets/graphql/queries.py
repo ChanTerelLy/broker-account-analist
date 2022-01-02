@@ -48,6 +48,7 @@ class Query(ObjectType):
     iis_income = graphene.List(IISIncomeAggregated)
     assets_remains = graphene.JSONString()
     coupon_aggregated = graphene.List(CouponAverage)
+    coupon_table = graphene.List(CouponTable)
 
     def resolve_my_portfolio(self, info) -> MoexPortfolio:
         return MoexPortfolio.objects.filter(account__user=info.context.user)
@@ -357,6 +358,15 @@ class Query(ObjectType):
             del aggr_by_month[index]['execution_date__month']
             del aggr_by_month[index]['execution_date__year']
         return [CouponAggregated(**aggr) for aggr in aggr_by_month]
+
+    def resolve_coupon_table(self, info):
+        coupons = Transfer.objects.filter(type='Зачисление купона', account_income__user=info.context.user) \
+                        .order_by('-execution_date')[:20]
+        return [CouponTable(
+            account=coupon.account_income.name,
+            date=coupon.execution_date,
+            sum=coupon.sum,
+            description=coupon.description) for coupon in coupons]
 
     def resolve_iis_income(self, info):
         aggr_by_year = IISIncome.objects.filter(account__user=info.context.user) \

@@ -17,6 +17,14 @@
             <div id="month_avg_chart"></div>
         </div>
     </div>
+    <p></p>
+    <p><b>Последние выплаты купонов:</b></p>
+    <div class="row">
+
+        <div class="col-md-12">
+            <div id="table_div"></div>
+        </div>
+    </div>
     </body>
 {% endblock content %}
 {% block extra_scripts %}
@@ -34,6 +42,12 @@ query {
     year,
     sum,
     avgMonth
+  },
+  couponTable{
+    account,
+    date,
+    sum,
+    description
   }
 }
         `

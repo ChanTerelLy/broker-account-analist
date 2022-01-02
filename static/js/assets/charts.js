@@ -285,10 +285,11 @@ function showAvgIncome(queryData){
 }
 
 function showDividentChart(queryData) {
-        google.charts.load('current', {'packages': ['corechart', 'bar']});
+        google.charts.load('current', {'packages': ['corechart', 'bar', 'table']});
         google.charts.setOnLoadCallback(drawChart);
         google.charts.setOnLoadCallback(drawAvgYearChart);
         google.charts.setOnLoadCallback(drawAvgMonthChart);
+        google.charts.setOnLoadCallback(drawTable);
 
         function drawChart() {
             let darrays = [];
@@ -338,5 +339,24 @@ function showDividentChart(queryData) {
             };
             var chart = new google.charts.Bar(document.getElementById(elementId));
             chart.draw(data, google.charts.Bar.convertOptions(options))
+        }
+        function drawTable() {
+            let darrays = [];
+            $.each(queryData.data.couponTable, function (index, value) {
+                darrays.push([value.account, value.date, value.sum, value.description])
+            })
+            var data = google.visualization.arrayToDataTable(
+                [['Аккаунт', 'Дата', 'Сумма', 'Описание'],
+                ...darrays]
+            );
+            let params = {
+                allowHtml: true,
+                showRowNumber: true,
+                width: '100%',
+                height: '80%',
+                vAxis: {title: 'Последние выплаты купонов'}
+            }
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+            table.draw(data, params);
         }
 }
