@@ -105,6 +105,15 @@ class Moex:
                 self.request_jsons]
         return data
 
+    async def get_assets_links(self, isins):
+        urls = {}
+        assets = await self.search_assets(isins)
+        for asset in assets:
+            asset_values = jmespath.search(f"securities.data[0]", asset)
+            if asset_values:
+                urls[asset_values[5]] = f'https://www.moex.com/ru/issue.aspx?board={asset_values[14]}&code={asset_values[1]}'
+        return urls
+
     ### MOEX Portfolio calculation ###
 
     async def get_portfolio(self, data: list) -> list:
@@ -172,10 +181,20 @@ class Moex:
 
     ### Searching ###
 
-    def get_isin_by_name(self, isin: str):
+    def generate_search_url(self, isin):
         url = f'{self.moex_url}/securities.json?iss.meta=off'
-        r = requests.session().get(url + f'&q={isin}')
+        return url + f'&q={isin}'
+
+    def search_asset(self, isin: str):
+        url = self.generate_search_url(isin)
+        r = requests.session().get(url)
         return r.json()
+
+    async def search_assets(self, isins: list):
+        urls = [self.generate_search_url(isin) for isin in isins]
+        await self.aiohttp_generator(urls)
+        data = self.request_jsons
+        return data
 
     ###########################
     def get_corp_bound_tax_free(self):
@@ -200,3 +219,9 @@ class Cbr:
     def __dict__(self):
         r = xmltodict.parse(self.xml)
         return json.loads(json.dumps(r))
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    data = loop.run_until_complete(Moex().get_assets_links(['RU000A1015P6', 'RU000A1005T9']))
+    print(data)

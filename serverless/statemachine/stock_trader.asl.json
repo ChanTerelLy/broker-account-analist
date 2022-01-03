@@ -1,5 +1,5 @@
 {
-  "Comment": "This is your state machine",
+  "Comment": "Aggregate data from moex",
   "StartAt": "Parallel",
   "States": {
     "Parallel": {
@@ -75,6 +75,21 @@
               "Parameters": {
                 "Payload.$": "$",
                 "FunctionName": "${CouponsArn}"
+              },
+              "OutputPath": "$.Payload",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Links",
+          "States": {
+            "Links": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${LinksArn}"
               },
               "OutputPath": "$.Payload",
               "End": true

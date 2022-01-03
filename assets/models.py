@@ -194,7 +194,7 @@ class Deal(Modify):
 
     def validate_isin(self):
         if self.isin and len(str(self.isin)) < 12:
-            isins = Moex().get_isin_by_name(self.isin)
+            isins = Moex().search_asset(self.isin)
             isins = jmespath.search(f"securities.data[?[1] == '{self.isin}'][05]", isins)
             if len(isins):
                 self.isin = isins[0]

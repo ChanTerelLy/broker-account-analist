@@ -252,6 +252,8 @@ class Query(ObjectType):
                         assets[d[0]['isin']]['Процент купона'] = d[0].get('valueprc', [None])
                         assets[d[0]['isin']]['Выплата купона'] = dmY_hyphen_to_date(
                             d[0].get('coupondate', [None]))
+                for key, value in output[5].items():
+                    assets[key]['Cсылка'] = value
         for index, asset in assets.items():
             assets[index]['Стоимость на момент покупки'] = assets[index]['Средняя цена покупки'] \
                                                            * assets[index]['Количество, шт (Начало Периода)']

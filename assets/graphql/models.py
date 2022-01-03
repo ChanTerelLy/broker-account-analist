@@ -104,6 +104,7 @@ class PortfolioReportType(ObjectType):
     sum_of_liquidation = graphene.Float()
     income = graphene.Float()
     income_percent = graphene.Float()
+    link = graphene.String()
 
     def resolve_income_percent(self, info, *args):
         return round((1 - (self.sum_of_liquidation / self.sum_of_buying)) * 100 * -1, 1)
@@ -137,6 +138,7 @@ class PortfolioReportType(ObjectType):
                 'Ликвидационная стоимость': 'sum_of_liquidation',
                 'Доход': 'income',
                 'Доход в процентах': 'income_percent',
+                'Cсылка': 'link'
                 }
 
     @classmethod
@@ -150,7 +152,9 @@ class PortfolioReportMapType(ObjectType):
     data = graphene.List(PortfolioReportType)
 
     def resolve_map(self, *args):
-        return {key: to_camel_case(value) for key, value in PortfolioReportType.get_map().items()}
+        map = PortfolioReportType.get_map()
+        del map['Cсылка']
+        return {key: to_camel_case(value) for key, value in map.items()}
 
 
 class TinkoffPrice(ObjectType):

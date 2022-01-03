@@ -147,6 +147,10 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         // google.charts.setOnLoadCallback(piePositionChart);
         let reportValues = [];
         $.each(mergedData.data, function(key, value){
+            if (value.link) {
+               value.isin = `<a href="${value.link}" target="_blank">${value.isin}</a>`
+            }
+            delete value.link
             reportValues.push(Object.values(value))
         })
         let totalStyle = 'font-size:1.5rem';
