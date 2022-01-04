@@ -107,7 +107,10 @@ class PortfolioReportType(ObjectType):
     link = graphene.String()
 
     def resolve_income_percent(self, info, *args):
-        return round((1 - (self.sum_of_liquidation / self.sum_of_buying)) * 100 * -1, 1)
+        if self.sum_of_buying > 0:
+            return round((1 - (self.sum_of_liquidation / self.sum_of_buying)) * 100 * -1, 1)
+        else:
+            return 0
 
     @classmethod
     def convert_name_for_dict(cls, data):

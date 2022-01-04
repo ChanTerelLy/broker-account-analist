@@ -222,7 +222,9 @@ class Query(ObjectType):
         # get data from deals
         isins_with_balance_price = Deal.get_balance_price(isins, accounts)
         for balance_price in isins_with_balance_price:
-            assets[balance_price[0].get('isin')]['Средняя цена покупки'] = balance_price[0]['avg_price']
+            if len(balance_price):
+                bp = balance_price[0].get('isin')
+                assets[bp]['Средняя цена покупки'] = balance_price[0]['avg_price']
         avg_percents = asyncio_helper(Moex().coupon_calculator, isins_with_balance_price)
         isins_with_avg_percents = {}
         for v in avg_percents:
@@ -255,7 +257,7 @@ class Query(ObjectType):
                 for key, value in output[5].items():
                     assets[key]['Cсылка'] = value
         for index, asset in assets.items():
-            assets[index]['Стоимость на момент покупки'] = assets[index]['Средняя цена покупки'] \
+            assets[index]['Стоимость на момент покупки'] = assets[index].get('Средняя цена покупки',0) \
                                                            * assets[index]['Количество, шт (Начало Периода)']
             assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая цена', 0) \
                                                         * assets[index]['Количество, шт (Начало Периода)']
