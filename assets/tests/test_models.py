@@ -51,20 +51,20 @@ class AssetModelTest(TestCase):
         self.assertEqual(deal3.isin, 'RU0009092134')
 
         self.assertEquals(len(Deal.objects.all()),3)
-
-    def test_deal_save_from_list(self):
-        deals = []
-        map = Deal.help_text_map_resolver()
-        for i in range(3):
-            deal = self.deal_base
-            deal['number'] = rnd.randint(1000000, 3000000)
-            deal['isin'] = self.isins[rnd.randint(0, len(self.isins) - 1)]
-            deal['type'] = self.types[rnd.randint(0, len(self.types) - 1)]
-            deal = {map.get(index, 'undefined'): attr for index, attr in deal.items()}
-            deal['Номер договора'] = self.account.name
-            deals.append(deal)
-        Deal.save_from_list(deals)
-        self.assertEquals(len(Deal.objects.all()),6)
+    #
+    # def test_deal_save_from_list(self):
+    #     deals = []
+    #     map = Deal.help_text_map_resolver()
+    #     for i in range(3):
+    #         deal = self.deal_base
+    #         deal['number'] = rnd.randint(1000000, 3000000)
+    #         deal['isin'] = self.isins[rnd.randint(0, len(self.isins) - 1)]
+    #         deal['type'] = self.types[rnd.randint(0, len(self.types) - 1)]
+    #         deal = {map.get(index, 'undefined'): attr for index, attr in deal.items()}
+    #         deal['Номер договора'] = self.account.name
+    #         deals.append(deal)
+    #     Deal.save_from_list(deals)
+    #     self.assertEquals(len(Deal.objects.all()),6)
 
     def test_portfolio(self):
         self.assertEqual(len(MoexPortfolio.objects.all()), 5)
