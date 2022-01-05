@@ -37,7 +37,8 @@ class SberbankReport(Report):
         # portfolio table
         portfolio_table = find_by_text(soup, 'Портфель Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in portfolio_table.find_all('tr')]
-        json_portfolio = pd.DataFrame(table_data[2:], columns=self._generate_header_for_portfel(table_data[1])).to_dict(orient='records')
+        json_portfolio = pd.DataFrame(table_data[2:], columns=self._generate_header_for_portfel(table_data[1])).to_dict(
+            orient='records')
         # hand book table
         handbook_table = find_by_text(soup, 'Справочник Ценных Бумаг', 'p').find_next_sibling('table')
         table_data = [self._cell_generator(row) for row in handbook_table.find_all('tr')]
@@ -113,7 +114,6 @@ class SberbankReport(Report):
                     assets[key]['Плановый исходящий остаток, шт'] += attr['Плановый исходящий остаток, шт']
         return assets
 
-
     def _get_dates(self, dates: str):
         result = re.search('Отчет брокера за период с (.*) по (.*), дата создания .*', dates)
         if result:
@@ -131,14 +131,14 @@ class SberbankReport(Report):
         return row
 
     def _clear_asterics(self, string: str):
-        return string.replace('*','')
+        return string.replace('*', '')
+
 
 class MoneyManager:
 
     def __init__(self, db_path):
         self.db_path = db_path
         self.conn = self._connect(db_path)
-
 
     def _connect(self, db_path):
         import sqlite3
@@ -155,8 +155,8 @@ class MoneyManager:
         """)
         return c.fetchall()
 
-class TinkoffApi:
 
+class TinkoffApi:
     _operation_type_map = {
         'Dividend': 'Зачисление дивидендов',
         'Tax': 'Списание налогов',

@@ -63,7 +63,7 @@ class Account(Modify):
 
 class Deal(Modify):
     account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
-    number = models.CharField(max_length=50, help_text='Номер сделки')
+    number = models.CharField(max_length=50, unique=True, help_text='Номер сделки')
     conclusion_date = models.DateTimeField(help_text='Дата заключения')
     settlement_date = models.DateTimeField(help_text='Дата расчётов')
     isin = models.CharField(max_length=50, help_text='Код финансового инструмента')
@@ -78,7 +78,7 @@ class Deal(Modify):
     service_fee = models.FloatField(help_text='Комиссия')
 
     @classmethod
-    # @method_decorator(transaction.atomic, name='dispatch')
+    # @method_decorator(transaction.atomic, name='dispatch')price_rub
     def save_from_list(cls, deals):
         for deal in deals:
             account_income = Account.objects.filter(name=deal['Номер договора']).first()
@@ -86,29 +86,39 @@ class Deal(Modify):
                 account_income = Account.objects.create(name=deal['Номер договора'])
             isin = deal.get('Код финансового инструмента')
             isin = isin if isin else deal.get('Код ЦБ')
-            type = deal.get('Операция')
-            type = type if type else deal.get('Вид')
-            amount = deal.get('Количество')
-            amount = amount if amount else deal.get('Количество, шт.')
-            price = deal.get('Цена')
-            price = price if price else conver_to_number(deal.get('Цена**'))
-            volume = deal.get('Объём сделки')
-            volume = volume if volume else conver_to_number(deal.get('Сумма'))
-            Deal.objects.create(
-                account=account_income,
-                number=deal.get('Номер сделки'),
-                conclusion_date=dmYHM_to_date(deal.get('Дата заключения')),
-                settlement_date=dmYHM_to_date(deal.get('Дата расчётов')),
-                isin=isin,
-                type=type,
-                amount=amount,
-                price=price,
-                nkd=deal.get('НКД'),
-                volume=volume,
-                currency=deal.get('Валюта'),
-                service_fee=(deal.get('Комиссия') if deal.get('Комиссия') else 0),
-            )
-
+            if isin:
+                type = deal.get('Операция')
+                type = type if type else deal.get('Вид')
+                amount = deal.get('Количество')
+                amount = amount if amount else deal.get('Количество, шт.')
+                price = deal.get('Цена')
+                price = price if price else conver_to_number(deal.get('Цена**'))
+                volume = deal.get('Объём сделки')
+                volume = volume if volume else conver_to_number(deal.get('Сумма'))
+                conclusion_date = deal.get('Дата заключения')
+                conclusion_date = dmYHM_to_date(conclusion_date) if dmYHM_to_date(conclusion_date) else dmY_to_date(conclusion_date)
+                settlement_date = deal.get('Дата расчетов')
+                settlement_date = dmYHM_to_date(settlement_date) if dmYHM_to_date(settlement_date) else dmY_to_date(settlement_date)
+                try:
+                    Deal.objects.create(
+                        account=account_income,
+                        number=deal.get('Номер сделки'),
+                        conclusion_date=conclusion_date,
+                        settlement_date=settlement_date,
+                        isin=isin,
+                        type=type,
+                        amount=conver_to_number(amount),
+                        price=price,
+                        nkd=conver_to_number(deal.get('НКД')),
+                        volume=volume,
+                        currency=deal.get('Валюта'),
+                        service_fee=(deal.get('Комиссия') if deal.get('Комиссия') else 0),
+                    )
+                except Exception as e:
+                    if isinstance(e, IntegrityError):
+                        logging.warning(e)
+                    else:
+                        logging.info(traceback.format_exc())
     @classmethod
     def convert_tinkoff_deal(cls, operation, account, figis):
         if Deal.objects.filter(account=account, number=operation.id).exists():
@@ -146,12 +156,11 @@ class Deal(Modify):
     def transaction_amount(self):
         return self.amount * (1 if self.type == 'Покупка' else -1)
 
-
     @classmethod
-    def get_balance_price(self, isins, accounts):
+    def get_balance_price(cls, isins, accounts):
         values = []
         for isin in isins:
-            aggr_deals = Deal.objects.filter(isin=isin, account__in=accounts).annotate(
+            aggr_deals = cls.objects.filter(isin=isin, account__in=accounts).annotate(
                 type_sum=Case(
                     When(type='Продажа', then=F('volume') * -1),
                     default=F('volume')
@@ -609,6 +618,7 @@ def update_amount_accounts(sender, **kwargs):
 def update_transfers_from_sbr_report(sender, **kwargs):
     json_transfers = kwargs['instance'].transfers
     json_iis_income = kwargs['instance'].iis_income
+    json_deals = kwargs['instance'].deals
     params = {}
     params['report'] = kwargs['instance']
     params['account'] = kwargs['instance'].account
@@ -618,6 +628,10 @@ def update_transfers_from_sbr_report(sender, **kwargs):
     if json_iis_income:
         json_iis_income = json.loads(json_iis_income)
         IISIncome.save_from_sberbank_report(json_iis_income, params)
+    if json_deals:
+        for deal in json_deals:
+            deal['Номер договора'] = params['account'].name
+        Deal.save_from_list(json_deals)
 
 
 @receiver(pre_save, sender=Deal)
@@ -632,6 +646,7 @@ def update_transfer_sum_rub(sender, **kwargs):
     transfer = kwargs['instance']
     transfer.update_sum_rub()
     logging.info(f'{transfer.description} was updated')
+
 
 @receiver(pre_save, sender=Deal)
 def check_isin(sender, **kwargs):
