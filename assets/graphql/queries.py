@@ -5,8 +5,6 @@ import numpy as np
 import pytz
 from codetiming import Timer
 import pandas as pd
-from django.core import serializers
-from graphql import GraphQLError
 from datetime import datetime as dt
 
 from more_itertools import flatten
@@ -257,10 +255,10 @@ class Query(ObjectType):
                 for key, value in output[5].items():
                     assets[key]['Cсылка'] = value
         for index, asset in assets.items():
-            assets[index]['Стоимость на момент покупки'] = assets[index].get('Средняя цена покупки',0) \
-                                                           * assets[index]['Количество, шт (Начало Периода)']
+            assets[index]['Стоимость на момент покупки'] = assets[index].get('Средняя цена покупки', 0) \
+                                                           * assets[index]['Количество, шт (Конец Периода)']
             assets[index]['Ликвидационная стоимость'] = assets[index].get('Текущая цена', 0) \
-                                                        * assets[index]['Количество, шт (Начало Периода)']
+                                                        * assets[index]['Количество, шт (Конец Периода)']
             assets[index]['Доход'] = assets[index]['Ликвидационная стоимость'] - assets[index][
                 'Стоимость на момент покупки']
         conv_assets = [PortfolioReportType.convert_name_for_dict(asset) for index, asset in assets.items()]
@@ -365,7 +363,7 @@ class Query(ObjectType):
 
     def resolve_coupon_table(self, info):
         coupons = Transfer.objects.filter(type='Зачисление купона', account_income__user=info.context.user) \
-                        .order_by('-execution_date')[:20]
+                      .order_by('-execution_date')[:20]
         return [CouponTable(
             account=coupon.account_income.name,
             date=coupon.execution_date,
