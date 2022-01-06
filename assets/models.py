@@ -6,16 +6,16 @@ import jmespath
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from accounts.models import User
+from accounts.models import User, Profile
 from django.db import models, transaction, IntegrityError
 import uuid
 from graphene.utils.str_converters import to_camel_case
 from django.utils.decorators import method_decorator
 
-from assets.helpers.service import TinkoffApi as tapi
+from assets.helpers.service import TinkoffApi as tapi, SberbankReport, TinkoffApi
 from moex.service import Moex, Cbr
 from assets.helpers.utils import dmYHM_to_date, conver_to_number, get_value, dmY_to_date, \
-    date_to_dmY
+    date_to_dmY, asyncio_helper
 
 
 class Modify(models.Model):
@@ -97,7 +97,7 @@ class Deal(Modify):
                 volume = volume if volume else conver_to_number(deal.get('Сумма'))
                 conclusion_date = deal.get('Дата заключения')
                 conclusion_date = dmYHM_to_date(conclusion_date) if dmYHM_to_date(conclusion_date) else dmY_to_date(conclusion_date)
-                settlement_date = deal.get('Дата расчетов')
+                settlement_date = deal.get('Дата расчетов') if deal.get('Дата расчетов') else deal.get('Дата расчётов')
                 settlement_date = dmYHM_to_date(settlement_date) if dmYHM_to_date(settlement_date) else dmY_to_date(settlement_date)
                 try:
                     Deal.objects.create(
@@ -192,7 +192,10 @@ class Deal(Modify):
 
     @property
     def volume_rub(self):
-        return self.price_rub * self.amount * (-1 if self.type == 'Покупка' else 1)
+        volume = self.volume
+        if self.currency != 'RUB':
+            volume = self.price_rub * self.amount
+        return volume * (-1 if self.type == 'Покупка' else 1)
 
     def update_price_rub(self):
         if self.currency != 'RUB':
@@ -326,6 +329,41 @@ class AccountReport(models.Model):
                 logging.warning(e)
             else:
                 logging.error(traceback.format_exc())
+
+    @classmethod
+    def extract_portfolious(cls, accounts):
+        reports = []
+        for account in accounts:
+            reports.append(cls.objects.filter(account=account).order_by('-start_date').first())
+        # generate data from portfolio report
+        return list(
+            [{
+              'portfolio': json.loads(r.portfolio),
+              'account': r.account.name,
+              'source': r.source
+            } for r in reports if r])
+
+    @staticmethod
+    def get_assets_from_portfolios(portfolious,user, ignore_tinkoff=True):
+        assets = {}
+        for value in portfolious:
+            if value['source'] == 'sberbank':
+                assets = {**assets, **SberbankReport.extract_assets(assets, value)}
+            elif value['source'] == 'tinkoff' and not ignore_tinkoff:
+                TOKEN = Profile.objects.get(user=user).tinkoff_token
+                if TOKEN:
+                    tapi = TinkoffApi(TOKEN)
+                    portfolio = asyncio_helper(tapi.get_portfolio)
+                    positions = json.loads(portfolio)['positions']
+                    posistions_json = {}
+                    for p in positions:
+                        if p.get('isin'):
+                            posistions_json[p['isin']] = p
+                        elif p.get('ticker'):
+                            posistions_json[p['ticker']] = p
+                    assets = {**assets, **posistions_json}
+        return assets
+
 
 
 class Transfer(Modify):

@@ -55,7 +55,13 @@ class Query(ObjectType):
         return gql_optimizer.query(Transfer.objects.filter(account_income__user=info.context.user).all(), info)
 
     def resolve_my_deals(self, info) -> Deal:
-        return gql_optimizer.query(Deal.objects.filter(account__user=info.context.user).all(), info)
+        accounts = Account.get_with_reports(user=info.context.user)
+        portfolious = AccountReport.extract_portfolious(accounts)
+        assets = AccountReport.get_assets_from_portfolios(portfolious, info.context.user, False)
+        isins = list(assets.keys())
+        currency = ['EUR_RUB__TOM', 'USD000UTSTOM']
+        return gql_optimizer.query(Deal.objects.filter(account__user=info.context.user)
+                                   .exclude(isin__in=isins + currency).all(), info)
 
     def resolve_account_chart(self, info) -> dict:
         data = {'data': []}
@@ -195,18 +201,8 @@ class Query(ObjectType):
     @Timer(name="decorator")
     def resolve_portfolio_combined(self, info):
         accounts = Account.get_with_reports(user=info.context.user)
-        reports = []
-        for account in accounts:
-            reports.append(AccountReport.objects.filter(account=account).order_by('-start_date').first())
-        # generate data from portfolio report
-        portfolious = list(
-            [{'portfolio': json.loads(r.portfolio), 'account': r.account.name, 'source': r.source} for r in reports
-             if r])
-        assets = {}
-        # agrate value from portfolious
-        for value in portfolious:
-            if value['source'] == 'sberbank':
-                assets = SberbankReport.extract_assets(assets, value)
+        portfolious = AccountReport.extract_portfolious(accounts)
+        assets = AccountReport.get_assets_from_portfolios(portfolious, info.context.user)
         # get coupon data from moex
         isins = list(assets.keys())
         client = None
