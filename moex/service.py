@@ -223,5 +223,5 @@ class Cbr:
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    data = loop.run_until_complete(Moex().get_assets_links(['RU000A1015P6', 'RU000A1005T9']))
+    data = loop.run_until_complete(Moex().search_assets(['RU000A1015P6', 'RU000A1005T9']))
     print(data)

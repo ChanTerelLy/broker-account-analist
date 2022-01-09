@@ -393,7 +393,7 @@ class Transfer(Modify):
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=['account_income', 'execution_date', 'type', 'sum', 'currency', 'transfer_id'],
+                fields=['account_income', 'execution_date', 'description', 'type', 'sum', 'currency'],
                 name='unique_transfer')
         ]
 
