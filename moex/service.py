@@ -11,7 +11,7 @@ import pandas as pd
 import requests
 import xmltodict
 from more_itertools import flatten, chunked
-
+log = logging.getLogger("django")
 
 class Moex:
 
@@ -42,7 +42,7 @@ class Moex:
                 json = await resp.json()
                 self.request_jsons.append(json)
             except Exception as e:
-                logging.error(e)
+                log.error(e)
 
     async def _build_url(self, query, url):
         url = url + '?' + query

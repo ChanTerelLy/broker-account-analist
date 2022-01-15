@@ -49,3 +49,25 @@ XRAY_RECORDER = {
     'PLUGINS': ('ECSPlugin','EC2Plugin'),
     'SAMPLING': False,
 }
+LOGGING = {
+    "version": 1,
+    'disable_existing_loggers': False,
+    "formatters": {
+        "json": {
+            "class": "pythonjsonlogger.jsonlogger.JsonFormatter"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        }
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            'propagate': False,
+        }
+    }
+}

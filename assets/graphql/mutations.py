@@ -1,12 +1,8 @@
 import json
 import logging
-import pathlib
-
 import dateutil
-from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-
 from accounts.models import Profile
 from .models import *
 from ..helpers.google_services import get_gmail_reports, provides_credentials, get_money_manager_database
@@ -19,6 +15,7 @@ from ..models import MoexPortfolio, Transfer, Deal, AccountReport, Account, Mone
 from graphene_file_upload.scalars import Upload
 
 from google.oauth2.credentials import Credentials
+log = logging.getLogger("django")
 
 
 class UploadTransfers(graphene.Mutation):
@@ -133,7 +130,7 @@ class ParseReportsFromGmail(graphene.Mutation):
                 source = 'sberbank'
                 AccountReport.save_from_dict(data, source)
             except Exception as e:
-                logging.error(e)
+                log.error(e)
         return ParseReportsFromGmail(success=True)
 
 
@@ -231,7 +228,7 @@ class UpdateReports(graphene.Mutation):
                 root=info.context
             )
             content = response.data
-            logging.info(content)
+            log.info(content)
         return {'success': True}
 
 

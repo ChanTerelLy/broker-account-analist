@@ -139,6 +139,7 @@ Unidecode = "==1.1.1"
 more-itertools = "*"
 sentry-sdk = "*"
 xmltodict = "*"
+python-json-logger = "2.0.2"
 
 [dev-packages]
 

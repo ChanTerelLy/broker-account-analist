@@ -1,7 +1,7 @@
 import json
 import logging
+log = logging.getLogger("django")
 import traceback
-
 import jmespath
 from django.db.models import UniqueConstraint, Window, Sum, F, Q, Case, When
 from django.db.models.signals import post_save, pre_save
@@ -116,9 +116,9 @@ class Deal(Modify):
                     )
                 except Exception as e:
                     if isinstance(e, IntegrityError):
-                        logging.warning(e)
+                        log.warning(e)
                     else:
-                        logging.info(traceback.format_exc())
+                        log.info(traceback.format_exc())
     @classmethod
     def convert_tinkoff_deal(cls, operation, account, figis):
         if Deal.objects.filter(account=account, number=operation.id).exists():
@@ -140,9 +140,9 @@ class Deal(Modify):
             )
         except Exception as e:
             if isinstance(e, IntegrityError):
-                logging.warning(e)
+                log.warning(e)
             else:
-                logging.info(traceback.format_exc())
+                log.info(traceback.format_exc())
 
     @method_decorator(transaction.atomic)
     def dispatch(self, *args, **kwargs):
@@ -316,9 +316,9 @@ class AccountReport(models.Model):
             cls.objects.create(**data)
         except Exception as e:
             if isinstance(e, IntegrityError):
-                logging.warning(e)
+                log.warning(e)
             else:
-                logging.error(traceback.format_exc())
+                log.error(traceback.format_exc())
 
     @classmethod
     def save_from_tinkoff(cls, **kwargs):
@@ -326,9 +326,9 @@ class AccountReport(models.Model):
             cls.objects.create(**kwargs)
         except Exception as e:
             if isinstance(e, IntegrityError):
-                logging.warning(e)
+                log.warning(e)
             else:
-                logging.error(traceback.format_exc())
+                log.error(traceback.format_exc())
 
     @classmethod
     def extract_portfolious(cls, accounts):
@@ -418,9 +418,9 @@ class Transfer(Modify):
             )
         except Exception as e:
             if isinstance(e, IntegrityError):
-                logging.warning(e)
+                log.warning(e)
             else:
-                logging.info(traceback.format_exc())
+                log.info(traceback.format_exc())
 
     @property
     def type_sum(self):
@@ -461,9 +461,9 @@ class Transfer(Modify):
                 )
             except Exception as e:
                 if isinstance(e, IntegrityError):
-                    logging.warning(e)
+                    log.warning(e)
                 else:
-                    logging.info(traceback.format_exc())
+                    log.info(traceback.format_exc())
 
     @classmethod
     def save_from_sberbank_report(cls, rows: list, params):
@@ -506,9 +506,9 @@ class Transfer(Modify):
                     )
                 except Exception as e:
                     if isinstance(e, IntegrityError):
-                        logging.warning(e)
+                        log.warning(e)
                     else:
-                        logging.error(traceback.format_exc())
+                        log.error(traceback.format_exc())
 
     @property
     def xirr_sum(self):
@@ -553,7 +553,7 @@ class Transfer(Modify):
     def update_sum_rub(self):
         if self.currency != 'RUB':
             currency_value = Cbr(date_to_dmY(self.execution_date)).__getattr__(self.currency)
-            self.sum_rub = currency_value * self.sum
+            self.sum_rub = currency_value * float(self.sum)
         else:
             self.sum_rub = self.sum
 
@@ -600,9 +600,9 @@ class MoneyManagerTransaction(Modify):
                 )
             except Exception as e:
                 if isinstance(e, IntegrityError):
-                    logging.warning(e)
+                    log.warning(e)
                 else:
-                    logging.error(traceback.format_exc())
+                    log.error(traceback.format_exc())
 
 
 class AdditionalInvestmentIncome(Modify):
@@ -640,9 +640,9 @@ class IISIncome(Modify):
                 ).save()
             except Exception as e:
                 if isinstance(e, IntegrityError):
-                    logging.warning(e)
+                    log.warning(e)
                 else:
-                    logging.error(traceback.format_exc())
+                    log.error(traceback.format_exc())
 
 
 # Signals
@@ -677,14 +677,14 @@ def update_transfers_from_sbr_report(sender, **kwargs):
 def update_deal_price_rub(sender, **kwargs):
     deal = kwargs['instance']
     deal.update_price_rub()
-    logging.info(f'{deal.number} was updated')
+    log.info(f'{deal.number} was updated')
 
 
 @receiver(pre_save, sender=Transfer)
 def update_transfer_sum_rub(sender, **kwargs):
     transfer = kwargs['instance']
     transfer.update_sum_rub()
-    logging.info(f'{transfer.description} was updated')
+    log.info(f'{transfer.description} was updated')
 
 
 @receiver(pre_save, sender=Deal)
