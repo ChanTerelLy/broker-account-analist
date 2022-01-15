@@ -434,35 +434,36 @@ class Transfer(Modify):
             return self.sum_rub
 
     @classmethod
-    @method_decorator(transaction.atomic, name='dispatch')
+    # @method_decorator(transaction.atomic, name='dispatch')
     def save_from_list(cls, transfers):
         for transfer in transfers:
             account_charge = Account.objects.none()  # TODO:add account instance
             account_income = Account.objects.filter(name=transfer['Номер договора']).first()
-            execution_date = dmYHM_to_date(transfer.get('Дата исполнения поручения'))
+            execution_date = transfer.get('Дата исполнения поручения')
+            execution_date = dmYHM_to_date(execution_date) if dmYHM_to_date(execution_date) else dmY_to_date(execution_date)
+            date_of_application = transfer.get('Дата подачи поручения')
+            date_of_application = dmYHM_to_date(date_of_application) if dmYHM_to_date(date_of_application) else dmY_to_date(date_of_application)
             sum = transfer.get('Сумма')
             type = transfer.get('Операция')
-            transfer_exist = Transfer.objects.filter(
-                account_income=account_income,
-                execution_date=execution_date,
-                type=type,
-                sum=sum
-            ).count()
-            if transfer_exist:
-                continue
             if not account_income:
                 account_income = Account.objects.create(name=transfer['Номер договора'])
-            cls.objects.create(
-                account_income=account_income,
-                # account_charge=account_charge,
-                date_of_application=dmYHM_to_date(transfer.get('Дата подачи поручения')),
-                execution_date=execution_date,
-                type=type,
-                sum=sum,
-                currency=transfer.get('Валюта операции'),
-                description=transfer.get('Содержание операции'),
-                status=transfer.get('Статус'),
-            )
+            try:
+                cls.objects.create(
+                    account_income=account_income,
+                    # account_charge=account_charge,
+                    date_of_application=date_of_application,
+                    execution_date=execution_date,
+                    type=type,
+                    sum=sum,
+                    currency=transfer.get('Валюта операции'),
+                    description=transfer.get('Содержание операции'),
+                    status=transfer.get('Статус'),
+                )
+            except Exception as e:
+                if isinstance(e, IntegrityError):
+                    logging.warning(e)
+                else:
+                    logging.info(traceback.format_exc())
 
     @classmethod
     def save_from_sberbank_report(cls, rows: list, params):

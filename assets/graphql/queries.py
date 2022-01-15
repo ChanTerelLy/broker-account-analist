@@ -150,7 +150,8 @@ class Query(ObjectType):
                     data = json.loads(report.asset_estimate)
                     sum = data[-1]['Оценка, руб.']
                     ac_dic['data'].append(
-                        ReportData(date=dt_to_date(report.start_date), sum=convert_devided_number(sum),
+                        ReportData(date=dt_to_date(report.start_date),
+                                   sum=convert_devided_number(sum),
                                    income_sum=None)
                     )
                 elif report.source == 'tinkoff':
