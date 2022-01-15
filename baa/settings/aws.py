@@ -1,3 +1,4 @@
+import logging
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -40,6 +41,7 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 ALLOWED_HOSTS = ['*']
 MIDDLEWARE.append('aws_xray_sdk.ext.django.middleware.XRayMiddleware')
 INSTALLED_APPS.append('aws_xray_sdk.ext.django')
+logging.getLogger('aws_xray_sdk').setLevel(logging.CRITICAL)
 XRAY_RECORDER = {
     'AUTO_INSTRUMENT': True,
     'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
