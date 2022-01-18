@@ -200,7 +200,7 @@ class Deal(Modify):
     def update_price_rub(self):
         if self.currency != 'RUB':
             currency_value = Cbr(date_to_dmY(self.conclusion_date)).__getattr__(self.currency)
-            self.price_rub = currency_value * self.price
+            self.price_rub = currency_value * float(self.price)
         else:
             self.price_rub = self.price
 
