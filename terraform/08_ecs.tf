@@ -87,10 +87,12 @@ resource "aws_ecs_service" "production" {
   task_definition                    = aws_ecs_task_definition.app.arn
   iam_role                           = module.ecs_service_role.iam_role_arn
   desired_count                      = var.app_count
-  deployment_minimum_healthy_percent = 0
-  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
+  health_check_grace_period_seconds  = 30
+
   deployment_circuit_breaker {
-    enable   = false
+    enable   = true
     rollback = true
   }
   depends_on = [
