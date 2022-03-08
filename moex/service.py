@@ -55,7 +55,7 @@ class Moex:
         paths = []
         types = {
             'etf': {'market': 'shares', 'boards': ['TQTF']},
-            'bonds': {'market': 'bonds', 'boards': ['TQCB', 'TQIR']},
+            'bonds': {'market': 'bonds', 'boards': ['TQCB', 'TQIR', 'TQRD']},
             'shares': {'market': 'shares', 'boards': ['TQBR']},
             'foreignshares': {'market': 'foreignshares', 'boards': ['FQBR']}
         }

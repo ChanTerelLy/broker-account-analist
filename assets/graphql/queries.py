@@ -236,7 +236,7 @@ class Query(ObjectType):
             while data['status'] == 'RUNNING':
                 data = client.describe_execution(executionArn=start_sync_execution['executionArn'])
             # convert naming
-            if data:
+            if data and data.get('output'):
                 output = json.loads(data['output'])
                 for i, o in enumerate(output[1]):
                     output[1][i][2] *= 10  # multiplie price to 10 for bounds
