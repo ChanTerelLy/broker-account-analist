@@ -31,13 +31,16 @@ class Moex:
 
     async def aiohttp_generator(self, urls):
         async with aiohttp.ClientSession(headers=self.headers) as client:
-            await asyncio.gather(*[
-                asyncio.ensure_future(self.extract_request_data(client, item))
-                for item in urls
-            ])
+            try:
+                await asyncio.gather(*[
+                    asyncio.ensure_future(self.extract_request_data(client, item))
+                    for item in urls
+                ])
+            except Exception as e:
+                log.error(e)
 
     async def extract_request_data(self, client, url):
-        async with client.get(url) as resp:
+        async with client.get(url,timeout=5) as resp:
             try:
                 json = await resp.json()
                 self.request_jsons.append(json)

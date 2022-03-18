@@ -140,6 +140,7 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
         let SUM_COLUMN = 4
         let INCOME_COLUMN = 5
         let SORT_COLUMN = 6
+        let REPORT_SUM_COLUMN = 13
 
         google.charts.load('current', {'packages': ['table', 'corechart']});
         google.charts.setOnLoadCallback(drawTable);
@@ -163,8 +164,10 @@ function showPortfolioReportTable(queryData, reportType='sberbank'){
     function styling(data) {
         let formatter = new google.visualization.ArrowFormat()
         var totalSum = Math.round((calculateSum(reportValues, SUM_COLUMN)) * 100) / 100
+        var totalSumReport = Math.round((calculateSum(reportValues, REPORT_SUM_COLUMN)) * 100) / 100
         var totalEarn = Math.round((calculateSum(reportValues, INCOME_COLUMN )) * 100) / 100
         $( "#liquidateTotalSum" ).text(numberWithCommas(totalSum))
+        $( "#liquidateTotalSumReport" ).text(numberWithCommas(totalSumReport))
         $( "#Income" ).text(numberWithCommas(totalEarn))
         formatter.format(data, INCOME_COLUMN );
     }

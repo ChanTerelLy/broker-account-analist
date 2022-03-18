@@ -30,6 +30,7 @@ deploy_sam:
     paths:
       - .cache/pip
       - venv/
+  allow_failure: true
   script:
     - pip3 install -r moex/requirements.txt
     - python3 -m unittest discover moex/tests
