@@ -7,7 +7,7 @@ resource "aws_ecs_cluster" "production" {
 #  }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 

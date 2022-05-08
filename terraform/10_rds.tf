@@ -24,6 +24,6 @@ resource "aws_db_instance" "production" {
   iam_database_authentication_enabled = true
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }

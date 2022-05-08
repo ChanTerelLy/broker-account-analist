@@ -10,6 +10,6 @@ resource "aws_elasticache_cluster" "redis" {
   subnet_group_name    = aws_elasticache_subnet_group.redis.name
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
